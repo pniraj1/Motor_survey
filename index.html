@@ -1402,7 +1402,7 @@ const GEMINI_API_KEY = 'AIzaSyCEw6DQXFOnWXZpv-Y_4G9tI0P_JCEu1y4';
 
 // Helper: call Gemini API
 async function callGemini(parts, maxTokens = 2000) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
