@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Motor Survey & Loss Assessment System v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --navy: #0d1b2a; --navy2: #1b2d3e; --teal: #1a7a6e; --teal-light: #22a99a;
+  --gold: #c9943a; --gold-light: #e8b95a; --cream: #f7f3ed; --cream2: #ede8df;
+  --red: #c0392b; --green: #1e7e52; --text: #1a1a1a; --muted: #6b7280;
+  --border: #d4cfc7; --shadow: 0 2px 12px rgba(13,27,42,0.10);
+  --shadow-lg: 0 8px 32px rgba(13,27,42,0.16);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+.app-shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 260px; min-width: 260px; background: var(--navy);
+  display: flex; flex-direction: column; position: fixed;
+  top: 0; left: 0; height: 100vh; z-index: 100; box-shadow: var(--shadow-lg);
+}
+.sidebar-logo { padding: 22px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.sidebar-logo h1 { font-family: 'Crimson Pro', serif; font-size: 1.2rem; font-weight: 700; color: #fff; line-height: 1.3; }
+.sidebar-logo span { font-size: 0.68rem; color: var(--teal-light); font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-top: 3px; }
+.sidebar-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+.nav-section-label { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 20px 5px; font-weight: 500; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; cursor: pointer; color: rgba(255,255,255,0.62); font-size: 0.85rem; transition: all 0.15s; border-left: 3px solid transparent; }
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.nav-item.active { background: rgba(26,122,110,0.18); color: var(--teal-light); border-left-color: var(--teal-light); font-weight: 500; }
+.nav-item .icon { font-size: 0.95rem; width: 18px; text-align: center; }
+.sidebar-footer { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.68rem; color: rgba(255,255,255,0.28); }
+
+.main-content { margin-left: 260px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { background: #fff; border-bottom: 1px solid var(--border); padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.topbar-title { font-family: 'Crimson Pro', serif; font-size: 1.3rem; font-weight: 600; color: var(--navy); }
+.topbar-meta { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.page-body { padding: 24px 28px; flex: 1; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* FORMS */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 13px; }
+.span-2 { grid-column: 1 / -1; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--navy2); }
+.form-input, .form-select, .form-textarea { padding: 8px 11px; border: 1.5px solid var(--border); border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--text); background: #fff; transition: border-color 0.15s; outline: none; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(26,122,110,0.09); }
+.form-input.ai-filled { border-color: var(--teal); background: #f0fdf8; }
+.form-textarea { resize: vertical; min-height: 68px; }
+
+/* CARDS */
+.card { background: #fff; border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+.card-header { padding: 13px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%); }
+.card-header h3 { font-family: 'Crimson Pro', serif; font-size: 1rem; font-weight: 600; color: #fff; }
+.card-header .badge { font-size: 0.67rem; padding: 2px 8px; border-radius: 20px; background: rgba(201,148,58,0.2); color: var(--gold-light); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+.card-body { padding: 18px; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 7px; font-size: 0.83rem; font-weight: 500; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
+.btn-primary { background: var(--teal); color: #fff; }
+.btn-primary:hover { background: #155f55; transform: translateY(-1px); }
+.btn-secondary { background: #fff; color: var(--navy); border: 1.5px solid var(--border); }
+.btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+.btn-gold { background: var(--gold); color: #fff; }
+.btn-gold:hover { background: #a87830; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-ai { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+.btn-ai:hover { background: linear-gradient(135deg, #4f46e5, #7c3aed); transform: translateY(-1px); }
+.btn-sm { padding: 5px 11px; font-size: 0.76rem; }
+.btn-lg { padding: 11px 26px; font-size: 0.93rem; }
+
+/* VOICE INPUT */
+.voice-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: all 0.2s; box-shadow: 0 2px 8px rgba(99,102,241,0.3); }
+.voice-btn:hover { transform: translateY(-50%) scale(1.05); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+.voice-btn.recording { background: var(--red); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+.voice-btn.processing { background: #fbbf24; }
+.form-group { position: relative; }
+.voice-modal-content { max-height: 400px; overflow-y: auto; }
+
+/* ==============================
+   DOCUMENT UPLOAD & AI EXTRACTION
+   ============================== */
+.doc-upload-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+}
+.doc-card {
+  border: 2px dashed var(--border); border-radius: 12px;
+  background: #fafaf8; transition: all 0.2s; overflow: hidden;
+  position: relative;
+}
+.doc-card:hover { border-color: var(--teal); box-shadow: 0 4px 16px rgba(26,122,110,0.1); }
+.doc-card.has-file { border-style: solid; border-color: var(--teal); background: #f0fdf8; }
+.doc-card.processing { border-color: #6366f1; background: #f5f3ff; }
+.doc-card.done { border-color: var(--green); background: #f0fdf4; }
+.doc-card.error { border-color: var(--red); background: #fef2f2; }
+
+.doc-card-header {
+  padding: 12px 14px 8px; display: flex; align-items: center; gap: 8px;
+}
+.doc-type-icon { font-size: 1.4rem; }
+.doc-type-label { font-size: 0.78rem; font-weight: 600; color: var(--navy); line-height: 1.2; }
+.doc-type-sub { font-size: 0.68rem; color: var(--muted); }
+
+.doc-drop-zone {
+  margin: 0 14px 14px; border: 1.5px dashed var(--border);
+  border-radius: 8px; padding: 16px 10px; text-align: center;
+  cursor: pointer; transition: all 0.18s; background: rgba(255,255,255,0.6);
+}
+.doc-drop-zone:hover { border-color: var(--teal); background: rgba(26,122,110,0.04); }
+.doc-drop-zone .dz-icon { font-size: 1.5rem; margin-bottom: 4px; }
+.doc-drop-zone .dz-text { font-size: 0.75rem; color: var(--muted); }
+.doc-drop-zone .dz-text strong { color: var(--teal); }
+
+.doc-file-preview {
+  margin: 0 14px 10px; display: none;
+  border-radius: 6px; overflow: hidden; border: 1px solid var(--border);
+}
+.doc-file-preview img { width: 100%; max-height: 110px; object-fit: cover; }
+.doc-file-preview .pdf-preview {
+  background: #fff5f5; padding: 12px; text-align: center;
+  font-size: 0.75rem; color: var(--red);
+}
+
+.doc-status {
+  margin: 0 14px 14px; padding: 8px 10px;
+  border-radius: 6px; font-size: 0.75rem; display: none;
+}
+.doc-status.processing { display: flex; align-items: center; gap: 8px; background: #f5f3ff; color: #6d28d9; }
+.doc-status.done { display: flex; align-items: center; gap: 8px; background: #f0fdf4; color: var(--green); }
+.doc-status.error { display: flex; align-items: center; gap: 8px; background: #fef2f2; color: var(--red); }
+
+.doc-extracted-fields {
+  margin: 0 14px 14px; display: none;
+  background: #fff; border: 1px solid #d1fae5; border-radius: 6px;
+  padding: 8px 10px;
+}
+.doc-extracted-fields.show { display: block; }
+.extracted-field { font-size: 0.7rem; padding: 2px 0; display: flex; gap: 6px; }
+.extracted-field .ef-key { color: var(--muted); flex-shrink: 0; min-width: 80px; }
+.extracted-field .ef-val { color: var(--navy); font-weight: 500; word-break: break-word; }
+
+/* spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 14px; height: 14px; border: 2px solid rgba(109,40,217,0.2); border-top-color: #6d28d9; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+.spinner-green { border-color: rgba(30,126,82,0.2); border-top-color: var(--green); }
+
+/* ASSESSMENT TABLE */
+.assess-table-wrap { overflow-x: auto; }
+.assess-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 860px; }
+.assess-table th { background: var(--navy); color: #fff; padding: 9px 9px; text-align: left; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.assess-table td { padding: 7px 9px; border-bottom: 1px solid var(--cream2); vertical-align: middle; }
+.assess-table tr:hover td { background: rgba(26,122,110,0.025); }
+.assess-table tr.section-row td { background: var(--cream2); font-weight: 600; font-size: 0.72rem; color: var(--navy); text-transform: uppercase; letter-spacing: 0.05em; }
+.assess-table tr.total-row td { background: var(--navy); color: #fff; font-weight: 600; }
+.assess-table tr.subtotal-row td { background: #e8f5f3; font-weight: 600; color: var(--teal); border-top: 2px solid var(--teal); }
+.num-input { width: 85px; padding: 4px 7px; border: 1px solid var(--border); border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 0.78rem; text-align: right; background: #fafaf8; }
+.num-input:focus { outline: none; border-color: var(--teal); background: #fff; }
+.text-input-cell { width: 100%; min-width: 130px; padding: 4px 7px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem; background: #fafaf8; font-family: 'DM Sans', sans-serif; }
+.text-input-cell:focus { outline: none; border-color: var(--teal); background: #fff; }
+.mono { font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+.allowed-tag { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 0.67rem; font-weight: 600; }
+.tag-allowed { background: #d1fae5; color: var(--green); }
+.tag-partial { background: #fef3c7; color: #92400e; }
+
+/* SUMMARY */
+.summary-panel { background: linear-gradient(135deg, var(--navy) 0%, #0a3d62 100%); border-radius: 10px; padding: 20px 22px; color: #fff; }
+.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.09); }
+.summary-row:last-child { border-bottom: none; }
+.summary-label { font-size: 0.82rem; color: rgba(255,255,255,0.68); }
+.summary-val { font-family: 'DM Mono', monospace; font-size: 0.87rem; }
+.summary-total-row { background: rgba(201,148,58,0.15); border-radius: 6px; padding: 10px 12px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(201,148,58,0.3); }
+.summary-total-label { font-family: 'Crimson Pro', serif; font-size: 1.02rem; font-weight: 600; color: var(--gold-light); }
+.summary-total-val { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 600; color: var(--gold-light); }
+
+/* stats */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.stat-card { background: #fff; border-radius: 10px; padding: 16px 18px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.stat-label { font-size: 0.7rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-value { font-family: 'Crimson Pro', serif; font-size: 1.7rem; font-weight: 700; color: var(--navy); margin: 3px 0 0; }
+.stat-sub { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.stat-card.accent { background: var(--teal); border-color: var(--teal); }
+.stat-card.accent .stat-label { color: rgba(255,255,255,0.72); }
+.stat-card.accent .stat-value { color: #fff; }
+.stat-card.accent .stat-sub { color: rgba(255,255,255,0.55); }
+
+/* modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(13,27,42,0.6); backdrop-filter: blur(3px); z-index: 500; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 14px; width: 90%; max-width: 520px; box-shadow: var(--shadow-lg); overflow: hidden; animation: modalIn 0.2s ease; }
+@keyframes modalIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-head { background: var(--navy); padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; }
+.modal-head h2 { font-family: 'Crimson Pro', serif; font-size: 1.05rem; font-weight: 600; color: #fff; }
+.modal-close { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; }
+.modal-body { padding: 22px; }
+.modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+/* sig */
+.sig-area { border: 2px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; background: #fafaf8; cursor: pointer; transition: all 0.2s; }
+.sig-area:hover { border-color: var(--teal); }
+.sig-preview { max-height: 70px; max-width: 180px; object-fit: contain; }
+
+/* alerts */
+.alert { padding: 10px 14px; border-radius: 7px; font-size: 0.82rem; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 9px; }
+.alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+.alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+.alert-ai { background: #f5f3ff; border: 1px solid #c4b5fd; color: #5b21b6; }
+
+/* toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: #fff; padding: 11px 18px; border-radius: 8px; font-size: 0.83rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 9px; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s cubic-bezier(.17,.67,.41,1.3); max-width: 340px; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-left: 4px solid var(--teal-light); }
+.toast.error { border-left: 4px solid var(--red); }
+.toast.ai { border-left: 4px solid #8b5cf6; }
+
+/* policy toggle */
+.policy-toggle { display: inline-flex; border-radius: 7px; overflow: hidden; border: 1.5px solid var(--border); background: var(--cream2); }
+.policy-toggle button { padding: 6px 16px; border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+.policy-toggle button.active { background: var(--teal); color: #fff; }
+
+/* dep table */
+.dep-table { width: 100%; border-collapse: collapse; font-size: 0.79rem; }
+.dep-table th, .dep-table td { padding: 7px 11px; border: 1px solid var(--border); text-align: center; }
+.dep-table th { background: var(--cream2); font-weight: 600; color: var(--navy2); font-size: 0.7rem; }
+
+/* report preview */
+.report-preview { background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); }
+.report-header-bar { background: var(--navy); padding: 9px 18px; display: flex; align-items: center; justify-content: space-between; }
+.report-header-bar span { color: rgba(255,255,255,0.68); font-size: 0.78rem; }
+.report-doc { padding: 28px; font-family: 'Crimson Pro', serif; font-size: 0.88rem; line-height: 1.6; }
+
+/* progress bar */
+.progress-bar-wrap { background: rgba(255,255,255,0.15); border-radius: 4px; height: 4px; margin-top: 6px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--teal-light); border-radius: 4px; transition: width 0.3s; }
+
+/* checklist */
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+/* misc */
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.font-mono { font-family: 'DM Mono', monospace; }
+.text-muted { color: var(--muted); }
+.mb-4 { margin-bottom: 14px; }
+.mb-6 { margin-bottom: 22px; }
+.mt-4 { margin-top: 14px; }
+.flex { display: flex; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.hidden { display: none !important; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.13); border-radius: 3px; }
+
+/* AI badge on filled fields */
+.ai-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.6rem; background: #f5f3ff; color: #6d28d9;
+  border: 1px solid #c4b5fd; border-radius: 3px; padding: 1px 5px;
+  margin-left: 6px; vertical-align: middle;
+}
+
+/* upload area drag states */
+.doc-card.dragover { border-color: var(--teal) !important; background: rgba(26,122,110,0.07) !important; transform: scale(1.01); }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <span id="toast-icon">✓</span>
+  <span id="toast-msg">Saved</span>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Motor Survey System</h1>
+    <span>AI-Powered Loss Assessment</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('upload')"><span class="icon">🤖</span> AI Document Scan</div>
+    <div class="nav-item" onclick="showPage('claim-details')"><span class="icon">📋</span> Claim Details</div>
+    <div class="nav-item" onclick="showPage('assessment')"><span class="icon">🔍</span> Loss Assessment</div>
+    <div class="nav-section-label">Reports</div>
+    <div class="nav-item" onclick="showPage('spot-survey')"><span class="icon">📍</span> Spot Survey</div>
+    <div class="nav-item" onclick="showPage('survey-report')"><span class="icon">📄</span> Survey Report</div>
+    <div class="nav-item" onclick="showPage('bill-check')"><span class="icon">🧾</span> Bill Check Report</div>
+    <div class="nav-item" onclick="showPage('ri-report')"><span class="icon">🔄</span> RI Report</div>
+    <div class="nav-item" onclick="showPage('fee-bill')"><span class="icon">💰</span> Surveyor Fee Bill</div>
+    <div class="nav-section-label">Config</div>
+    <div class="nav-item" onclick="showPage('surveyor-profile')"><span class="icon">👤</span> Surveyor Profile</div>
+    <div class="nav-item" onclick="showPage('dep-schedule')"><span class="icon">📉</span> Depreciation Schedule</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div>IRDAI Compliant · India · v2.0</div>
+    <div style="margin-top:3px; color:rgba(255,255,255,0.45);">Claude AI · Motor/Marine/Engg</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+  <header class="topbar">
+    <div>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-meta" id="page-meta">Motor Insurance Survey & Loss Assessment</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ai btn-sm" onclick="showPage('upload')">🤖 AI Scan Docs</button>
+      <button class="btn btn-secondary btn-sm" onclick="saveAll()">💾 Save</button>
+      <button class="btn btn-gold btn-sm" onclick="generateAllReports()">📄 Generate Reports</button>
+    </div>
+  </header>
+
+  <div class="page-body">
+
+    <!-- ====== DASHBOARD ====== -->
+    <div id="page-dashboard" class="tab-panel active">
+      <div class="stats-grid">
+        <div class="stat-card accent">
+          <div class="stat-label">Claim Reference</div>
+          <div class="stat-value" id="dash-ref" style="font-size:1.1rem; margin-top:6px;">—</div>
+          <div class="stat-sub">Report No.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Estimate Amount</div>
+          <div class="stat-value" id="dash-est">₹ —</div>
+          <div class="stat-sub">Garage Estimate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Assessed Amount</div>
+          <div class="stat-value" id="dash-assessed">₹ —</div>
+          <div class="stat-sub">Surveyor Assessed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Net Liability</div>
+          <div class="stat-value" id="dash-net">₹ —</div>
+          <div class="stat-sub">After deductions</div>
+        </div>
+      </div>
+
+      <!-- Statistics Section -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px;" id="stats-section">
+        <div class="stat-card">
+          <div class="stat-label">This Month</div>
+          <div class="stat-value" id="stat-month-count">0</div>
+          <div class="stat-sub">Surveys Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Assessed</div>
+          <div class="stat-value" id="stat-total-assessed">₹ 0</div>
+          <div class="stat-sub">This Month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Assessment</div>
+          <div class="stat-value" id="stat-avg-assessed">₹ 0</div>
+          <div class="stat-sub">Per Vehicle</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Saved</div>
+          <div class="stat-value" id="stat-total-reports">0</div>
+          <div class="stat-sub">All Reports</div>
+        </div>
+      </div>
+
+      <!-- Recent Reports Section -->
+      <div class="card" style="margin-top:18px;">
+        <div class="card-header">
+          <h3>📋 Recent Reports</h3>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="exportToExcel()" title="Export all reports to Excel">📤 Export</button>
+            <button class="btn btn-secondary btn-sm" onclick="backupToGoogleSheets()" title="Backup to Google Sheets">☁️ Backup</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearCurrentReport()">🆕 New</button>
+            <button class="btn btn-secondary btn-sm" onclick="refreshReportsList()">🔄</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <!-- Search Bar -->
+          <div style="padding:14px;border-bottom:1px solid var(--border);">
+            <div style="position:relative;">
+              <input 
+                type="text" 
+                id="reports-search" 
+                class="form-input" 
+                placeholder="🔍 Search by vehicle, claim no., insured name, or report no..."
+                style="width:100%;padding-left:16px;"
+                onkeyup="filterReports()"
+              />
+              <button 
+                class="btn btn-secondary btn-sm" 
+                onclick="document.getElementById('reports-search').value='';filterReports();" 
+                style="position:absolute;right:8px;top:4px;padding:4px 10px;"
+                title="Clear search"
+              >✕</button>
+            </div>
+          </div>
+          
+          <div id="reports-list-container">
+            <div style="padding:24px;text-align:center;color:var(--muted);">
+              <div style="font-size:2.5rem;margin-bottom:10px;">📄</div>
+              <div style="font-size:0.88rem;font-weight:500;">No saved reports yet</div>
+              <div style="font-size:0.76rem;margin-top:6px;">Complete and save a survey to see it here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-top:18px;">
+        <div class="card">
+          <div class="card-header"><h3>Claim Summary</h3><span class="badge" id="dash-badge">Draft</span></div>
+          <div class="card-body">
+            <table style="width:100%; font-size:0.83rem; border-collapse:collapse;">
+              <tr><td style="padding:6px 0; color:var(--muted); width:42%;">Insured Name</td><td id="ds-insured" style="font-weight:500;">—</td></tr>
+              <tr><td style="padding:6px 0; color:var(--muted);">Vehicle No.</td><td id="ds-vehicle" style="font-weight:500; font-family:'DM Mono',monospace;">—</td></tr>
+              <tr><td style="padding:6px 0; color:var(--muted);">Make / Model</td><td id="ds-model">—</td></tr>
+              <tr><td style="padding:6px 0; color:var(--muted);">Policy No.</td><td id="ds-policy" style="font-family:'DM Mono',monospace; font-size:0.76rem;">—</td></tr>
+              <tr><td style="padding:6px 0; color:var(--muted);">Claim No.</td><td id="ds-claim" style="font-family:'DM Mono',monospace; font-size:0.76rem;">—</td></tr>
+              <tr><td style="padding:6px 0; color:var(--muted);">Date of Accident</td><td id="ds-doa">—</td></tr>
+              <tr><td style="padding:6px 0; color:var(--muted);">Place of Survey</td><td id="ds-pos">—</td></tr>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="card mb-4">
+            <div class="card-header"><h3>AI Extraction Status</h3></div>
+            <div class="card-body" style="padding:14px;">
+              <div style="display:flex; flex-direction:column; gap:8px;" id="ai-status-list">
+                <div class="flex gap-2" style="align-items:center;"><span class="status-dot" id="ai-rc" style="background:#e5e7eb;"></span><span style="font-size:0.8rem;">RC Book</span></div>
+                <div class="flex gap-2" style="align-items:center;"><span class="status-dot" id="ai-dl" style="background:#e5e7eb;"></span><span style="font-size:0.8rem;">Driving Licence</span></div>
+                <div class="flex gap-2" style="align-items:center;"><span class="status-dot" id="ai-pol" style="background:#e5e7eb;"></span><span style="font-size:0.8rem;">Policy Document</span></div>
+                <div class="flex gap-2" style="align-items:center;"><span class="status-dot" id="ai-claim" style="background:#e5e7eb;"></span><span style="font-size:0.8rem;">Claim Form</span></div>
+                <div class="flex gap-2" style="align-items:center;"><span class="status-dot" id="ai-est" style="background:#e5e7eb;"></span><span style="font-size:0.8rem;">Repair Estimate</span></div>
+                <div class="flex gap-2" style="align-items:center;"><span class="status-dot" id="ai-photos" style="background:#e5e7eb;"></span><span style="font-size:0.8rem;">Damage Photos</span></div>
+              </div>
+              <button class="btn btn-ai" style="width:100%;margin-top:14px;justify-content:center;" onclick="showPage('upload')">🤖 Go to AI Document Scan</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Quick Actions</h3></div>
+            <div class="card-body" style="display:flex; flex-direction:column; gap:7px; padding:14px;">
+              <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="showPage('upload')">🤖 Upload & Auto-Extract Docs</button>
+              <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="showPage('assessment')">🔍 Open Assessment Sheet</button>
+              <button class="btn btn-gold" style="width:100%;justify-content:flex-start;" onclick="generateAllReports()">📄 Generate All Reports</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== AI DOCUMENT SCAN ====== -->
+    <div id="page-upload" class="tab-panel">
+      <div class="alert alert-ai" style="margin-bottom:18px;">
+        <span>🤖</span>
+        <div>
+          <strong>AI-Powered Document Extraction</strong> — Upload photos or scanned PDFs below.
+          Claude AI will instantly read and auto-fill all form fields. Review and edit extracted values before generating reports.
+        </div>
+      </div>
+
+      <div class="doc-upload-grid">
+
+        <!-- RC BOOK -->
+        <div class="doc-card" id="card-rc"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'rc')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">🚗</span>
+            <div><div class="doc-type-label">RC Book</div><div class="doc-type-sub">Vehicle Registration Certificate</div></div>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('rc')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> RC Book image/PDF</div>
+          </div>
+          <input type="file" id="upload-rc" accept=".jpg,.jpeg,.png,.pdf" style="display:none" onchange="handleDocFile(this,'rc')"/>
+          <div class="doc-file-preview" id="preview-rc"></div>
+          <div class="doc-status" id="status-rc"></div>
+          <div class="doc-extracted-fields" id="fields-rc"></div>
+        </div>
+
+        <!-- DRIVING LICENCE -->
+        <div class="doc-card" id="card-dl"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'dl')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">🪪</span>
+            <div><div class="doc-type-label">Driving Licence</div><div class="doc-type-sub">Driver's MDL Details</div></div>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('dl')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> DL image/PDF</div>
+          </div>
+          <input type="file" id="upload-dl" accept=".jpg,.jpeg,.png,.pdf" style="display:none" onchange="handleDocFile(this,'dl')"/>
+          <div class="doc-file-preview" id="preview-dl"></div>
+          <div class="doc-status" id="status-dl"></div>
+          <div class="doc-extracted-fields" id="fields-dl"></div>
+        </div>
+
+        <!-- INSURANCE POLICY -->
+        <div class="doc-card" id="card-policy"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'policy')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">📜</span>
+            <div><div class="doc-type-label">Insurance Policy</div><div class="doc-type-sub">Policy schedule & terms</div></div>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('policy')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> Policy document</div>
+          </div>
+          <input type="file" id="upload-policy" accept=".jpg,.jpeg,.png,.pdf" style="display:none" onchange="handleDocFile(this,'policy')"/>
+          <div class="doc-file-preview" id="preview-policy"></div>
+          <div class="doc-status" id="status-policy"></div>
+          <div class="doc-extracted-fields" id="fields-policy"></div>
+        </div>
+
+        <!-- CLAIM FORM -->
+        <div class="doc-card" id="card-claim"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'claim')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">📝</span>
+            <div><div class="doc-type-label">Claim Form</div><div class="doc-type-sub">Motor claim intimation form</div></div>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('claim')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> Claim form image/PDF</div>
+          </div>
+          <input type="file" id="upload-claim" accept=".jpg,.jpeg,.png,.pdf" style="display:none" onchange="handleDocFile(this,'claim')"/>
+          <div class="doc-file-preview" id="preview-claim"></div>
+          <div class="doc-status" id="status-claim"></div>
+          <div class="doc-extracted-fields" id="fields-claim"></div>
+        </div>
+
+        <!-- REPAIR ESTIMATE -->
+        <div class="doc-card" id="card-estimate"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'estimate')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">🔧</span>
+            <div><div class="doc-type-label">Repair Estimate / Bill</div><div class="doc-type-sub">Workshop repair estimate</div></div>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('estimate')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> Estimate / Tax Invoice</div>
+          </div>
+          <input type="file" id="upload-estimate" accept=".jpg,.jpeg,.png,.pdf" style="display:none" onchange="handleDocFile(this,'estimate')"/>
+          <div class="doc-file-preview" id="preview-estimate"></div>
+          <div class="doc-status" id="status-estimate"></div>
+          <div class="doc-extracted-fields" id="fields-estimate"></div>
+        </div>
+
+        <!-- DAMAGE PHOTOS -->
+        <div class="doc-card" id="card-photos"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'photos')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">📸</span>
+            <div><div class="doc-type-label">Vehicle Damage Photos</div><div class="doc-type-sub">Pre/post repair survey + AI Analysis</div></div>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('photos')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> Photos/PDF (multiple)</div>
+          </div>
+          <input type="file" id="upload-photos" accept=".jpg,.jpeg,.png,.pdf" multiple style="display:none" onchange="handleDocFile(this,'photos')"/>
+          <div class="doc-file-preview" id="preview-photos"></div>
+          <div class="doc-status" id="status-photos"></div>
+          <div class="doc-extracted-fields" id="fields-photos"></div>
+          <div style="margin:0 12px 12px;" id="damage-analysis-btn" class="hidden">
+            <button class="btn btn-ai btn-sm" style="width:100%;justify-content:center;" onclick="analyzeSavedPhotos()">🔍 AI Damage Analysis</button>
+          </div>
+        </div>
+
+      </div><!-- end doc-upload-grid -->
+
+      <!-- OVERALL PROGRESS -->
+      <div class="card mt-4" style="margin-top:18px;" id="extraction-progress-card" style="display:none;">
+        <div class="card-header"><h3>Extraction Progress</h3></div>
+        <div class="card-body">
+          <div id="extraction-log" style="font-size:0.8rem; max-height:180px; overflow-y:auto; font-family:'DM Mono',monospace; color:var(--navy2); line-height:1.8;"></div>
+          <div id="go-to-form-btn" class="hidden" style="margin-top:14px;">
+            <button class="btn btn-primary" onclick="showPage('claim-details')">✅ Review Extracted Data →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== CLAIM DETAILS ====== -->
+    <div id="page-claim-details" class="tab-panel">
+      <div class="alert alert-ai">
+        <span>🤖</span>
+        <span>Fields marked with <span class="ai-badge">✨ AI</span> were auto-filled from uploaded documents. Review and correct as needed before generating reports.</span>
+      </div>
+      <div class="alert alert-info" style="margin-bottom:14px;">
+        <span>🎤</span>
+        <span><strong>Voice Input with AI Verification</strong> — Click the microphone button on any field to speak your input. Claude AI will verify, format, and clean up your speech before filling the field.</span>
+      </div>
+
+      <div class="card mb-6">
+        <div class="card-header"><h3>Policy & Claim Information</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Report No.</label><input class="form-input" id="f-report-no" placeholder="e.g. MOTOR-785/2026"/></div>
+            <div class="form-group"><label class="form-label">Report Date</label><input class="form-input" type="date" id="f-report-date"/></div>
+            <div class="form-group"><label class="form-label">Policy No.</label><input class="form-input" id="f-policy-no" placeholder="Policy number"/></div>
+            <div class="form-group"><label class="form-label">Claim No.</label><input class="form-input" id="f-claim-no" placeholder="Claim reference"/></div>
+            <div class="form-group"><label class="form-label">Policy Period From</label><input class="form-input" type="date" id="f-policy-from"/></div>
+            <div class="form-group"><label class="form-label">Policy Period To</label><input class="form-input" type="date" id="f-policy-to"/></div>
+            <div class="form-group"><label class="form-label">IDV (₹)</label><input class="form-input" id="f-idv" type="number"/></div>
+            <div class="form-group"><label class="form-label">Type of Policy</label><select class="form-select" id="f-policy-type"><option>Goods Carrying Vehicle Package Policy</option><option>Private Car Package Policy</option><option>Two Wheeler Package Policy</option><option>Commercial Vehicle Package Policy</option><option>Standalone OD Policy</option></select></div>
+            <div class="form-group"><label class="form-label">Depreciation Type</label><div class="policy-toggle" id="dep-toggle"><button class="active" onclick="setDepType('nil')">Nil Dep (0%)</button><button onclick="setDepType('standard')">Standard Dep</button></div></div>
+            <div class="form-group"><label class="form-label">Policy Issuing Office</label><input class="form-input" id="f-policy-office"/></div>
+            <div class="form-group span-2"><label class="form-label">Insurer Name &amp; Address</label><input class="form-input" id="f-insurer" placeholder="Insurance company name and address"/></div>
+            <div class="form-group"><label class="form-label">Appointing Office</label><input class="form-input" id="f-appt-office"/></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-6">
+        <div class="card-header"><h3>Insured Details</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Insured Name</label><input class="form-input" id="f-insured-name"/></div>
+            <div class="form-group"><label class="form-label">Mobile No.</label><input class="form-input" id="f-insured-mobile"/></div>
+            <div class="form-group span-2"><label class="form-label">Address</label><input class="form-input" id="f-insured-addr"/></div>
+            <div class="form-group"><label class="form-label">HPA / Finance With</label><input class="form-input" id="f-hpa"/></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-6">
+        <div class="card-header"><h3>Vehicle Particulars</h3><span class="badge">RC Verified</span></div>
+        <div class="card-body">
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Registration No.</label><input class="form-input" id="f-reg-no" style="text-transform:uppercase;"/></div>
+            <div class="form-group"><label class="form-label">Date of Registration</label><input class="form-input" type="date" id="f-reg-date"/></div>
+            <div class="form-group"><label class="form-label">Class of Vehicle</label><select class="form-select" id="f-veh-class"><option>LGV</option><option>HGV</option><option>Car</option><option>Two Wheeler</option><option>Bus</option><option>Taxi</option></select></div>
+            <div class="form-group"><label class="form-label">Make</label><input class="form-input" id="f-make"/></div>
+            <div class="form-group"><label class="form-label">Model / Variant</label><input class="form-input" id="f-model"/></div>
+            <div class="form-group"><label class="form-label">Year of Manufacture</label><input class="form-input" id="f-year" type="number"/></div>
+            <div class="form-group"><label class="form-label">Chassis No.</label><input class="form-input" id="f-chassis" style="text-transform:uppercase;"/></div>
+            <div class="form-group"><label class="form-label">Engine No.</label><input class="form-input" id="f-engine" style="text-transform:uppercase;"/></div>
+            <div class="form-group"><label class="form-label">Cubic Capacity / HP</label><input class="form-input" id="f-cc"/></div>
+            <div class="form-group"><label class="form-label">Type of Body</label><input class="form-input" id="f-body-type"/></div>
+            <div class="form-group"><label class="form-label">Colour</label><input class="form-input" id="f-colour"/></div>
+            <div class="form-group"><label class="form-label">Fuel Type</label><select class="form-select" id="f-fuel"><option>Diesel</option><option>Petrol</option><option>CNG</option><option>Electric</option><option>Hybrid</option></select></div>
+            <div class="form-group"><label class="form-label">Odometer (KM)</label><input class="form-input" id="f-odo" type="number"/></div>
+            <div class="form-group"><label class="form-label">RLW / Seating Capacity</label><input class="form-input" id="f-rlw"/></div>
+            <div class="form-group"><label class="form-label">Pre-accident Condition</label><select class="form-select" id="f-condition"><option>New</option><option>Good</option><option>Fair</option><option>Poor</option></select></div>
+            <div class="form-group"><label class="form-label">Fitness Cert No.</label><input class="form-input" id="f-fitness"/></div>
+            <div class="form-group"><label class="form-label">Route / Area</label><input class="form-input" id="f-route"/></div>
+            <div class="form-group"><label class="form-label">Road Tax</label><select class="form-select" id="f-roadtax"><option>LTT</option><option>Lifetime</option><option>Annual</option></select></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-6">
+        <div class="card-header"><h3>Driver's Particulars</h3><span class="badge">MDL Verified</span></div>
+        <div class="card-body">
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Driver Name</label><input class="form-input" id="f-driver-name"/></div>
+            <div class="form-group"><label class="form-label">MDL No.</label><input class="form-input" id="f-mdl"/></div>
+            <div class="form-group"><label class="form-label">Date of Birth</label><input class="form-input" type="date" id="f-dob"/></div>
+            <div class="form-group"><label class="form-label">Date of Issue</label><input class="form-input" type="date" id="f-dl-issue"/></div>
+            <div class="form-group"><label class="form-label">Validity</label><input class="form-input" id="f-dl-valid"/></div>
+            <div class="form-group"><label class="form-label">Issuing Authority</label><input class="form-input" id="f-dl-auth"/></div>
+            <div class="form-group"><label class="form-label">Type of License</label><input class="form-input" id="f-dl-type"/></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-6">
+        <div class="card-header"><h3>Accident &amp; Survey Details</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Date &amp; Time of Accident</label><input class="form-input" id="f-doa" type="datetime-local"/></div>
+            <div class="form-group"><label class="form-label">Place of Accident</label><input class="form-input" id="f-poa"/></div>
+            <div class="form-group"><label class="form-label">Date of Survey Allotment</label><input class="form-input" type="date" id="f-allot-date"/></div>
+            <div class="form-group"><label class="form-label">Date of Survey</label><input class="form-input" id="f-survey-date"/></div>
+            <div class="form-group span-2"><label class="form-label">Place of Survey (Workshop)</label><input class="form-input" id="f-survey-place"/></div>
+            <div class="form-group span-2"><label class="form-label">Cause &amp; Nature of Accident</label><textarea class="form-textarea" id="f-cause"></textarea></div>
+            <div class="form-group"><label class="form-label">Third Party Details</label><input class="form-input" id="f-tp" placeholder="Nil or details"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signature & Stamp -->
+      <div class="card mb-6">
+        <div class="card-header"><h3>🔏 Surveyor Signature &amp; Stamp</h3></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+            <div>
+              <div class="form-label mb-4" style="margin-bottom:8px;">Signature Image</div>
+              <div class="sig-area" onclick="document.getElementById('sig-upload').click()">
+                <div id="sig-placeholder"><div style="font-size:1.8rem;margin-bottom:5px;">✍️</div><div style="font-size:0.78rem;color:var(--muted);">Click to upload signature</div></div>
+                <img id="sig-preview-img" class="sig-preview hidden"/>
+              </div>
+              <input type="file" id="sig-upload" accept=".png,.jpg,.jpeg" style="display:none" onchange="handleSigUpload(this)"/>
+            </div>
+            <div>
+              <div class="form-label mb-4" style="margin-bottom:8px;">Stamp Image</div>
+              <div class="sig-area" onclick="document.getElementById('stamp-upload').click()">
+                <div id="stamp-placeholder"><div style="font-size:1.8rem;margin-bottom:5px;">🔵</div><div style="font-size:0.78rem;color:var(--muted);">Click to upload stamp</div></div>
+                <img id="stamp-preview-img" class="sig-preview hidden"/>
+              </div>
+              <input type="file" id="stamp-upload" accept=".png,.jpg,.jpeg" style="display:none" onchange="handleStampUpload(this)"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="showPage('upload')">← Back to Document Scan</button>
+        <button class="btn btn-primary" onclick="showPage('assessment')">Save &amp; Continue to Assessment →</button>
+      </div>
+    </div>
+
+    <!-- ====== ASSESSMENT ====== -->
+    <div id="page-assessment" class="tab-panel">
+      <div class="flex-between mb-4">
+        <div class="alert alert-ai" style="margin:0;flex:1;margin-right:14px;">
+          <span>⚡</span>
+          <span>If a Repair Estimate was uploaded, line items are <strong>auto-filled from AI extraction</strong>. Enter Assessed amounts to complete the assessment.</span>
+        </div>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-secondary btn-sm" onclick="addAssessRow('parts')">+ Part</button>
+          <button class="btn btn-secondary btn-sm" onclick="addAssessRow('labour')">+ Labour</button>
+          <button class="btn btn-secondary btn-sm" onclick="addAssessRow('paint')">+ Paint</button>
+        </div>
+      </div>
+
+      <div class="card mb-6">
+        <div class="card-header"><h3>Assessment Sheet</h3><span class="badge" id="assess-policy-badge">0% Dep. Policy</span></div>
+        <div class="card-body" style="padding:0;">
+          <div class="assess-table-wrap">
+            <table class="assess-table" id="assess-table">
+              <thead>
+                <tr>
+                  <th style="width:30px;">Sr.</th><th>Particulars</th>
+                  <th class="text-center">GST%</th>
+                  <th class="text-center" colspan="2">Estimated</th>
+                  <th class="text-center" colspan="3">Assessed</th>
+                  <th class="text-center" style="width:60px;">Del</th>
+                </tr>
+                <tr style="background:#0d2035;">
+                  <th></th><th></th><th></th>
+                  <th class="text-center" style="background:#0d2035;font-size:0.65rem;">₹ Amt</th>
+                  <th class="text-center" style="background:#0d2035;font-size:0.65rem;">Status</th>
+                  <th class="text-center" style="background:#1a4a30;font-size:0.65rem;">Metal</th>
+                  <th class="text-center" style="background:#1a3a4a;font-size:0.65rem;">Plastic/Rub</th>
+                  <th class="text-center" style="background:#2a2a1a;font-size:0.65rem;">Glass 0%</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="assess-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div class="summary-panel">
+          <div style="font-family:'Crimson Pro',serif;font-size:1.05rem;font-weight:600;margin-bottom:12px;color:var(--gold-light);">Assessment Summary</div>
+          <div class="summary-row"><span class="summary-label">I) Total Parts (Base)</span><span class="summary-val" id="sum-parts-base">₹ 0.00</span></div>
+          <div class="summary-row"><span class="summary-label">+ CGST 9%</span><span class="summary-val" id="sum-parts-cgst">₹ 0.00</span></div>
+          <div class="summary-row"><span class="summary-label">+ SGST 9%</span><span class="summary-val" id="sum-parts-sgst">₹ 0.00</span></div>
+          <div class="summary-row" style="border-top:2px solid rgba(255,255,255,0.18);padding-top:8px;"><span class="summary-label" style="font-weight:600;">Total Parts (incl. GST)</span><span class="summary-val" id="sum-parts-total">₹ 0.00</span></div>
+          <div class="summary-row"><span class="summary-label">II) Total Labour (Base)</span><span class="summary-val" id="sum-labour-base">₹ 0.00</span></div>
+          <div class="summary-row"><span class="summary-label">+ GST 18%</span><span class="summary-val" id="sum-labour-gst">₹ 0.00</span></div>
+          <div class="summary-row" style="border-top:2px solid rgba(255,255,255,0.18);padding-top:8px;"><span class="summary-label" style="font-weight:600;">Total Labour (incl. GST)</span><span class="summary-val" id="sum-labour-total">₹ 0.00</span></div>
+          <div class="summary-row"><span class="summary-label">Grand Total (I+II)</span><span class="summary-val" id="sum-grand">₹ 0.00</span></div>
+          <div class="summary-row"><span class="summary-label">Less: Salvage ₹</span>
+            <span><input id="sum-salvage" type="number" value="0" style="width:65px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.4);color:#fff;font-family:'DM Mono',monospace;font-size:0.85rem;text-align:right;" onchange="recalcSummary()"/></span></div>
+          <div class="summary-row"><span class="summary-label">Less: Excess ₹</span>
+            <span><input id="sum-excess" type="number" value="500" style="width:65px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.4);color:#fff;font-family:'DM Mono',monospace;font-size:0.85rem;text-align:right;" onchange="recalcSummary()"/></span></div>
+          <div class="summary-total-row">
+            <span class="summary-total-label">NET ASSESSED LOSS</span>
+            <span class="summary-total-val" id="sum-net">₹ 0.00</span>
+          </div>
+          <div style="margin-top:8px;font-size:0.72rem;color:rgba(255,255,255,0.45);font-style:italic;" id="sum-inwords">—</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card">
+            <div class="card-header"><h3>Estimate vs Assessed</h3></div>
+            <div class="card-body">
+              <table style="width:100%;font-size:0.82rem;border-collapse:collapse;">
+                <tr><td style="padding:5px 0;color:var(--muted);">Original Estimate</td><td class="text-right mono" id="cmp-est">₹ 0.00</td></tr>
+                <tr><td style="padding:5px 0;color:var(--muted);">Assessed Amount</td><td class="text-right mono" style="color:var(--teal);" id="cmp-ass">₹ 0.00</td></tr>
+                <tr style="border-top:1px solid var(--border);"><td style="padding:7px 0;font-weight:600;">Difference</td><td class="text-right mono" style="color:var(--red);font-weight:600;" id="cmp-diff">₹ 0.00</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Parts Breakdown</h3></div>
+            <div class="card-body">
+              <table style="width:100%;font-size:0.82rem;border-collapse:collapse;">
+                <tr><td style="padding:5px 0;color:var(--muted);">Nil Dep. Metal</td><td class="text-right mono" id="bd-metal">₹ 0.00</td></tr>
+                <tr><td style="padding:5px 0;color:var(--muted);">Nil Dep. Plastic/Rubber</td><td class="text-right mono" id="bd-plastic">₹ 0.00</td></tr>
+                <tr><td style="padding:5px 0;color:var(--muted);">Glass 0%</td><td class="text-right mono" id="bd-glass">₹ 0.00</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== SPOT SURVEY ====== -->
+    <div id="page-spot-survey" class="tab-panel">
+      <div class="flex-between mb-4">
+        <div class="alert alert-info" style="margin:0;flex:1;margin-right:14px;">
+          <span>📍</span>
+          <span><strong>Spot Survey Report</strong> — On-the-spot accident inspection. Conducted at accident location before vehicle moves to garage.</span>
+        </div>
+        <button class="btn btn-gold" onclick="generateSpotSurveyPDF()">📄 Generate PDF</button>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h3>Spot Survey Details</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Report No.</label>
+              <input class="form-input" id="spot-report-no" placeholder="e.g. SPO/463/2025"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Report</label>
+              <input class="form-input" type="date" id="spot-report-date"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Allotment</label>
+              <input class="form-input" type="date" id="spot-allot-date"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date & Time of Survey</label>
+              <input class="form-input" type="datetime-local" id="spot-survey-datetime"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h3>Accident Details</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Date & Time of Accident</label>
+              <input class="form-input" type="datetime-local" id="spot-accident-datetime"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Place of Accident</label>
+              <input class="form-input" id="spot-accident-place" placeholder="Location details"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Place of Survey</label>
+              <input class="form-input" id="spot-survey-place" placeholder="Survey location"/>
+            </div>
+            <div class="form-group span-2">
+              <label class="form-label">Cause & Nature of Accident</label>
+              <textarea class="form-textarea" id="spot-accident-cause" rows="3" placeholder="Describe how the accident occurred..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h3>Driver's Particulars & DL Verification</h3>
+          <span class="badge" id="dl-validity-badge" style="background:var(--muted);">Not Verified</span>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-ai" style="margin-bottom:14px;">
+            <span>⚠️</span>
+            <span><strong>DL Validity Check Required:</strong> If driving licence is invalid/expired, add remarks in the report.</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Driver Name</label>
+              <input class="form-input" id="spot-driver-name" placeholder="Full name" onchange="checkDLValidity()"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">MDL Number</label>
+              <input class="form-input" id="spot-mdl-no" placeholder="e.g. RJ0520160011747" onchange="checkDLValidity()"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Issuing Authority</label>
+              <input class="form-input" id="spot-dl-authority" placeholder="RTO/Sub Office"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Issue</label>
+              <input class="form-input" type="date" id="spot-dl-issue" onchange="checkDLValidity()"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valid Upto</label>
+              <input class="form-input" type="date" id="spot-dl-valid" onchange="checkDLValidity()"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type of Licence</label>
+              <input class="form-input" id="spot-dl-type" placeholder="LMV, MCWG, TRANS"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">MDL Verification Status</label>
+              <select class="form-select" id="spot-mdl-verified" onchange="checkDLValidity()">
+                <option value="verified">Original MDL Verified</option>
+                <option value="photocopy">Photocopy Verified</option>
+                <option value="not-available">Not Available</option>
+              </select>
+            </div>
+            <div class="form-group span-2" id="dl-invalid-remarks-section" style="display:none;">
+              <label class="form-label" style="color:var(--red);font-weight:600;">⚠️ DL Invalid - Mandatory Remarks</label>
+              <textarea class="form-textarea" id="spot-dl-invalid-remarks" rows="2" placeholder="Explain DL invalidity issue (expired, wrong class, not present, etc.)..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h3>Load/Challan Details</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">CN/Challan Number</label>
+              <input class="form-input" id="spot-cn-no" placeholder="e.g. 340867"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">CN Date</label>
+              <input class="form-input" type="date" id="spot-cn-date"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Load Carrying Capacity (KG)</label>
+              <input class="form-input" type="number" id="spot-load-capacity" placeholder="e.g. 20350"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Actual Load Weight (KG)</label>
+              <input class="form-input" type="number" id="spot-actual-load" placeholder="e.g. 17500"/>
+            </div>
+            <div class="form-group span-2">
+              <label class="form-label">Load Description</label>
+              <textarea class="form-textarea" id="spot-load-desc" rows="2" placeholder="Details of load/cargo (items, quantity, from-to locations)..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h3>Police Case Particulars</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Accident Reported to Police?</label>
+              <select class="form-select" id="spot-police-reported">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Police Station Name</label>
+              <input class="form-input" id="spot-police-station" placeholder="Station name"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Station Diary No.</label>
+              <input class="form-input" id="spot-diary-no" placeholder="FIR/Diary number"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Panchanama Done?</label>
+              <select class="form-select" id="spot-panchanama">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h3>Third Party Details</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Third Party Involved?</label>
+              <select class="form-select" id="spot-tp-involved">
+                <option value="no">No</option>
+                <option value="tppd">TPPD (Property Damage)</option>
+                <option value="tppi">TPPI (Personal Injury)</option>
+                <option value="both">Both TPPD & TPPI</option>
+              </select>
+            </div>
+            <div class="form-group span-2">
+              <label class="form-label">Third Party Details</label>
+              <textarea class="form-textarea" id="spot-tp-details" rows="2" placeholder="Vehicle number, driver details, injury/damage details..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h3>Damage Assessment at Spot</h3></div>
+        <div class="card-body">
+          <div class="alert alert-warning" style="margin-bottom:14px;">
+            <span>📸</span>
+            <span>Document all visible damages. Hidden damages may be found during garage inspection.</span>
+          </div>
+          
+          <!-- Damage Summary -->
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:18px;">
+            <div class="form-group">
+              <label class="form-label">Damage Severity</label>
+              <select class="form-select" id="spot-damage-severity">
+                <option value="minor">Minor</option>
+                <option value="moderate">Moderate</option>
+                <option value="major">Major</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Airbags Deployed</label>
+              <select class="form-select" id="spot-airbags">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vehicle Drivable</label>
+              <select class="form-select" id="spot-drivable">
+                <option value="yes">Yes</option>
+                <option value="no">No — Towed</option>
+                <option value="limited">Limited — Cautiously</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Component Damage Table -->
+          <div style="background:var(--navy);color:white;padding:10px 14px;border-radius:6px 6px 0 0;display:grid;grid-template-columns:200px 1fr 50px;gap:12px;font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">
+            <div>System / Component</div>
+            <div>Damage Observed at Spot</div>
+            <div>Action</div>
+          </div>
+          
+          <div id="spot-damage-rows" style="border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;">
+            <!-- Rows will be rendered here -->
+          </div>
+          
+          <button class="btn btn-secondary" style="margin-top:12px;" onclick="addSpotDamageRow()">+ Add Component</button>
+          
+          <div class="form-group" style="margin-top:18px;">
+            <label class="form-label">Additional Comments/Recommendations</label>
+            <textarea class="form-textarea" id="spot-comments" rows="3" placeholder="Vehicle will be shifted to... Garage inspection required for... Any hidden damages to be noted during dismantling..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-preview">
+        <div class="report-header-bar"><span>Spot Survey Report — Preview</span></div>
+        <div class="report-doc" id="spot-survey-html">
+          <div style="text-align:center;padding:36px;color:var(--muted);">
+            <button class="btn btn-primary" onclick="refreshSpotSurvey()">Generate Preview</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== SURVEY REPORT ====== -->
+    <div id="page-survey-report" class="tab-panel">
+      <div class="flex-between mb-4">
+        <div class="alert alert-success" style="margin:0;flex:1;margin-right:14px;"><span>✅</span><span>Final Survey Report preview. Click <strong>Generate PDF</strong> to download.</span></div>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-secondary" onclick="refreshReportPreview()">🔄 Refresh</button>
+          <button class="btn btn-gold btn-lg" onclick="generateSurveyReportPDF()">📄 Generate PDF</button>
+        </div>
+      </div>
+      <div class="report-preview">
+        <div class="report-header-bar"><span>Final Survey Report — Preview</span><span id="rp-report-no">—</span></div>
+        <div class="report-doc" id="survey-report-html"><div style="text-align:center;padding:36px;color:var(--muted);"><div style="font-size:1.8rem;margin-bottom:10px;">📋</div><div>Fill in claim details to preview</div><button class="btn btn-primary mt-4" style="margin-top:14px;" onclick="refreshReportPreview()">Generate Preview</button></div></div>
+      </div>
+    </div>
+
+    <!-- ====== BILL CHECK ====== -->
+    <div id="page-bill-check" class="tab-panel">
+      <div class="flex-between mb-4">
+        <div class="alert alert-info" style="margin:0;flex:1;margin-right:14px;"><span>ℹ️</span><span>Bill Check Report — Post-repair verification of actual workshop bill. Verifies parts replaced and repair costs against original survey assessment.</span></div>
+        <button class="btn btn-gold" onclick="generateBillCheckPDF()">📄 Generate PDF</button>
+      </div>
+      <div class="report-preview">
+        <div class="report-header-bar"><span>Bill Check Report — Preview</span></div>
+        <div class="report-doc" id="bill-check-html"><div style="text-align:center;padding:36px;color:var(--muted);"><button class="btn btn-primary" onclick="refreshBillCheck()">Generate Preview</button></div></div>
+      </div>
+    </div>
+
+    <!-- ====== RI REPORT ====== -->
+    <div id="page-ri-report" class="tab-panel">
+      <div class="flex-between mb-4">
+        <div class="alert alert-info" style="margin:0;flex:1;margin-right:14px;"><span>🔄</span><span>Reinspection Report — Post-repair verification. Confirm which parts were actually replaced vs. allowed in survey report.</span></div>
+        <button class="btn btn-gold" onclick="generateRIPDF()">📄 Generate PDF</button>
+      </div>
+      
+      <div class="card mb-4">
+        <div class="card-header"><h3>Reinspection Details</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">RI Ref No.</label><input class="form-input" id="ri-ref" placeholder="e.g. RIN/395/2026"/></div>
+            <div class="form-group"><label class="form-label">Date of Reinspection</label><input class="form-input" type="date" id="ri-date"/></div>
+            <div class="form-group"><label class="form-label">Survey Report Ref</label><input class="form-input" id="ri-survey-ref" placeholder="Original survey report no."/></div>
+            <div class="form-group"><label class="form-label">Date of Survey</label><input class="form-input" type="date" id="ri-survey-date"/></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h3>Parts Replacement Verification</h3>
+          <span class="badge" style="background:rgba(34,169,154,0.2);color:var(--teal-light);">From Survey Report</span>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-ai" style="margin-bottom:14px;">
+            <span>✓</span>
+            <span>Check each part from the original survey report. Mark whether it was actually replaced during repair or not replaced.</span>
+          </div>
+          <div class="assess-table-wrap">
+            <table class="assess-table" id="ri-parts-table">
+              <thead>
+                <tr>
+                  <th style="width:35px;">Sr.</th>
+                  <th>Particulars (From Survey Report)</th>
+                  <th class="text-center" style="width:100px;">Allowed ₹</th>
+                  <th class="text-center" style="width:140px;">Replacement Status</th>
+                  <th style="width:200px;">Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="ri-parts-tbody"></tbody>
+            </table>
+          </div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:12px;" onclick="loadPartsForRI()">🔄 Load Parts from Assessment</button>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h3>Overall Condition After Repair</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Repair Quality</label>
+              <select class="form-select" id="ri-repair-quality">
+                <option value="satisfactory">Satisfactory - As per survey report</option>
+                <option value="good">Good - Better than expected</option>
+                <option value="partial">Partial - Some items pending</option>
+                <option value="unsatisfactory">Unsatisfactory - Not as per survey</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vehicle Condition</label>
+              <select class="form-select" id="ri-vehicle-condition">
+                <option value="roadworthy">Road Worthy - Fit for operation</option>
+                <option value="needs-attention">Needs Minor Attention</option>
+                <option value="not-roadworthy">Not Road Worthy</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Salvage Parts Status</label>
+              <select class="form-select" id="ri-salvage-status">
+                <option value="collected">Salvage parts collected and verified</option>
+                <option value="not-collected">Salvage parts not collected</option>
+                <option value="partial">Partial salvage collected</option>
+                <option value="na">Not Applicable</option>
+              </select>
+            </div>
+            <div class="form-group span-2">
+              <label class="form-label">Additional Observations</label>
+              <textarea class="form-textarea" id="ri-observations" placeholder="Any additional observations about the repair quality, parts replaced, or vehicle condition..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="card" style="margin:0;">
+          <div class="card-header"><h3>Parts Summary</h3></div>
+          <div class="card-body">
+            <table style="width:100%;font-size:0.8rem;border-collapse:collapse;">
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:6px 0;color:var(--muted);">Total Parts Allowed</td>
+                <td class="text-right font-mono" id="ri-total-allowed">0</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:6px 0;color:var(--muted);">Parts Replaced</td>
+                <td class="text-right font-mono" style="color:var(--green);" id="ri-parts-replaced">0</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:6px 0;color:var(--muted);">Parts Not Replaced</td>
+                <td class="text-right font-mono" style="color:var(--red);" id="ri-parts-not-replaced">0</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;font-weight:600;">Replacement Rate</td>
+                <td class="text-right font-mono" style="font-weight:600;color:var(--teal);" id="ri-replacement-rate">0%</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin:0;">
+          <div class="card-header"><h3>Quick Actions</h3></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="showPage('survey-report')">📄 View Original Survey Report</button>
+            <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="showPage('bill-check')">🧾 View Bill Check Report</button>
+            <button class="btn btn-primary" style="width:100%;justify-content:flex-start;" onclick="refreshRIReport()">🔄 Refresh Preview</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-preview">
+        <div class="report-header-bar"><span>Reinspection Report — Preview</span></div>
+        <div class="report-doc" id="ri-report-html"><div style="text-align:center;padding:36px;color:var(--muted);"><button class="btn btn-primary" onclick="refreshRIReport()">Generate Preview</button></div></div>
+      </div>
+    </div>
+
+    <!-- ====== FEE BILL ====== -->
+    <div id="page-fee-bill" class="tab-panel">
+      <div class="flex-between mb-4"><div></div><button class="btn btn-gold" onclick="generateFeeBillPDF()">📄 Generate PDF</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div class="card">
+          <div class="card-header"><h3>Fee Details</h3></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:11px;">
+            <div class="form-group"><label class="form-label">Professional Fee (₹)</label><input class="form-input" id="fee-prof" type="number" value="1500"/></div>
+            <div class="form-group"><label class="form-label">RI Fees (₹)</label><input class="form-input" id="fee-ri" type="number" value="1000"/></div>
+            <div class="form-group"><label class="form-label">Travelling / Conveyance (₹)</label><input class="form-input" id="fee-travel" type="number" value="1000"/></div>
+            <div class="form-group"><label class="form-label">Travel Notes</label><input class="form-input" id="fee-travel-note" value="Local 2 Visits Including R.I"/></div>
+            <div class="form-group"><label class="form-label">Haltage (₹)</label><input class="form-input" id="fee-haltage" type="number" value="0"/></div>
+            <div class="form-group"><label class="form-label">Digital Photos (No.)</label><input class="form-input" id="fee-photos-count" type="number" value="18" onchange="calcFeeTotal()"/></div>
+            <div class="form-group"><label class="form-label">Rate per Photo (₹)</label><input class="form-input" id="fee-photo-rate" type="number" value="10" onchange="calcFeeTotal()"/></div>
+            <div class="form-group"><label class="form-label">Postal / Courier (₹)</label><input class="form-input" id="fee-postal" type="number" value="100" onchange="calcFeeTotal()"/></div>
+          </div>
+        </div>
+        <div>
+          <div class="card mb-4">
+            <div class="card-header"><h3>Summary</h3></div>
+            <div class="card-body">
+              <button class="btn btn-primary btn-sm" style="margin-bottom:12px;" onclick="calcFeeTotal()">🔄 Calculate</button>
+              <table style="width:100%;font-size:0.83rem;border-collapse:collapse;">
+                <tr><td style="padding:6px 0;color:var(--muted);">Professional Fees</td><td class="text-right mono" id="fs-prof">₹ 1,500.00</td></tr>
+                <tr><td style="padding:6px 0;color:var(--muted);">RI Fees</td><td class="text-right mono" id="fs-ri">₹ 1,000.00</td></tr>
+                <tr><td style="padding:6px 0;color:var(--muted);">Travelling</td><td class="text-right mono" id="fs-travel">₹ 1,000.00</td></tr>
+                <tr><td style="padding:6px 0;color:var(--muted);">Photo Charges</td><td class="text-right mono" id="fs-photos">₹ 180.00</td></tr>
+                <tr><td style="padding:6px 0;color:var(--muted);">Postal</td><td class="text-right mono" id="fs-postal">₹ 100.00</td></tr>
+                <tr style="border-top:2px solid var(--border);"><td style="padding:9px 0;font-weight:700;">TOTAL</td><td class="text-right mono" style="font-weight:700;color:var(--teal);" id="fs-total">₹ 3,780.00</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Bank Details</h3></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:9px;">
+              <div class="form-group"><label class="form-label">Bank Name</label><input class="form-input" id="bank-name" value="State Bank Of India"/></div>
+              <div class="form-group"><label class="form-label">A/C No.</label><input class="form-input" id="bank-ac"/></div>
+              <div class="form-group"><label class="form-label">IFSC Code</label><input class="form-input" id="bank-ifsc"/></div>
+              <div class="form-group"><label class="form-label">PAN No.</label><input class="form-input" id="bank-pan"/></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== SURVEYOR PROFILE ====== -->
+    <div id="page-surveyor-profile" class="tab-panel">
+      <div class="card">
+        <div class="card-header"><h3>Surveyor Profile</h3><span class="badge">Auto-fills all reports</span></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="sp-name"/></div>
+            <div class="form-group"><label class="form-label">Qualifications</label><input class="form-input" id="sp-qual" placeholder="e.g. B.Sc., Dip. in Auto Engg."/></div>
+            <div class="form-group"><label class="form-label">Licence No.</label><input class="form-input" id="sp-lic"/></div>
+            <div class="form-group"><label class="form-label">Licence Expiry</label><input class="form-input" id="sp-lic-exp"/></div>
+            <div class="form-group"><label class="form-label">IIISLA No.</label><input class="form-input" id="sp-iiisla"/></div>
+            <div class="form-group"><label class="form-label">Surveyor Code</label><input class="form-input" id="sp-code"/></div>
+            <div class="form-group"><label class="form-label">Categories</label><input class="form-input" id="sp-categories" placeholder="MOTOR, MARINE, ENGG"/></div>
+            <div class="form-group"><label class="form-label">GST No.</label><input class="form-input" id="sp-gst"/></div>
+            <div class="form-group"><label class="form-label">Mobile</label><input class="form-input" id="sp-mobile"/></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="sp-email" type="email"/></div>
+            <div class="form-group span-2"><label class="form-label">Address</label><textarea class="form-textarea" id="sp-addr"></textarea></div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:9px;justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="showToast('Surveyor profile saved!')">💾 Save Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== DEP SCHEDULE ====== -->
+    <div id="page-dep-schedule" class="tab-panel">
+      <div class="alert alert-info mb-4"><span>ℹ️</span><span>IRDAI standard depreciation schedule. Applied when Standard Dep policy is selected.</span></div>
+      <div class="card">
+        <div class="card-header"><h3>IRDAI Depreciation Schedule</h3></div>
+        <div class="card-body">
+          <table class="dep-table">
+            <thead><tr><th>Vehicle Age</th><th>Metal (%)</th><th>Rubber/Plastic (%)</th><th>Fibre (%)</th><th>Glass (%)</th><th>Painting (%)</th></tr></thead>
+            <tbody>
+              <tr><td>≤ 6 months</td><td>Nil</td><td>50%</td><td>30%</td><td>Nil</td><td>Nil</td></tr>
+              <tr><td>6m – 1 yr</td><td>5%</td><td>50%</td><td>30%</td><td>Nil</td><td>Nil</td></tr>
+              <tr><td>1 – 2 yrs</td><td>10%</td><td>50%</td><td>30%</td><td>Nil</td><td>Nil</td></tr>
+              <tr><td>2 – 3 yrs</td><td>15%</td><td>50%</td><td>30%</td><td>Nil</td><td>Nil</td></tr>
+              <tr><td>3 – 4 yrs</td><td>25%</td><td>50%</td><td>30%</td><td>Nil</td><td>Nil</td></tr>
+              <tr><td>4 – 5 yrs</td><td>35%</td><td>50%</td><td>30%</td><td>Nil</td><td>Nil</td></tr>
+              <tr><td>5 – 10 yrs</td><td>40%</td><td>50%</td><td>30%</td><td>Nil</td><td>Nil</td></tr>
+              <tr><td>> 10 yrs</td><td>50%</td><td>50%</td><td>30%</td><td>Nil</td><td>Nil</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end page-body -->
+</main>
+
+<!-- ADD ROW MODAL -->
+<div class="modal-overlay" id="add-row-modal">
+  <div class="modal">
+    <div class="modal-head"><h2 id="modal-title">Add Item</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group mb-4" style="margin-bottom:12px;"><label class="form-label">Description</label><input class="form-input" id="modal-particulars" placeholder="e.g. FRONT DOOR SHELL ASSY LH"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group"><label class="form-label">Estimated Amount (₹)</label><input class="form-input" id="modal-estimated" type="number" placeholder="0.00"/></div>
+        <div class="form-group"><label class="form-label">Part Type</label><select class="form-select" id="modal-part-type"><option value="metal">Nil Dep. Metal</option><option value="plastic">Nil Dep. Plastic/Rubber</option><option value="glass">Glass 0%</option><option value="labour">Labour</option><option value="paint">Painting</option></select></div>
+        <div class="form-group"><label class="form-label">Assessed Amount (₹)</label><input class="form-input" id="modal-assessed" type="number" placeholder="0.00"/></div>
+        <div class="form-group"><label class="form-label">GST %</label><select class="form-select" id="modal-gst"><option value="18">18%</option><option value="12">12%</option><option value="28">28%</option><option value="5">5%</option><option value="0">0%</option></select></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="confirmAddRow()">Add Item</button></div>
+  </div>
+</div>
+
+<!-- VOICE INPUT MODAL -->
+<div class="modal-overlay" id="voice-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>🎤 Voice Input</h2>
+      <button class="modal-close" onclick="closeVoiceModal()">✕</button>
+    </div>
+    <div class="modal-body voice-modal-content">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div id="voice-status" style="font-size:0.85rem;color:var(--muted);margin-bottom:8px;">Click the microphone to start recording</div>
+        <div id="voice-hint" style="font-size:0.75rem;color:var(--gold);margin-bottom:12px;font-style:italic;"></div>
+        <button id="voice-record-btn" class="btn btn-ai btn-lg" onclick="toggleVoiceRecording()" style="width:auto;">
+          <span id="voice-record-icon">🎤</span>
+          <span id="voice-record-text">Start Recording</span>
+        </button>
+      </div>
+      
+      <div id="voice-transcript-section" style="display:none;margin-top:16px;">
+        <div style="background:var(--cream);border-radius:6px;padding:12px;margin-bottom:12px;">
+          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:var(--navy2);margin-bottom:6px;">What you said:</div>
+          <div id="voice-transcript" style="font-size:0.85rem;line-height:1.6;color:var(--text);font-style:italic;"></div>
+        </div>
+      </div>
+
+      <div id="voice-verification-section" style="display:none;margin-top:16px;">
+        <div style="background:#f0fdf8;border:1px solid #bbf7d0;border-radius:6px;padding:12px;">
+          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:var(--green);margin-bottom:8px;">✓ Auto-Formatted:</div>
+          <div id="voice-verified-content" style="font-size:0.85rem;line-height:1.6;color:var(--text);"></div>
+        </div>
+      </div>
+
+      <div id="voice-field-info" style="margin-top:12px;font-size:0.75rem;color:var(--muted);text-align:center;">
+        Filling: <strong id="voice-field-name">—</strong>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeVoiceModal()">Cancel</button>
+      <button class="btn btn-primary" id="voice-apply-btn" onclick="applyVoiceInput()" style="display:none;">Apply to Field</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ============================================================
+// ⚙️ CONFIGURATION - ADD YOUR GOOGLE GEMINI API KEY HERE
+// ============================================================
+const GEMINI_API_KEY = 'AIzaSyCEw6DQXFOnWXZpv-Y_4G9tI0P_JCEu1y4';
+// 
+// 📝 HOW TO GET YOUR FREE GEMINI API KEY:
+// 1. Go to: https://aistudio.google.com/app/apikey
+// 2. Sign in with your Google account (FREE - no credit card needed)
+// 3. Click "Create API Key"
+// 4. Copy the key
+// 5. Replace 'YOUR_GEMINI_API_KEY_HERE' above with your actual key
+//
+// ✅ FREE TIER LIMITS (more than enough for surveys):
+// - 15 requests per minute
+// - 1,500 requests per day
+// - 1 million tokens per month
+//
+// ⚠️ SECURITY WARNING:
+// - Never share this file with your API key in it
+// - Don't commit API keys to public repositories
+// ============================================================
+
+// Helper: call Gemini API
+async function callGemini(parts, maxTokens = 2000) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.1 }
+    })
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(`Gemini API error ${response.status}: ${err.error?.message || response.statusText}`);
+  }
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let depType = 'nil';
+let currentModal = null;
+let assessRows = [];
+let sigDataUrl = null;
+let stampDataUrl = null;
+const aiStatusMap = { rc: false, dl: false, policy: false, claim: false, estimate: false, photos: false };
+
+// Voice input state
+let voiceRecognition = null;
+let isRecording = false;
+let currentVoiceFieldId = null;
+let currentVoiceFieldLabel = null;
+let voiceTranscript = '';
+let voiceVerifiedData = '';
+
+// RI parts tracking
+let riParts = [];
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById('page-' + id);
+  if (panel) panel.classList.add('active');
+  const meta = {
+    dashboard: ['Dashboard', 'Claim overview'],
+    upload: ['AI Document Scan', 'Upload docs for auto field extraction'],
+    'claim-details': ['Claim Details', 'Review and edit extracted data'],
+    assessment: ['Loss Assessment Sheet', 'Itemised assessment'],
+    'survey-report': ['Final Survey Report', '4-page motor survey report'],
+    'bill-check': ['Bill Check Report', 'Parts & labour breakdown'],
+    'ri-report': ['Reinspection Report', 'Post-repair verification'],
+    'fee-bill': ['Surveyor Fee Bill', 'Professional fee invoice'],
+    'surveyor-profile': ['Surveyor Profile', 'Auto-fills all reports'],
+    'dep-schedule': ['Depreciation Schedule', 'IRDAI rates reference']
+  };
+  if (meta[id]) { document.getElementById('page-title').textContent = meta[id][0]; document.getElementById('page-meta').textContent = meta[id][1]; }
+  document.querySelectorAll('.nav-item').forEach(n => { if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + id + "'")) n.classList.add('active'); });
+  updateDashboard();
+}
+
+// ============================================================
+// AI DOCUMENT EXTRACTION VIA CLAUDE API
+// ============================================================
+// ============================================================
+// CLAUDE AI DOCUMENT EXTRACTION PROMPTS
+// ============================================================
+const DOC_PROMPTS = {
+  rc: `You are an expert at reading Indian vehicle RC (Registration Certificate) documents. Extract ALL visible fields from this RC book image. Return ONLY a JSON object with these keys (use empty string if not found):
+{
+  "registration_number": "",
+  "date_of_registration": "",
+  "owner_name": "",
+  "address": "",
+  "make": "",
+  "model": "",
+  "body_type": "",
+  "chassis_number": "",
+  "engine_number": "",
+  "cubic_capacity": "",
+  "colour": "",
+  "fuel": "",
+  "seating_capacity": "",
+  "unladen_weight": "",
+  "gross_weight": "",
+  "class_of_vehicle": "",
+  "fitness_cert_no": "",
+  "fitness_valid_upto": "",
+  "permit_no": "",
+  "route": "",
+  "road_tax": "",
+  "year_of_manufacture": "",
+  "hypothecation": ""
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  dl: `You are an expert at reading Indian Driving Licence (DL/MDL) documents. Extract ALL visible fields. Return ONLY a JSON object:
+{
+  "licence_number": "",
+  "holder_name": "",
+  "father_or_husband_name": "",
+  "date_of_birth": "",
+  "address": "",
+  "date_of_issue": "",
+  "validity_non_transport": "",
+  "validity_transport": "",
+  "issuing_authority": "",
+  "rto": "",
+  "vehicle_classes": "",
+  "badge_no": ""
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  policy: `You are an expert at reading Indian motor insurance policy documents. Extract ALL visible fields. Return ONLY a JSON object:
+{
+  "policy_number": "",
+  "insurer_name": "",
+  "insurer_address": "",
+  "insured_name": "",
+  "insured_address": "",
+  "insured_mobile": "",
+  "registration_number": "",
+  "make_model": "",
+  "chassis_number": "",
+  "engine_number": "",
+  "policy_type": "",
+  "period_from": "",
+  "period_to": "",
+  "idv": "",
+  "premium": "",
+  "hpa_with": "",
+  "policy_issuing_office": "",
+  "nomination": "",
+  "endorsements": ""
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  claim: `You are an expert at reading Indian motor insurance claim forms. Extract ALL visible fields. Return ONLY a JSON object:
+{
+  "claim_number": "",
+  "policy_number": "",
+  "insured_name": "",
+  "vehicle_number": "",
+  "date_of_accident": "",
+  "time_of_accident": "",
+  "place_of_accident": "",
+  "cause_of_accident": "",
+  "driver_name": "",
+  "driver_licence_no": "",
+  "place_of_repair": "",
+  "workshop_name": "",
+  "estimated_loss": "",
+  "third_party_details": "",
+  "surveyor_name": "",
+  "date_of_intimation": ""
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  estimate: `You are an expert at reading Indian vehicle repair estimates and workshop bills. Extract ALL line items and totals. Return ONLY a JSON object:
+{
+  "workshop_name": "",
+  "workshop_address": "",
+  "vehicle_number": "",
+  "chassis_number": "",
+  "engine_number": "",
+  "estimate_date": "",
+  "bill_number": "",
+  "spare_parts": [
+    { "description": "", "part_number": "", "quantity": 1, "unit_price": 0, "amount": 0, "gst_percent": 18, "category": "metal or plastic or glass" }
+  ],
+  "labour_items": [
+    { "description": "", "amount": 0, "gst_percent": 18 }
+  ],
+  "painting_items": [
+    { "description": "", "amount": 0, "gst_percent": 18 }
+  ],
+  "subtotal_parts": 0,
+  "subtotal_labour": 0,
+  "subtotal_painting": 0,
+  "gst_amount": 0,
+  "total_amount": 0
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  photos: `You are an expert vehicle damage assessor. Analyse this vehicle damage photo and describe:
+1. Which parts of the vehicle are visibly damaged
+2. Type of damage (dented, scratched, cracked, broken, deformed, etc.)
+3. Severity (minor, moderate, major)
+4. Affected side (front, rear, left, right)
+Return ONLY a JSON object:
+{
+  "damaged_parts": [
+    { "part": "", "damage_type": "", "severity": "", "side": "" }
+  ],
+  "overall_damage_summary": "",
+  "recommended_repairs": []
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`
+};
+
+function triggerDocUpload(type) { document.getElementById('upload-' + type).click(); }
+
+function handleDocDrop(e, type) {
+  e.preventDefault();
+  document.getElementById('card-' + type).classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processDocFile(file, type);
+}
+
+function handleDocFile(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  if(type==='photos'&&input.files.length>0){savedPhotoFiles=Array.from(input.files);document.getElementById('damage-analysis-btn').classList.remove('hidden');}
+  processDocFile(file, type);
+}
+
+async function processDocFile(file, type) {
+  const card = document.getElementById('card-' + type);
+  const previewEl = document.getElementById('preview-' + type);
+  const statusEl = document.getElementById('status-' + type);
+  const fieldsEl = document.getElementById('fields-' + type);
+  const logEl = document.getElementById('extraction-log');
+  const progressCard = document.getElementById('extraction-progress-card');
+
+  progressCard.style.display = 'block';
+  
+  // Show file preview
+  previewEl.style.display = 'block';
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => { 
+      previewEl.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:110px;object-fit:cover;"/>`;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    previewEl.innerHTML = `<div class="pdf-prev">📄 ${file.name}<br/><span style="font-size:0.68rem;color:var(--muted);">${(file.size/1024).toFixed(0)} KB</span></div>`;
+  }
+
+  // Set processing state
+  card.className = 'doc-card processing';
+  statusEl.className = 'doc-status processing';
+  statusEl.innerHTML = `<div class="spinner"></div> AI is reading document...`;
+  fieldsEl.className = 'doc-extracted-fields';
+  fieldsEl.style.display = 'none';
+
+  const typeLabel = { 
+    rc: 'RC Book', 
+    dl: 'Driving Licence', 
+    policy: 'Insurance Policy', 
+    claim: 'Claim Form', 
+    estimate: 'Repair Estimate', 
+    photos: 'Damage Photos' 
+  };
+  appendLog(logEl, `📄 Processing ${typeLabel[type]} with Claude AI...`);
+
+  try {
+    // Convert file to base64
+    const base64 = await fileToBase64(file);
+    const mediaType = file.type === 'application/pdf' ? 'application/pdf' : (file.type || 'image/jpeg');
+
+    // Build Gemini parts (supports both image and PDF)
+    const parts = [
+      { inlineData: { mimeType: mediaType, data: base64 } },
+      { text: DOC_PROMPTS[type] }
+    ];
+
+    const rawText = await callGemini(parts, 2000);
+
+    // Parse JSON from response
+    let extracted;
+    try {
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      extracted = JSON.parse(clean);
+    } catch (e) {
+      throw new Error('Could not parse AI response');
+    }
+
+    // Apply extracted data to form fields
+    const fieldCount = applyExtractedData(type, extracted);
+
+    // Show success state
+    card.className = 'doc-card done';
+    statusEl.className = 'doc-status done';
+    statusEl.innerHTML = `✅ Extracted ${fieldCount} fields`;
+
+    // Show extracted fields summary
+    showExtractedSummary(type, extracted, fieldsEl);
+
+    // Update status dots
+    aiStatusMap[type] = true;
+    updateAIStatusDots();
+
+    appendLog(logEl, `✅ ${typeLabel[type]} — ${fieldCount} fields extracted`);
+    showToast(`${typeLabel[type]}: ${fieldCount} fields filled!`, 'success');
+
+    const doneCount = Object.values(aiStatusMap).filter(Boolean).length;
+    if (doneCount >= 2) {
+      document.getElementById('go-to-form-btn').classList.remove('hidden');
+    }
+
+  } catch (err) {
+    card.className = 'doc-card error';
+    statusEl.className = 'doc-status error';
+    statusEl.innerHTML = `⚠️ ${err.message}`;
+    appendLog(logEl, `❌ ${typeLabel[type]} — ${err.message}`);
+    showToast(`Error: ${err.message}`, 'error');
+    console.error('Extraction Error:', err);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function appendLog(el, msg) {
+  if (!el) return;
+  el.innerHTML += `<div>${new Date().toLocaleTimeString('en-IN')} — ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ============================================================
+// APPLY EXTRACTED DATA TO FORM FIELDS
+// ============================================================
+function applyExtractedData(type, data) {
+  let count = 0;
+  function setField(id, val) {
+    if (!val) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    const str = String(val).trim();
+    if (!str || str === 'null' || str === 'undefined') return;
+    el.value = str;
+    el.classList.add('ai-filled');
+    count++;
+  }
+  function tryDate(v) {
+    if (!v) return '';
+    // Convert DD-MM-YYYY or DD/MM/YYYY to YYYY-MM-DD
+    const m = String(v).match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+    if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    // YYYY-MM-DD already
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    return v;
+  }
+
+  if (type === 'rc') {
+    setField('f-reg-no', data.registration_number);
+    setField('f-make', data.make);
+    setField('f-model', data.model);
+    setField('f-chassis', data.chassis_number);
+    setField('f-engine', data.engine_number);
+    setField('f-cc', data.cubic_capacity);
+    setField('f-colour', data.colour);
+    setField('f-body-type', data.body_type);
+    setField('f-rlw', data.gross_weight || data.seating_capacity);
+    setField('f-route', data.route);
+    setField('f-fitness', data.fitness_cert_no);
+    setField('f-hpa', data.hypothecation);
+    setField('f-insured-name', data.owner_name);
+    setField('f-insured-addr', data.address);
+    if (data.year_of_manufacture) setField('f-year', data.year_of_manufacture);
+    if (data.fuel) {
+      const fuelEl = document.getElementById('f-fuel');
+      if (fuelEl) { const opt = [...fuelEl.options].find(o => o.text.toLowerCase().includes(data.fuel.toLowerCase())); if (opt) { fuelEl.value = opt.value; count++; } }
+    }
+    if (data.date_of_registration) setField('f-reg-date', tryDate(data.date_of_registration));
+  }
+
+  if (type === 'dl') {
+    setField('f-driver-name', data.holder_name);
+    setField('f-mdl', data.licence_number);
+    setField('f-dl-valid', data.validity_non_transport);
+    setField('f-dl-auth', data.issuing_authority || data.rto);
+    setField('f-dl-type', data.vehicle_classes);
+    if (data.date_of_birth) setField('f-dob', tryDate(data.date_of_birth));
+    if (data.date_of_issue) setField('f-dl-issue', tryDate(data.date_of_issue));
+  }
+
+  if (type === 'policy') {
+    setField('f-policy-no', data.policy_number);
+    setField('f-insurer', data.insurer_name && data.insurer_address ? data.insurer_name + ' ' + data.insurer_address : data.insurer_name);
+    setField('f-insured-name', data.insured_name);
+    setField('f-insured-addr', data.insured_address);
+    setField('f-insured-mobile', data.insured_mobile);
+    setField('f-idv', data.idv);
+    setField('f-policy-office', data.policy_issuing_office);
+    setField('f-hpa', data.hpa_with);
+    setField('f-reg-no', data.registration_number);
+    setField('f-chassis', data.chassis_number);
+    setField('f-engine', data.engine_number);
+    if (data.period_from) setField('f-policy-from', tryDate(data.period_from));
+    if (data.period_to) setField('f-policy-to', tryDate(data.period_to));
+    if (data.policy_type) {
+      const sel = document.getElementById('f-policy-type');
+      if (sel) { const opt = [...sel.options].find(o => o.text.toLowerCase().includes((data.policy_type || '').toLowerCase().substring(0,6))); if (opt) { sel.value = opt.value; count++; } }
+    }
+  }
+
+  if (type === 'claim') {
+    setField('f-claim-no', data.claim_number);
+    setField('f-policy-no', data.policy_number);
+    setField('f-insured-name', data.insured_name);
+    setField('f-poa', data.place_of_accident);
+    setField('f-cause', data.cause_of_accident);
+    setField('f-driver-name', data.driver_name);
+    setField('f-mdl', data.driver_licence_no);
+    setField('f-survey-place', data.workshop_name || data.place_of_repair);
+    setField('f-tp', data.third_party_details);
+    if (data.date_of_accident) {
+      const dt = tryDate(data.date_of_accident);
+      const time = data.time_of_accident || '00:00';
+      setField('f-doa', dt + 'T' + (time.includes(':') ? time.substring(0,5) : '00:00'));
+    }
+    if (data.vehicle_number) setField('f-reg-no', data.vehicle_number);
+  }
+
+  if (type === 'estimate') {
+    setField('f-survey-place', data.workshop_name);
+    // Build assessment rows from estimate
+    if (data.spare_parts && Array.isArray(data.spare_parts) && data.spare_parts.length > 0) {
+      data.spare_parts.forEach(part => {
+        if (!part.description) return;
+        const cat = (part.category || '').toLowerCase();
+        const partType = cat.includes('glass') ? 'glass' : cat.includes('plastic') || cat.includes('rubber') ? 'plastic' : 'metal';
+        assessRows.push({
+          particulars: part.description,
+          estimated: parseFloat(part.amount) || 0,
+          assessed: parseFloat(part.amount) || 0,
+          partType, gst: parseInt(part.gst_percent) || 18, section: 'parts'
+        });
+        count++;
+      });
+    }
+    if (data.labour_items && Array.isArray(data.labour_items)) {
+      data.labour_items.forEach(item => {
+        if (!item.description) return;
+        assessRows.push({ particulars: item.description, estimated: parseFloat(item.amount) || 0, assessed: parseFloat(item.amount) || 0, partType: 'labour', gst: 18, section: 'labour' });
+        count++;
+      });
+    }
+    if (data.painting_items && Array.isArray(data.painting_items)) {
+      data.painting_items.forEach(item => {
+        if (!item.description) return;
+        assessRows.push({ particulars: item.description, estimated: parseFloat(item.amount) || 0, assessed: parseFloat(item.amount) || 0, partType: 'paint', gst: 18, section: 'paint' });
+        count++;
+      });
+    }
+    renderAssessTable();
+  }
+
+  if (type === 'photos') {
+    // Add damage description to cause field
+    if (data.overall_damage_summary) {
+      const causeEl = document.getElementById('f-cause');
+      if (causeEl && !causeEl.value) { causeEl.value = data.overall_damage_summary; count++; }
+    }
+  }
+  return count;
+}
+
+function showExtractedSummary(type, data, el) {
+  el.style.display = 'block';
+  el.classList.add('show');
+  let html = '';
+  if (type === 'estimate') {
+    const parts = (data.spare_parts || []).length;
+    const labour = (data.labour_items || []).length;
+    const paint = (data.painting_items || []).length;
+    html = `<div class="extracted-field"><span class="ef-key">Parts:</span><span class="ef-val">${parts} items</span></div>
+            <div class="extracted-field"><span class="ef-key">Labour:</span><span class="ef-val">${labour} items</span></div>
+            <div class="extracted-field"><span class="ef-key">Painting:</span><span class="ef-val">${paint} items</span></div>
+            <div class="extracted-field"><span class="ef-key">Total:</span><span class="ef-val">₹ ${data.total_amount || '—'}</span></div>`;
+  } else if (type === 'photos') {
+    const parts = (data.damaged_parts || []);
+    html = `<div class="extracted-field"><span class="ef-key">Damage:</span><span class="ef-val">${parts.length} areas found</span></div>`;
+    parts.slice(0,3).forEach(p => { html += `<div class="extracted-field"><span class="ef-key">${p.side || ''}:</span><span class="ef-val">${p.part} — ${p.damage_type}</span></div>`; });
+  } else {
+    const entries = Object.entries(data).filter(([k,v]) => v && v !== 'null' && String(v).trim() !== '').slice(0, 5);
+    entries.forEach(([k, v]) => {
+      html += `<div class="extracted-field"><span class="ef-key">${k.replace(/_/g,' ')}:</span><span class="ef-val">${String(v).substring(0,40)}${String(v).length>40?'…':''}</span></div>`;
+    });
+  }
+  el.innerHTML = html;
+}
+
+function updateAIStatusDots() {
+  const map = { rc: 'ai-rc', dl: 'ai-dl', policy: 'ai-pol', claim: 'ai-claim', estimate: 'ai-est', photos: 'ai-photos' };
+  Object.entries(aiStatusMap).forEach(([k, v]) => {
+    const el = document.getElementById(map[k]);
+    if (el) el.style.background = v ? 'var(--green)' : '#e5e7eb';
+  });
+}
+
+// ============================================================
+// ASSESSMENT TABLE
+// ============================================================
+function addAssessRow(section) {
+  currentModal = section;
+  const titles = { parts: 'Add Spare Part', labour: 'Add Labour Item', paint: 'Add Painting Charge' };
+  document.getElementById('modal-title').textContent = titles[section] || 'Add Item';
+  const typeMap = { parts: 'metal', labour: 'labour', paint: 'paint' };
+  document.getElementById('modal-part-type').value = typeMap[section] || 'metal';
+  document.getElementById('modal-particulars').value = '';
+  document.getElementById('modal-estimated').value = '';
+  document.getElementById('modal-assessed').value = '';
+  document.getElementById('add-row-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('add-row-modal').classList.remove('open'); }
+function confirmAddRow() {
+  const particulars = document.getElementById('modal-particulars').value.trim();
+  const estimated = parseFloat(document.getElementById('modal-estimated').value) || 0;
+  const assessed = parseFloat(document.getElementById('modal-assessed').value) || 0;
+  const partType = document.getElementById('modal-part-type').value;
+  const gst = parseInt(document.getElementById('modal-gst').value) || 18;
+  if (!particulars) { showToast('Please enter a description', 'error'); return; }
+  assessRows.push({ particulars, estimated, assessed, partType, gst, section: currentModal });
+  renderAssessTable();
+  closeModal();
+  showToast('Item added');
+}
+function deleteRow(idx) { assessRows.splice(idx, 1); renderAssessTable(); }
+
+function renderAssessTable() {
+  const tbody = document.getElementById('assess-tbody');
+  tbody.innerHTML = '';
+  const sections = [{ key: 'parts', label: 'SPARE PARTS' }, { key: 'labour', label: 'LABOUR' }, { key: 'paint', label: 'PAINTING CHARGES' }];
+  sections.forEach(sec => {
+    const rows = assessRows.map((r,i) => ({...r,origIdx:i})).filter(r => r.section === sec.key);
+    if (!rows.length) return;
+    const hr = tbody.insertRow(); hr.className = 'section-row';
+    hr.innerHTML = `<td colspan="9">${sec.label}</td>`;
+    rows.forEach((row, li) => {
+      const idx = row.origIdx; const tr = tbody.insertRow();
+      let metal = '', plastic = '', glass = '';
+      if (row.partType === 'metal') metal = row.assessed;
+      else if (row.partType === 'plastic') plastic = row.assessed;
+      else if (row.partType === 'glass') glass = row.assessed;
+      else metal = row.assessed;
+      const tag = row.estimated === row.assessed ? '<span class="allowed-tag tag-allowed">✓ Allowed</span>' : '<span class="allowed-tag tag-partial">↓ Partial</span>';
+      tr.innerHTML = `
+        <td class="mono" style="color:var(--muted);">${li+1}</td>
+        <td><input class="text-input-cell" value="${row.particulars.replace(/"/g,'&quot;')}" onchange="assessRows[${idx}].particulars=this.value"/></td>
+        <td class="text-center mono">${row.gst}%</td>
+        <td class="text-right"><input class="num-input" value="${row.estimated.toFixed(2)}" onchange="assessRows[${idx}].estimated=parseFloat(this.value)||0;recalcSummary()"/></td>
+        <td class="text-center">${tag}</td>
+        <td class="text-right mono" style="background:rgba(26,122,110,0.04);">${metal!==''?'₹ '+parseFloat(metal).toFixed(2):'—'}</td>
+        <td class="text-right mono" style="background:rgba(37,99,235,0.04);">${plastic!==''?'₹ '+parseFloat(plastic).toFixed(2):'—'}</td>
+        <td class="text-right mono" style="background:rgba(234,179,8,0.04);">${glass!==''?'₹ '+parseFloat(glass).toFixed(2):'—'}</td>
+        <td class="text-center"><button class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="deleteRow(${idx})">🗑</button></td>`;
+    });
+  });
+  recalcSummary();
+}
+
+function recalcSummary() {
+  let metal=0, plastic=0, glass=0, labour=0;
+  assessRows.filter(r=>r.section==='parts').forEach(r=>{
+    if(r.partType==='metal') metal+=r.assessed;
+    else if(r.partType==='glass') glass+=r.assessed;
+    else plastic+=r.assessed;
+  });
+  assessRows.filter(r=>r.section==='labour'||r.section==='paint').forEach(r=>labour+=r.assessed);
+  const partsBase=metal+plastic+glass, labBase=labour;
+  const pCGST=partsBase*0.09, lGST=labBase*0.18;
+  const pTotal=partsBase+pCGST*2, lTotal=labBase+lGST, grand=pTotal+lTotal;
+  const salvage=parseFloat(document.getElementById('sum-salvage').value)||0;
+  const excess=parseFloat(document.getElementById('sum-excess').value)||500;
+  const net=Math.max(0,grand-salvage-excess);
+  const f=v=>'₹ '+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  document.getElementById('sum-parts-base').textContent=f(partsBase);
+  document.getElementById('sum-parts-cgst').textContent=f(pCGST);
+  document.getElementById('sum-parts-sgst').textContent=f(pCGST);
+  document.getElementById('sum-parts-total').textContent=f(pTotal);
+  document.getElementById('sum-labour-base').textContent=f(labBase);
+  document.getElementById('sum-labour-gst').textContent=f(lGST);
+  document.getElementById('sum-labour-total').textContent=f(lTotal);
+  document.getElementById('sum-grand').textContent=f(grand);
+  document.getElementById('sum-net').textContent=f(net);
+  document.getElementById('sum-inwords').textContent='RUPEES '+numberToWords(net)+' ONLY';
+  document.getElementById('bd-metal').textContent=f(metal);
+  document.getElementById('bd-plastic').textContent=f(plastic);
+  document.getElementById('bd-glass').textContent=f(glass);
+  // estimate compare
+  let estTotal=0;
+  assessRows.forEach(r=>{ estTotal += r.estimated*(1+(r.gst/100)); });
+  document.getElementById('cmp-est').textContent=f(estTotal);
+  document.getElementById('cmp-ass').textContent=f(grand);
+  document.getElementById('cmp-diff').textContent=f(Math.abs(estTotal-grand));
+  document.getElementById('dash-est').textContent=f(estTotal);
+  document.getElementById('dash-assessed').textContent=f(grand);
+  document.getElementById('dash-net').textContent=f(net);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function gv(id){return (document.getElementById(id)||{}).value||'';}
+function fmt2(v){return parseFloat(v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function setDepType(t){depType=t;document.querySelectorAll('#dep-toggle button').forEach((b,i)=>{b.classList.toggle('active',(t==='nil'&&i===0)||(t==='standard'&&i===1));});document.getElementById('assess-policy-badge').textContent=t==='nil'?'0% Dep. Policy':'Standard Dep.';}
+function handleSigUpload(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{sigDataUrl=e.target.result;document.getElementById('sig-placeholder').classList.add('hidden');const img=document.getElementById('sig-preview-img');img.src=sigDataUrl;img.classList.remove('hidden');};r.readAsDataURL(f);}
+function handleStampUpload(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{stampDataUrl=e.target.result;document.getElementById('stamp-placeholder').classList.add('hidden');const img=document.getElementById('stamp-preview-img');img.src=stampDataUrl;img.classList.remove('hidden');};r.readAsDataURL(f);}
+function showToast(msg,type='success'){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;document.getElementById('toast-icon').textContent=type==='error'?'✕':type==='ai'?'🤖':'✓';t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3200);}
+
+// LocalStorage Save/Load System
+function gatherCurrentReportData(){return{reportNo:gv('f-report-no'),reportDate:gv('f-report-date'),vehicle:gv('f-reg-no'),insured:gv('f-insured-name'),claimNo:gv('f-claim-no'),policyNo:gv('f-policy-no'),make:gv('f-make'),model:gv('f-model'),savedAt:new Date().toISOString(),formData:{policyFrom:gv('f-policy-from'),policyTo:gv('f-policy-to'),idv:gv('f-idv'),policyType:gv('f-policy-type'),policyOffice:gv('f-policy-office'),insurer:gv('f-insurer'),apptOffice:gv('f-appt-office'),insuredMobile:gv('f-insured-mobile'),insuredAddr:gv('f-insured-addr'),hpa:gv('f-hpa'),regDate:gv('f-reg-date'),vehClass:gv('f-veh-class'),year:gv('f-year'),chassis:gv('f-chassis'),engine:gv('f-engine'),cc:gv('f-cc'),bodyType:gv('f-body-type'),colour:gv('f-colour'),fuel:gv('f-fuel'),odo:gv('f-odo'),rlw:gv('f-rlw'),condition:gv('f-condition'),driverName:gv('f-driver-name'),mdl:gv('f-mdl'),dob:gv('f-dob'),dlIssue:gv('f-dl-issue'),dlValid:gv('f-dl-valid'),dlAuth:gv('f-dl-auth'),dlType:gv('f-dl-type'),doa:gv('f-doa'),poa:gv('f-poa'),surveyDate:gv('f-survey-date'),surveyPlace:gv('f-survey-place'),cause:gv('f-cause'),tp:gv('f-tp')},assessmentData:{rows:assessRows,depType:depType,salvage:parseFloat(gv('sum-salvage'))||0,excess:parseFloat(gv('sum-excess'))||0},riData:{riRef:gv('ri-ref'),riDate:gv('ri-date'),riParts:riParts},spotSurveyData:{reportNo:gv('spot-report-no'),reportDate:gv('spot-report-date'),allotDate:gv('spot-allot-date'),surveyDatetime:gv('spot-survey-datetime'),accidentDatetime:gv('spot-accident-datetime'),accidentPlace:gv('spot-accident-place'),surveyPlace:gv('spot-survey-place'),cause:gv('spot-accident-cause'),driverName:gv('spot-driver-name'),mdlNo:gv('spot-mdl-no'),dlAuthority:gv('spot-dl-authority'),dlIssue:gv('spot-dl-issue'),dlValid:gv('spot-dl-valid'),dlType:gv('spot-dl-type'),mdlVerified:gv('spot-mdl-verified'),dlInvalidRemarks:gv('spot-dl-invalid-remarks'),cnNo:gv('spot-cn-no'),cnDate:gv('spot-cn-date'),loadCapacity:gv('spot-load-capacity'),actualLoad:gv('spot-actual-load'),loadDesc:gv('spot-load-desc'),policeReported:gv('spot-police-reported'),policeStation:gv('spot-police-station'),diaryNo:gv('spot-diary-no'),panchanama:gv('spot-panchanama'),tpInvolved:gv('spot-tp-involved'),tpDetails:gv('spot-tp-details'),damageSeverity:gv('spot-damage-severity'),airbags:gv('spot-airbags'),drivable:gv('spot-drivable'),damageRows:spotDamageRows,comments:gv('spot-comments')},signatures:{signature:sigDataUrl,stamp:stampDataUrl}};}
+function saveAll(){const data=gatherCurrentReportData();if(!data.vehicle){showToast('Enter vehicle registration number first','error');return;}const reportId='survey_'+data.vehicle.replace(/[^A-Z0-9]/gi,'')+'_'+Date.now();localStorage.setItem(reportId,JSON.stringify(data));let allReports=JSON.parse(localStorage.getItem('all_reports')||'[]');allReports=allReports.filter(r=>r.reportNo!==data.reportNo||!data.reportNo);allReports.unshift({id:reportId,reportNo:data.reportNo||'DRAFT-'+data.vehicle,vehicle:data.vehicle,insured:data.insured,claimNo:data.claimNo,savedAt:data.savedAt,make:data.make,model:data.model});if(allReports.length>50)allReports=allReports.slice(0,50);localStorage.setItem('all_reports',JSON.stringify(allReports));localStorage.setItem('current_report_id',reportId);showToast('Report saved successfully!','success');refreshReportsList();updateDashboard();}
+function loadReport(reportId){const saved=localStorage.getItem(reportId);if(!saved){showToast('Report not found','error');return;}try{const data=JSON.parse(saved);document.getElementById('f-report-no').value=data.reportNo||'';document.getElementById('f-report-date').value=data.reportDate||'';document.getElementById('f-reg-no').value=data.vehicle||'';document.getElementById('f-insured-name').value=data.insured||'';document.getElementById('f-claim-no').value=data.claimNo||'';document.getElementById('f-policy-no').value=data.policyNo||'';document.getElementById('f-make').value=data.make||'';document.getElementById('f-model').value=data.model||'';if(data.formData){Object.keys(data.formData).forEach(key=>{const fieldId='f-'+key.replace(/([A-Z])/g,'-$1').toLowerCase();const el=document.getElementById(fieldId);if(el)el.value=data.formData[key]||'';});}if(data.assessmentData){assessRows=data.assessmentData.rows||[];depType=data.assessmentData.depType||'nil';renderAssessTable();if(data.assessmentData.salvage)document.getElementById('sum-salvage').value=data.assessmentData.salvage;if(data.assessmentData.excess)document.getElementById('sum-excess').value=data.assessmentData.excess;setDepType(depType);}if(data.riData){document.getElementById('ri-ref').value=data.riData.riRef||'';document.getElementById('ri-date').value=data.riData.riDate||'';if(data.riData.riParts){riParts=data.riData.riParts;renderRIParts();}}if(data.spotSurveyData){const ss=data.spotSurveyData;document.getElementById('spot-report-no').value=ss.reportNo||'';document.getElementById('spot-report-date').value=ss.reportDate||'';document.getElementById('spot-allot-date').value=ss.allotDate||'';document.getElementById('spot-survey-datetime').value=ss.surveyDatetime||'';document.getElementById('spot-accident-datetime').value=ss.accidentDatetime||'';document.getElementById('spot-accident-place').value=ss.accidentPlace||'';document.getElementById('spot-survey-place').value=ss.surveyPlace||'';document.getElementById('spot-accident-cause').value=ss.cause||'';document.getElementById('spot-driver-name').value=ss.driverName||'';document.getElementById('spot-mdl-no').value=ss.mdlNo||'';document.getElementById('spot-dl-authority').value=ss.dlAuthority||'';document.getElementById('spot-dl-issue').value=ss.dlIssue||'';document.getElementById('spot-dl-valid').value=ss.dlValid||'';document.getElementById('spot-dl-type').value=ss.dlType||'';document.getElementById('spot-mdl-verified').value=ss.mdlVerified||'verified';document.getElementById('spot-dl-invalid-remarks').value=ss.dlInvalidRemarks||'';document.getElementById('spot-cn-no').value=ss.cnNo||'';document.getElementById('spot-cn-date').value=ss.cnDate||'';document.getElementById('spot-load-capacity').value=ss.loadCapacity||'';document.getElementById('spot-actual-load').value=ss.actualLoad||'';document.getElementById('spot-load-desc').value=ss.loadDesc||'';document.getElementById('spot-police-reported').value=ss.policeReported||'no';document.getElementById('spot-police-station').value=ss.policeStation||'';document.getElementById('spot-diary-no').value=ss.diaryNo||'';document.getElementById('spot-panchanama').value=ss.panchanama||'no';document.getElementById('spot-tp-involved').value=ss.tpInvolved||'no';document.getElementById('spot-tp-details').value=ss.tpDetails||'';document.getElementById('spot-damage-severity').value=ss.damageSeverity||'moderate';document.getElementById('spot-airbags').value=ss.airbags||'no';document.getElementById('spot-drivable').value=ss.drivable||'yes';document.getElementById('spot-comments').value=ss.comments||'';if(ss.damageRows){spotDamageRows=ss.damageRows;renderSpotDamageRows();}checkDLValidity();}if(data.signatures){if(data.signatures.signature){sigDataUrl=data.signatures.signature;document.getElementById('sig-placeholder').classList.add('hidden');document.getElementById('sig-preview-img').src=sigDataUrl;document.getElementById('sig-preview-img').classList.remove('hidden');}if(data.signatures.stamp){stampDataUrl=data.signatures.stamp;document.getElementById('stamp-placeholder').classList.add('hidden');document.getElementById('stamp-preview-img').src=stampDataUrl;document.getElementById('stamp-preview-img').classList.remove('hidden');}}localStorage.setItem('current_report_id',reportId);showToast('Report loaded: '+(data.reportNo||data.vehicle),'success');updateDashboard();refreshReportsList();showPage('claim-details');}catch(e){showToast('Error loading report','error');console.error(e);}}
+function deleteReport(reportId,event){event.stopPropagation();if(!confirm('Delete this report? This cannot be undone.'))return;localStorage.removeItem(reportId);let allReports=JSON.parse(localStorage.getItem('all_reports')||'[]');allReports=allReports.filter(r=>r.id!==reportId);localStorage.setItem('all_reports',JSON.stringify(allReports));showToast('Report deleted','success');refreshReportsList();}
+function clearCurrentReport(){if(Object.values(aiStatusMap).some(v=>v)||assessRows.length>0){if(!confirm('Start a new report? Unsaved changes will be lost.'))return;}document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(el=>{el.value='';el.classList.remove('ai-filled');});assessRows=[];riParts=[];spotDamageRows=[];depType='nil';sigDataUrl=null;stampDataUrl=null;Object.keys(aiStatusMap).forEach(k=>aiStatusMap[k]=false);renderAssessTable();renderSpotDamageRows();updateAIStatusDots();updateDashboard();document.getElementById('sig-placeholder').classList.remove('hidden');document.getElementById('sig-preview-img').classList.add('hidden');document.getElementById('stamp-placeholder').classList.remove('hidden');document.getElementById('stamp-preview-img').classList.add('hidden');localStorage.removeItem('current_report_id');showToast('New report started','success');showPage('upload');}
+function refreshReportsList(){const allReports=JSON.parse(localStorage.getItem('all_reports')||'[]');const container=document.getElementById('reports-list-container');const currentId=localStorage.getItem('current_report_id');if(allReports.length===0){container.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);"><div style="font-size:2.5rem;margin-bottom:10px;">📄</div><div style="font-size:0.88rem;font-weight:500;">No saved reports yet</div><div style="font-size:0.76rem;margin-top:6px;">Complete and save a survey to see it here</div></div>';updateStatistics(allReports);return;}let html='<table style="width:100%;border-collapse:collapse;font-size:0.8rem;" id="reports-table"><thead style="background:var(--cream2);"><tr><th style="padding:10px;text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;">Report No.</th><th style="padding:10px;text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;">Vehicle</th><th style="padding:10px;text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;">Insured</th><th style="padding:10px;text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;">Claim No.</th><th style="padding:10px;text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;">Saved</th><th style="padding:10px;text-align:center;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;width:100px;">Actions</th></tr></thead><tbody>';allReports.forEach(report=>{const isCurrent=report.id===currentId;const savedDate=new Date(report.savedAt);const savedStr=savedDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+savedDate.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});html+=`<tr onclick="loadReport('${report.id}')" data-vehicle="${report.vehicle||''}" data-insured="${report.insured||''}" data-claim="${report.claimNo||''}" data-report="${report.reportNo||''}" style="cursor:pointer;border-bottom:1px solid var(--cream2);${isCurrent?'background:#f0fdf8;':''}" onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='${isCurrent?'#f0fdf8':''}'" >`;html+=`<td style="padding:10px;font-family:'DM Mono',monospace;font-size:0.75rem;color:${isCurrent?'var(--teal)':'var(--navy)'};font-weight:${isCurrent?'600':'400'};">${report.reportNo||'—'}${isCurrent?' <span style="font-size:0.65rem;color:var(--teal);">●</span>':''}</td>`;html+=`<td style="padding:10px;font-weight:500;">${report.vehicle||'—'}</td>`;html+=`<td style="padding:10px;">${report.insured||'—'}</td>`;html+=`<td style="padding:10px;font-family:'DM Mono',monospace;font-size:0.75rem;">${report.claimNo||'—'}</td>`;html+=`<td style="padding:10px;color:var(--muted);font-size:0.75rem;">${savedStr}</td>`;html+=`<td style="padding:10px;text-align:center;"><button class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:0.7rem;" onclick="deleteReport('${report.id}',event)" title="Delete">🗑</button></td>`;html+='</tr>';});html+='</tbody></table>';container.innerHTML=html;updateStatistics(allReports);}
+
+// Search/Filter Reports
+function filterReports(){const searchTerm=document.getElementById('reports-search').value.toLowerCase();const rows=document.querySelectorAll('#reports-table tbody tr');let visibleCount=0;rows.forEach(row=>{const vehicle=(row.getAttribute('data-vehicle')||'').toLowerCase();const insured=(row.getAttribute('data-insured')||'').toLowerCase();const claim=(row.getAttribute('data-claim')||'').toLowerCase();const reportNo=(row.getAttribute('data-report')||'').toLowerCase();const matches=vehicle.includes(searchTerm)||insured.includes(searchTerm)||claim.includes(searchTerm)||reportNo.includes(searchTerm);row.style.display=matches?'':'none';if(matches)visibleCount++;});if(visibleCount===0&&searchTerm){document.getElementById('reports-list-container').innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);"><div style="font-size:2rem;margin-bottom:8px;">🔍</div><div style="font-size:0.85rem;">No reports found for "<strong>'+searchTerm+'</strong>"</div><div style="font-size:0.75rem;margin-top:6px;">Try a different search term</div></div>';}}
+
+// Statistics
+function updateStatistics(allReports){const now=new Date();const thisMonth=now.getMonth();const thisYear=now.getFullYear();let monthCount=0,totalAssessed=0;allReports.forEach(report=>{const savedDate=new Date(report.savedAt);if(savedDate.getMonth()===thisMonth&&savedDate.getFullYear()===thisYear){monthCount++;const reportData=JSON.parse(localStorage.getItem(report.id)||'{}');if(reportData.assessmentData&&reportData.assessmentData.rows){const assessed=reportData.assessmentData.rows.reduce((sum,row)=>sum+(row.assessed||0),0);totalAssessed+=assessed;}}});const avgAssessed=monthCount>0?totalAssessed/monthCount:0;document.getElementById('stat-month-count').textContent=monthCount;document.getElementById('stat-total-assessed').textContent='₹ '+fmt2(totalAssessed);document.getElementById('stat-avg-assessed').textContent='₹ '+fmt2(avgAssessed);document.getElementById('stat-total-reports').textContent=allReports.length;}
+
+// Export to Excel
+function exportToExcel(){const allReports=JSON.parse(localStorage.getItem('all_reports')||'[]');if(allReports.length===0){showToast('No reports to export','error');return;}let csv='Report No.,Date,Vehicle,Insured,Claim No.,Policy No.,Make/Model,Assessed Amount,Net Liability\n';allReports.forEach(report=>{const reportData=JSON.parse(localStorage.getItem(report.id)||'{}');let assessed=0,net=0;if(reportData.assessmentData&&reportData.assessmentData.rows){const rows=reportData.assessmentData.rows;assessed=rows.reduce((sum,r)=>sum+(r.assessed||0)*(1+r.gst/100),0);net=assessed-(reportData.assessmentData.salvage||0)-(reportData.assessmentData.excess||0);}const savedDate=new Date(report.savedAt).toLocaleString('en-IN');csv+=`"${report.reportNo||''}","${savedDate}","${report.vehicle||''}","${report.insured||''}","${report.claimNo||''}","${reportData.policyNo||''}","${report.make||''} ${report.model||''}",${assessed.toFixed(2)},${net.toFixed(2)}\n`;});const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='Motor_Survey_Reports_'+new Date().toISOString().split('T')[0]+'.csv';link.click();showToast('Excel file downloaded!','success');}
+
+// Backup to Google Sheets
+function backupToGoogleSheets(){const allReports=JSON.parse(localStorage.getItem('all_reports')||'[]');if(allReports.length===0){showToast('No reports to backup','error');return;}showToast('Google Sheets backup feature - Setup required','ai');setTimeout(()=>{const setup=`To enable Google Sheets backup:
+
+1. Go to https://console.cloud.google.com
+2. Create a new project
+3. Enable Google Sheets API
+4. Create credentials (API Key)
+5. Create a Google Sheet and get its ID
+6. Add your API key and Sheet ID to the code
+
+Would you like detailed setup instructions?`;if(confirm(setup)){window.open('https://developers.google.com/sheets/api/quickstart/js','_blank');}},500);}
+
+// Enhanced Damage Analysis with AI (Gemini)
+async function analyzeMultipleDamagePhotos(photoFiles){showToast('Analyzing damage photos with AI...','ai');const photos=await Promise.all(Array.from(photoFiles).map(f=>fileToBase64(f)));const geminiParts=[...photos.map(base64=>({inlineData:{mimeType:'image/jpeg',data:base64}})),{text:`You are a senior motor vehicle damage assessor with 20 years of experience. Analyze ALL these damage photos comprehensively.
+
+For EACH damaged part, provide:
+1. Exact part name and location
+2. Damage type and severity (Minor/Moderate/Major)
+3. REPAIR vs REPLACE recommendation with reasoning
+4. Estimated cost in INR
+
+Also provide:
+- Overall damage assessment
+- Total estimated repair cost
+- Safety concerns if any
+- Recommended next steps
+
+Return detailed JSON:
+{
+  "damaged_parts": [
+    {
+      "part": "Front Bumper",
+      "location": "Center section",
+      "damage_type": "Cracked and dented",
+      "severity": "Major",
+      "recommendation": "REPLACE",
+      "reason": "Structural cracks present",
+      "estimated_cost": 8500
+    }
+  ],
+  "overall_assessment": {
+    "total_parts": 5,
+    "severity": "Moderate to Major",
+    "total_cost": 45000,
+    "repair_days": 3
+  },
+  "safety_concerns": ["Check frame damage"],
+  "next_steps": ["Remove bumper for inspection"]
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`}];try{const rawText=await callGemini(geminiParts,3000);const analysis=JSON.parse(rawText.replace(/```json|```/g,'').trim());showDamageAnalysisModal(analysis);return analysis;}catch(err){showToast('Damage analysis failed: '+err.message,'error');console.error(err);}}
+
+// Show Damage Analysis Modal
+function showDamageAnalysisModal(analysis){const modal=document.getElementById('add-row-modal');document.getElementById('modal-title').textContent='🔍 AI Damage Analysis';let html='<div style="max-height:400px;overflow-y:auto;"><div class="alert alert-ai"><span>🤖</span><span>Claude AI analyzed your damage photos</span></div>';if(analysis.damaged_parts&&analysis.damaged_parts.length>0){html+='<div style="margin-bottom:14px;"><strong>Damaged Parts Found:</strong></div>';analysis.damaged_parts.forEach((part,i)=>{const color=part.severity==='Major'?'var(--red)':part.severity==='Moderate'?'#fbbf24':'var(--green)';html+=`<div style="background:var(--cream);padding:10px;border-radius:6px;margin-bottom:8px;border-left:3px solid ${color};"><div style="font-weight:600;margin-bottom:4px;">${i+1}. ${part.part}</div><div style="font-size:0.8rem;line-height:1.6;"><strong>Damage:</strong> ${part.damage_type}<br/><strong>Severity:</strong> <span style="color:${color};">${part.severity}</span><br/><strong>Recommendation:</strong> ${part.recommendation}<br/><strong>Reason:</strong> ${part.reason}<br/><strong>Est. Cost:</strong> ₹${part.estimated_cost.toLocaleString('en-IN')}</div></div>`;});}if(analysis.overall_assessment){html+=`<div style="background:#f0fdf8;padding:12px;border-radius:6px;margin-top:14px;"><strong>Overall Assessment:</strong><div style="font-size:0.8rem;margin-top:6px;">Total Parts: ${analysis.overall_assessment.total_parts}<br/>Severity: ${analysis.overall_assessment.severity}<br/>Total Cost: ₹${analysis.overall_assessment.total_cost.toLocaleString('en-IN')}<br/>Repair Duration: ${analysis.overall_assessment.repair_days} days</div></div>`;}html+='<div style="margin-top:14px;"><button class="btn btn-primary" onclick="applyDamageAnalysisToAssessment();closeModal();">Apply to Assessment Sheet</button></div>';html+='</div>';document.querySelector('#add-row-modal .modal-body').innerHTML=html;modal.classList.add('open');window.currentDamageAnalysis=analysis;}
+
+// Apply Damage Analysis to Assessment
+function applyDamageAnalysisToAssessment(){if(!window.currentDamageAnalysis)return;const analysis=window.currentDamageAnalysis;if(analysis.damaged_parts){analysis.damaged_parts.forEach(part=>{assessRows.push({particulars:part.part+' - '+part.damage_type,estimated:part.estimated_cost,assessed:part.recommendation==='REPLACE'?part.estimated_cost:part.estimated_cost*0.6,partType:part.part.toLowerCase().includes('bumper')?'plastic':'metal',gst:18,section:'parts'});});}renderAssessTable();showToast('Added '+analysis.damaged_parts.length+' items from AI analysis','success');}
+
+// Analyze Saved Photos
+let savedPhotoFiles=[];
+function analyzeSavedPhotos(){if(savedPhotoFiles.length===0){showToast('No photos available for analysis','error');return;}analyzeMultipleDamagePhotos(savedPhotoFiles);}
+
+// ============================================================
+// SPOT SURVEY & DL VALIDATION
+// ============================================================
+let spotDamageRows=[];
+
+function addSpotDamageRow(component='',damage=''){const id=Date.now();spotDamageRows.push({id,component,damage});renderSpotDamageRows();}
+
+function deleteSpotDamageRow(id){spotDamageRows=spotDamageRows.filter(r=>r.id!==id);renderSpotDamageRows();}
+
+function renderSpotDamageRows(){const container=document.getElementById('spot-damage-rows');if(spotDamageRows.length===0){container.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.85rem;">No components added yet. Click "+ Add Component" to start.</div>';return;}let html='';const commonComponents=['FRONT END STRUCTURE / DRIVERS CABIN','INSTRUMENTS','COOLING SYSTEM','ENGINE & TRANSMISSION','CHASSIS ASSY','LOAD BODY','STEERING SYSTEM','FRONT SUSPENSION','REAR SUSPENSION','WHEEL DISCS & TYRES','FRONT AXLE ASSY','REAR AXLE ASSY','BRAKING SYSTEM','ELECTRICAL SYSTEM','FUEL SYSTEM','EXHAUST SYSTEM','BODY PANELS','INTERIOR'];spotDamageRows.forEach((row,idx)=>{const bgColor=idx%2===0?'#ffffff':'var(--cream)';html+=`<div style="display:grid;grid-template-columns:200px 1fr 50px;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);background:${bgColor};align-items:start;"><div><select class="form-select" style="font-size:0.8rem;" onchange="spotDamageRows[${idx}].component=this.value" value="${row.component}"><option value="">Select Component</option>`;commonComponents.forEach(comp=>{html+=`<option value="${comp}" ${row.component===comp?'selected':''}>${comp}</option>`;});html+=`<option value="other" ${row.component&&!commonComponents.includes(row.component)?'selected':''}>Other (type below)</option></select>`;if(row.component&&!commonComponents.includes(row.component)){html+=`<input class="form-input" style="margin-top:6px;font-size:0.75rem;" value="${row.component}" onchange="spotDamageRows[${idx}].component=this.value" placeholder="Component name"/>`;}html+=`</div><div><textarea class="form-textarea" rows="2" style="font-size:0.8rem;resize:vertical;" placeholder="Describe damage observed..." onchange="spotDamageRows[${idx}].damage=this.value">${row.damage}</textarea></div><div><button class="btn btn-danger btn-sm" onclick="deleteSpotDamageRow(${row.id})" title="Delete" style="padding:6px 8px;font-size:0.75rem;">🗑</button></div></div>`;});container.innerHTML=html;}
+
+function checkDLValidity(){const validUpto=document.getElementById('spot-dl-valid').value;const badge=document.getElementById('dl-validity-badge');const remarksSection=document.getElementById('dl-invalid-remarks-section');const mdlVerified=document.getElementById('spot-mdl-verified').value;if(!validUpto){badge.textContent='Not Verified';badge.style.background='var(--muted)';remarksSection.style.display='none';return;}const validDate=new Date(validUpto);const today=new Date();today.setHours(0,0,0,0);if(validDate<today){badge.textContent='❌ EXPIRED';badge.style.background='var(--red)';remarksSection.style.display='block';showToast('DL EXPIRED - Add mandatory remarks','error');}else if(mdlVerified==='not-available'){badge.textContent='⚠️ NOT AVAILABLE';badge.style.background='#fbbf24';remarksSection.style.display='block';showToast('DL not available - Add remarks','error');}else{badge.textContent='✓ VALID';badge.style.background='var(--green)';remarksSection.style.display='none';}}
+
+function refreshSpotSurvey(){document.getElementById('spot-survey-html').innerHTML=buildSpotSurveyHTML();showToast('Spot survey preview generated','success');}
+
+function buildSpotSurveyHTML(){const reportNo=gv('spot-report-no')||'SPO/—/2025';const reportDate=gv('spot-report-date')||gv('f-report-date');const accidentDate=gv('spot-accident-datetime');const surveyDate=gv('spot-survey-datetime');const accidentPlace=gv('spot-accident-place');const surveyPlace=gv('spot-survey-place');const cause=gv('spot-accident-cause');const driverName=gv('spot-driver-name');const mdlNo=gv('spot-mdl-no');const dlAuthority=gv('spot-dl-authority');const dlIssue=gv('spot-dl-issue');const dlValid=gv('spot-dl-valid');const dlType=gv('spot-dl-type');const mdlVerified=gv('spot-mdl-verified');const dlInvalidRemarks=gv('spot-dl-invalid-remarks');const cnNo=gv('spot-cn-no');const cnDate=gv('spot-cn-date');const loadCapacity=gv('spot-load-capacity');const actualLoad=gv('spot-actual-load');const loadDesc=gv('spot-load-desc');const policeReported=gv('spot-police-reported');const policeStation=gv('spot-police-station');const diaryNo=gv('spot-diary-no');const panchanama=gv('spot-panchanama');const tpInvolved=gv('spot-tp-involved');const tpDetails=gv('spot-tp-details');const comments=gv('spot-comments');const damageSeverity=gv('spot-damage-severity');const airbags=gv('spot-airbags');const drivable=gv('spot-drivable');const ts=`width:100%;border-collapse:collapse;font-size:0.79rem;`;const td=`padding:5px 0;`;const dlValidDate=new Date(dlValid);const today=new Date();const isDLExpired=dlValid&&dlValidDate<today;const dlStatus=mdlVerified==='verified'?'ORIGINAL MDL VERIFIED':mdlVerified==='photocopy'?'PHOTOCOPY VERIFIED':'NOT AVAILABLE';const dlValidityText=isDLExpired?`<span style="color:var(--red);font-weight:700;">EXPIRED</span>`:dlValid?`Valid till ${dlValid}`:'—';let dlRemarksHTML='';if((isDLExpired||mdlVerified==='not-available')&&dlInvalidRemarks){dlRemarksHTML=`<div style="background:#fff3cd;border:2px solid #ffc107;padding:12px;margin:12px 0;border-radius:6px;"><div style="font-weight:700;color:#856404;margin-bottom:6px;">⚠️ DRIVING LICENCE INVALIDITY REMARKS:</div><div style="font-size:0.85rem;line-height:1.6;">${dlInvalidRemarks}</div></div>`;}let damageHTML='';if(spotDamageRows.length>0){spotDamageRows.forEach(row=>{if(row.component&&row.damage){damageHTML+=`<div style="margin-bottom:8px;"><strong style="text-transform:uppercase;">${row.component}</strong><div style="font-size:0.85rem;line-height:1.6;margin-top:4px;">${row.damage}</div></div>`;}});}else{damageHTML='<div style="font-style:italic;color:#666;">No damages documented.</div>';}return `${getSurveyorHeader()}<div style="text-align:center;font-weight:700;font-size:1.2rem;margin-bottom:14px;letter-spacing:0.05em;color:var(--red);">PRIVATE AND CONFIDENTIAL</div><div style="text-align:center;font-weight:700;font-size:1.15rem;margin-bottom:14px;letter-spacing:0.05em;">MOTOR SPOT SURVEY REPORT</div><div style="font-size:0.75rem;font-style:italic;margin-bottom:12px;text-align:center;">This report is issued by me/us as Licensed Surveyor without prejudice, in respect of cause, nature and extent of loss/damage and subject to the terms and conditions of the insurance policy.</div><div style="display:flex;justify-content:space-between;margin-bottom:12px;"><div><strong>Report No. : ${reportNo}</strong></div><div><strong>Date : ${reportDate}</strong></div></div><div style="font-weight:700;margin-bottom:7px;">1. INSURER</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Name</td><td>${gv('f-insurer').split(',')[0]||'—'}</td></tr><tr><td style="${td}color:#666;">Office</td><td>${gv('f-policy-office')}</td></tr><tr><td style="${td}color:#666;">Policy No.</td><td style="font-family:monospace;">${gv('f-policy-no')}</td></tr><tr><td style="${td}color:#666;">Policy Period</td><td>${gv('f-policy-from')} to ${gv('f-policy-to')}</td></tr><tr><td style="${td}color:#666;">I.D.V.</td><td>₹ ${gv('f-idv')}</td></tr><tr><td style="${td}color:#666;">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">2. INSURED</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Name</td><td style="font-weight:600;">${gv('f-insured-name')}</td></tr><tr><td style="${td}color:#666;">Address</td><td>${gv('f-insured-addr')}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">3. H.P.A. WITH</div><table style="${ts} margin-bottom:12px;"><tr><td>${gv('f-hpa')||'NIL'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">4. VEHICLE PARTICULARS</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Registration Number</td><td style="font-weight:600;">${gv('f-reg-no')}</td></tr><tr><td style="${td}color:#666;">Date of Registration</td><td>${gv('f-reg-date')}</td></tr><tr><td style="${td}color:#666;">Chassis No.</td><td style="font-family:monospace;">${gv('f-chassis')}</td></tr><tr><td style="${td}color:#666;">Engine No.</td><td style="font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#666;">Make / Model</td><td>${gv('f-make')} / ${gv('f-model')}</td></tr><tr><td style="${td}color:#666;">Type of Body</td><td>${gv('f-body-type')}</td></tr><tr><td style="${td}color:#666;">Class of Vehicle</td><td>${gv('f-veh-class')}</td></tr><tr><td style="${td}color:#666;">Pre-accident Condition</td><td>${gv('f-condition')}</td></tr><tr><td style="${td}color:#666;">R.L.W. / Seating Capacity</td><td>${gv('f-rlw')} KG</td></tr><tr><td style="${td}color:#666;">Fitness Cert. No.</td><td>${gv('f-fitness')}</td></tr><tr><td style="${td}color:#666;">Type of Permit</td><td>${gv('f-route')}</td></tr><tr><td style="${td}color:#666;">Fuel Used</td><td>${gv('f-fuel')}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">5. DRIVER'S PARTICULARS : ${dlStatus}</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Name of Driver</td><td style="font-weight:600;">${driverName||'—'}</td></tr><tr><td style="${td}color:#666;">M.D.L. No.</td><td style="font-family:monospace;">${mdlNo||'—'}</td></tr><tr><td style="${td}color:#666;">Issuing Authority</td><td>${dlAuthority||'—'}</td></tr><tr><td style="${td}color:#666;">Date of Issue</td><td>${dlIssue||'—'}</td></tr><tr><td style="${td}color:#666;">Validity</td><td>${dlValidityText}</td></tr><tr><td style="${td}color:#666;">Type of Licence</td><td>${dlType||'—'}</td></tr></table>${dlRemarksHTML}<div style="font-weight:700;margin-bottom:7px;">6. DETAILS OF ACCIDENT & SURVEY</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Date & Time of Accident</td><td>${accidentDate||'—'}</td></tr><tr><td style="${td}color:#666;">Place of Accident</td><td>${accidentPlace||'—'}</td></tr><tr><td style="${td}color:#666;">Place of Survey</td><td>${surveyPlace||'—'}</td></tr><tr><td style="${td}color:#666;">Date of Allotment of Survey</td><td>${gv('spot-allot-date')||'—'}</td></tr><tr><td style="${td}color:#666;">Date & Time of Survey</td><td>${surveyDate||'—'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">7. DETAILS OF LOAD/CHALLAN</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">CN Number & Date</td><td>${cnNo||'—'} dated ${cnDate||'—'}</td></tr><tr><td style="${td}color:#666;">Load Carrying Capacity</td><td>${loadCapacity||'—'} KG</td></tr><tr><td style="${td}color:#666;">Actual Load</td><td>${actualLoad||'—'} KG</td></tr><tr><td style="${td}color:#666;">Load Description</td><td>${loadDesc||'—'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">8. POLICE CASE PARTICULARS</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Accident Reported to Police</td><td>${policeReported==='yes'?'YES':'NO'}</td></tr><tr><td style="${td}color:#666;">Police Station</td><td>${policeStation||'NIL'}</td></tr><tr><td style="${td}color:#666;">Station Diary No.</td><td>${diaryNo||'NIL'}</td></tr><tr><td style="${td}color:#666;">Panchanama Carried Out</td><td>${panchanama==='yes'?'YES':'NO'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">THIRD PARTY DETAILS</div><table style="${ts} margin-bottom:12px;"><tr><td>${tpInvolved==='no'?'NIL':tpDetails||'—'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">9. CAUSE & NATURE OF ACCIDENT</div><p style="font-size:0.85rem;line-height:1.75;margin-bottom:14px;text-align:justify;">${cause||'—'}</p><div style="font-weight:700;margin-bottom:7px;">DAMAGE ASSESSMENT SUMMARY</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Damage Severity</td><td style="font-weight:600;text-transform:uppercase;">${damageSeverity||'—'}</td></tr><tr><td style="${td}color:#666;">Airbags Deployed</td><td>${airbags==='yes'?'YES':'NO'}</td></tr><tr><td style="${td}color:#666;">Vehicle Drivable</td><td>${drivable||'—'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;font-size:1rem;">DETAILS OF LOSS/DAMAGES</div><div style="background:var(--cream);padding:14px;border-radius:6px;margin-bottom:14px;font-size:0.85rem;line-height:1.7;">${damageHTML}</div><div style="font-weight:700;margin-bottom:7px;">10. VEHICLE WILL BE SHIFTED TO / ADDITIONAL COMMENTS</div><p style="font-size:0.85rem;margin-bottom:14px;line-height:1.6;">${comments||'—'}</p><p style="font-size:0.8rem;line-height:1.6;margin-bottom:14px;font-style:italic;">We noted down maximum possible visible damages at accident spot. Any other unseen/hidden damages which are related to cause of accident if noticed may be considered on dismantled checkup. This report is issued without prejudice subject to policy terms and condition and the damages stated in this report are based on physical inspection of accidental I.V. on the spot of the accident.</p>${getSigBlock()}<div style="font-size:0.72rem;color:#666;margin-top:14px;">Encl: DIGITAL PHOTOS & MY BILL FOR SURVEY.</div>`;}
+
+function generateSpotSurveyPDF(){refreshSpotSurvey();setTimeout(()=>{const opt={margin:[10,10,15,10],filename:'Spot_Survey_'+(gv('spot-report-no')||'Report')+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,letterRendering:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};html2pdf().set(opt).from(document.getElementById('spot-survey-html')).save();showToast('Spot survey PDF downloading...','success');},300);}
+
+function calcFeeTotal(){const p=parseFloat(gv('fee-prof'))||0,r=parseFloat(gv('fee-ri'))||0,t=parseFloat(gv('fee-travel'))||0,ph=(parseFloat(gv('fee-photos-count'))||0)*(parseFloat(gv('fee-photo-rate'))||0),po=parseFloat(gv('fee-postal'))||0,h=parseFloat(gv('fee-haltage'))||0,tot=p+r+t+ph+po+h;document.getElementById('fs-prof').textContent='₹ '+fmt2(p);document.getElementById('fs-ri').textContent='₹ '+fmt2(r);document.getElementById('fs-travel').textContent='₹ '+fmt2(t);document.getElementById('fs-photos').textContent='₹ '+fmt2(ph);document.getElementById('fs-postal').textContent='₹ '+fmt2(po);document.getElementById('fs-total').textContent='₹ '+fmt2(tot);}
+
+function updateDashboard(){
+  document.getElementById('ds-insured').textContent=gv('f-insured-name')||'—';
+  document.getElementById('ds-vehicle').textContent=gv('f-reg-no')||'—';
+  document.getElementById('ds-model').textContent=((gv('f-make')+' / '+gv('f-model')).replace(/^\s*\/\s*$/,''))||'—';
+  document.getElementById('ds-policy').textContent=gv('f-policy-no')||'—';
+  document.getElementById('ds-claim').textContent=gv('f-claim-no')||'—';
+  document.getElementById('ds-doa').textContent=gv('f-doa')?new Date(gv('f-doa')).toLocaleDateString('en-IN'):'—';
+  document.getElementById('ds-pos').textContent=gv('f-survey-place')||'—';
+  document.getElementById('dash-ref').textContent=gv('f-report-no')||'—';
+  document.getElementById('rp-report-no').textContent=gv('f-report-no')||'—';
+}
+
+function numberToWords(num){
+  if(!num||isNaN(num))return'ZERO';
+  const ones=['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'];
+  const tens=['','','TWENTY','THIRTY','FORTY','FIFTY','SIXTY','SEVENTY','EIGHTY','NINETY'];
+  function c(n){if(n<20)return ones[n];if(n<100)return tens[Math.floor(n/10)]+(n%10?' '+ones[n%10]:'');if(n<1000)return ones[Math.floor(n/100)]+' HUNDRED'+(n%100?' '+c(n%100):'');if(n<100000)return c(Math.floor(n/1000))+' THOUSAND'+(n%1000?' '+c(n%1000):'');if(n<10000000)return c(Math.floor(n/100000))+' LAKH'+(n%100000?' '+c(n%100000):'');return c(Math.floor(n/10000000))+' CRORE'+(n%10000000?' '+c(n%10000000):'');}
+  return c(Math.floor(num));
+}
+
+// ============================================================
+// REPORT HTML BUILDERS
+// ============================================================
+function getSurveyorHeader(){
+  const name=gv('sp-name')||'SURVEYOR NAME',qual=gv('sp-qual')||'B.Sc., Dip. in Auto Engg.',addr=gv('sp-addr')||'Address',lic=gv('sp-lic')||'—',exp=gv('sp-lic-exp')||'—',iiisla=gv('sp-iiisla')||'—',email=gv('sp-email')||'—',mob=gv('sp-mobile')||'—',cats=gv('sp-categories')||'MOTOR,MARINE,ENGG';
+  return`<div style="border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:16px;"><div style="text-align:center;"><div style="font-size:1.5rem;font-weight:700;letter-spacing:0.03em;">${name}</div><div style="font-size:0.82rem;">${qual}</div><div style="font-size:0.9rem;font-weight:700;letter-spacing:0.04em;margin-top:3px;">INSURANCE SURVEYOR, LOSS ASSESSOR &amp; VALUER</div></div><div style="display:flex;justify-content:space-between;margin-top:10px;font-size:0.75rem;"><div><div>Lic. No. : ${lic}</div><div>Expiry on : ${exp}</div><div>IIISLA No. : ${iiisla}</div><div>E-mail : ${email}</div><div>CELL : ${mob}</div></div><div style="text-align:right;"><div style="font-weight:700;">${cats}</div><div>${addr}</div></div></div></div>`;
+}
+function getSigBlock(){
+  const sig=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:48px;max-width:90px;object-fit:contain;"/>`:'';
+  const stamp=stampDataUrl?`<img src="${stampDataUrl}" style="max-height:55px;max-width:70px;object-fit:contain;"/>`:'';
+  const name=gv('sp-name')||'SURVEYOR NAME';
+  return`<div style="display:flex;justify-content:flex-end;align-items:flex-end;margin-top:28px;gap:10px;">${stamp}<div style="text-align:center;">${sig}<div style="font-weight:700;font-size:0.87rem;margin-top:3px;">${name}</div></div></div>`;
+}
+
+function buildSurveyReportHTML(){
+  let metal=0,plastic=0,glass=0,labBase=0;
+  assessRows.filter(r=>r.section==='parts').forEach(r=>{if(r.partType==='metal')metal+=r.assessed;else if(r.partType==='glass')glass+=r.assessed;else plastic+=r.assessed;});
+  assessRows.filter(r=>r.section==='labour'||r.section==='paint').forEach(r=>labBase+=r.assessed);
+  const partsBase=metal+plastic+glass,pCGST=partsBase*0.09,pTotal=partsBase+pCGST*2,lGST=labBase*0.18,lTotal=labBase+lGST,grand=pTotal+lTotal;
+  const salvage=parseFloat(document.getElementById('sum-salvage').value)||0,excess=parseFloat(document.getElementById('sum-excess').value)||500,net=Math.max(0,grand-salvage-excess);
+  const fa=v=>'₹ '+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  const ts=`width:100%;border-collapse:collapse;font-size:0.77rem;`,th=`background:#0d1b2a;color:#fff;padding:6px 8px;text-align:left;font-size:0.67rem;`,td=`padding:5px 8px;border-bottom:1px solid #e5e0d8;`;
+  const partsHtml=assessRows.filter(r=>r.section==='parts').map((r,i)=>`<tr><td>${i+1}</td><td>${r.particulars}</td><td>${r.gst}%</td><td style="text-align:right;">${r.partType==='metal'?fa(r.assessed):''}</td><td style="text-align:right;">${r.partType==='plastic'?fa(r.assessed):''}</td><td style="text-align:right;">${r.partType==='glass'?fa(r.assessed):''}</td></tr>`).join('');
+  const labHtml=assessRows.filter(r=>r.section==='labour'||r.section==='paint').map((r,i)=>`<tr><td>${i+1}</td><td>${r.particulars}</td><td>${r.gst}%</td><td colspan="3" style="text-align:right;">${fa(r.assessed)}</td></tr>`).join('');
+  return`${getSurveyorHeader()}
+<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #000;padding:7px 11px;margin-bottom:11px;"><div><strong>Report No. : ${gv('f-report-no')}</strong>&nbsp;&nbsp;Note : (${depType==='nil'?'0% Dep. Policy':'Standard Dep.'})</div><div><strong>Date : ${gv('f-report-date')}</strong></div></div>
+<div style="text-align:center;font-size:1rem;font-weight:700;margin-bottom:12px;text-decoration:underline;">Private And Confidential Motor (Final) Survey Report</div>
+<p style="font-size:0.72rem;font-style:italic;margin-bottom:12px;">This report is issued by us as licenced Surveyors without prejudice, in respect of cause, nature &amp; extent of loss / damage and subject to the terms &amp; conditions of the Insurance policy.</p>
+<table style="${ts} margin-bottom:12px;"><tr><td style="${td}width:30%;color:#666;">Policy No.</td><td style="${td}">${gv('f-policy-no')}</td><td style="${td}width:25%;color:#666;">Claim No.</td><td style="${td}">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#666;">Period</td><td style="${td}">${gv('f-policy-from')} To ${gv('f-policy-to')}</td><td style="${td}color:#666;">I.D.V.</td><td style="${td}">₹ ${fmt2(gv('f-idv'))}</td></tr><tr><td colspan="4" style="${td}">Policy Type : <strong>${gv('f-policy-type')}</strong></td></tr></table>
+<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">1. INSURER :</div><div style="margin-left:14px;font-size:0.78rem;margin-bottom:9px;">${gv('f-insurer')}<br/>Appointing Office : ${gv('f-appt-office')}</div>
+<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">2. INSURED :</div><div style="margin-left:14px;font-size:0.78rem;margin-bottom:9px;">${gv('f-insured-name')}<br/>Address : ${gv('f-insured-addr')}<br/>Mobile No. : ${gv('f-insured-mobile')}</div>
+<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">3. H.P.A. WITH : <span style="font-weight:400;">${gv('f-hpa')}</span></div>
+<div style="font-weight:700;margin:8px 0 5px;font-size:0.83rem;">4. VEHICLE PARTICULARS : <span style="font-size:0.72rem;font-style:italic;">RC VERIFIED</span></div>
+<table style="${ts} margin-bottom:12px;"><tr><td style="${td}width:33%;color:#666;">Registration No.</td><td style="${td}">${gv('f-reg-no')}</td><td style="${td}width:33%;color:#666;">Date of Registration</td><td style="${td}">${gv('f-reg-date')}</td></tr><tr><td style="${td}color:#666;">Make / Model / Year</td><td style="${td}" colspan="3">${gv('f-make')} / ${gv('f-model')} / ${gv('f-year')}</td></tr><tr><td style="${td}color:#666;">Chassis No.</td><td style="${td}">${gv('f-chassis')}</td><td style="${td}color:#666;">Engine No.</td><td style="${td}">${gv('f-engine')}</td></tr><tr><td style="${td}color:#666;">Colour</td><td style="${td}">${gv('f-colour')}</td><td style="${td}color:#666;">Odometer</td><td style="${td}">${gv('f-odo')} KM</td></tr><tr><td style="${td}color:#666;">Fuel</td><td style="${td}">${gv('f-fuel')}</td><td style="${td}color:#666;">Pre-accident Condition</td><td style="${td}">${gv('f-condition')}</td></tr></table>
+<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">5. DRIVER'S PARTICULARS : <span style="font-size:0.72rem;font-style:italic;">ORIGINAL MDL VERIFIED</span></div>
+<table style="${ts} margin-bottom:12px;"><tr><td style="${td}width:33%;color:#666;">Name of Driver</td><td style="${td}" colspan="3">${gv('f-driver-name')}</td></tr><tr><td style="${td}color:#666;">M.D.L. No.</td><td style="${td}">${gv('f-mdl')}</td><td style="${td}color:#666;">Date of Birth</td><td style="${td}">${gv('f-dob')}</td></tr><tr><td style="${td}color:#666;">Validity</td><td style="${td}">${gv('f-dl-valid')}</td><td style="${td}color:#666;">Issuing Authority</td><td style="${td}">${gv('f-dl-auth')}</td></tr></table>
+<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">6. DETAILS OF ACCIDENT &amp; SURVEY :</div>
+<table style="${ts} margin-bottom:12px;"><tr><td style="${td}width:33%;color:#666;">Date &amp; Time</td><td style="${td}">${gv('f-doa')}</td><td style="${td}width:33%;color:#666;">Place of Accident</td><td style="${td}">${gv('f-poa')}</td></tr><tr><td style="${td}color:#666;">Place of Survey</td><td style="${td}" colspan="3">${gv('f-survey-place')}</td></tr></table>
+<div style="font-weight:700;margin-bottom:5px;font-size:0.83rem;">7. SUMMARY OF ASSESSMENT :</div>
+<table style="${ts} margin-bottom:12px;"><tr><td style="${td}"></td><td style="${td}text-align:right;color:#666;font-size:0.7rem;">Original Estimate</td><td style="${td}text-align:right;color:#666;font-size:0.7rem;">Assessed</td></tr><tr><td style="${td}">Labour Charges</td><td style="${td}text-align:right;">${fa(labBase)}</td><td style="${td}text-align:right;">${fa(lTotal)}</td></tr><tr><td style="${td}">Plus Total Cost of Parts</td><td style="${td}text-align:right;">${fa(partsBase)}</td><td style="${td}text-align:right;">${fa(pTotal)}</td></tr><tr><td style="${td}font-weight:600;">TOTAL</td><td style="${td}text-align:right;font-weight:600;">${fa(partsBase+labBase)}</td><td style="${td}text-align:right;font-weight:600;">${fa(grand)}</td></tr><tr><td style="${td}">Less Excess</td><td></td><td style="${td}text-align:right;">${fa(excess)}</td></tr><tr><td style="${td}">Less Salvage</td><td></td><td style="${td}text-align:right;">${fa(salvage)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td style="padding:8px;font-weight:700;">NET LOSS ASSESSED</td><td></td><td style="padding:8px;text-align:right;font-weight:700;">${fa(net)}</td></tr></table>
+<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">9. CAUSE AND NATURE OF ACCIDENT</div>
+<div style="font-size:0.78rem;margin-bottom:12px;padding:8px;background:#f7f3ed;border-radius:4px;">${gv('f-cause')}</div>
+<div style="font-weight:700;margin-bottom:8px;font-size:0.83rem;">10. DETAILS OF ASSESSMENT :</div>
+<table style="${ts} margin-bottom:8px;"><thead><tr><th style="${th}">Sr.</th><th style="${th}">Particulars</th><th style="${th}text-align:center;">GST%</th><th style="${th}text-align:right;">Nil Dep Metal</th><th style="${th}text-align:right;">Nil Dep Plastic</th><th style="${th}text-align:right;">Glass 0%</th></tr></thead><tbody><tr><td colspan="6" style="padding:5px 8px;font-weight:600;background:#ede8df;font-size:0.7rem;">SPARE PARTS</td></tr>${partsHtml}<tr style="background:#e8f5f3;"><td colspan="3" style="padding:5px 8px;font-weight:600;">SUB TOTAL</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(metal)}</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(plastic)}</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(glass)}</td></tr><tr><td colspan="6" style="padding:5px 8px;font-weight:600;background:#ede8df;font-size:0.7rem;">LABOUR</td></tr>${labHtml}<tr style="background:#e8f5f3;"><td colspan="3" style="padding:5px 8px;font-weight:600;">SUB TOTAL LABOUR</td><td colspan="3" style="padding:5px 8px;text-align:right;font-weight:600;">${fa(labBase)}</td></tr></tbody></table>
+<table style="${ts} margin-bottom:14px;"><tr><td style="${td}">Total Parts (Base)</td><td style="${td}text-align:right;">${fa(partsBase)}</td><td style="${td}">CGST 9%</td><td style="${td}text-align:right;">${fa(pCGST)}</td></tr><tr><td style="${td}">SGST 9%</td><td style="${td}text-align:right;">${fa(pCGST)}</td><td style="${td}font-weight:600;">TOTAL PARTS</td><td style="${td}text-align:right;font-weight:600;">${fa(pTotal)}</td></tr><tr><td style="${td}">Total Labour (Base)</td><td style="${td}text-align:right;">${fa(labBase)}</td><td style="${td}">GST 18%</td><td style="${td}text-align:right;">${fa(lGST)}</td></tr><tr><td style="${td}font-weight:600;">TOTAL LABOUR</td><td colspan="3" style="${td}text-align:right;font-weight:600;">${fa(lTotal)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;font-size:0.92rem;">NET ASSESSED LOSS</td><td></td><td></td><td style="padding:9px;text-align:right;font-weight:700;font-size:0.92rem;">${fa(net)}</td></tr></table>
+<div style="font-style:italic;font-size:0.78rem;margin-bottom:14px;">(${numberToWords(net)} ONLY)</div>
+<div style="font-size:0.76rem;font-style:italic;text-align:center;font-weight:700;margin-bottom:14px;">"ISSUED WITHOUT PREJUDICE"</div>
+${getSigBlock()}
+<hr style="margin:14px 0;border:none;border-top:1px solid #ccc;"/><div style="font-size:0.72rem;color:#666;"><strong>Enclose:</strong> CLAIM FORM, ESTIMATE, DIGITAL PHOTOS &amp; MY BILL FOR SURVEY.</div>`;
+}
+
+function buildBillCheckHTML(){
+  let metal=0,plastic=0,labBase=0;
+  assessRows.filter(r=>r.section==='parts').forEach(r=>{ if(r.partType==='metal')metal+=r.assessed; else plastic+=r.assessed; });
+  assessRows.filter(r=>r.section==='labour'||r.section==='paint').forEach(r=>labBase+=r.assessed);
+  const mGST=metal*1.18,pGST=plastic*1.18,lGST=labBase*1.18,total=mGST+pGST+lGST,excess=parseFloat(document.getElementById('sum-excess').value)||500,net=Math.max(0,total-excess);
+  const fa=v=>v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  const ts=`width:100%;border-collapse:collapse;font-size:0.79rem;`,th=`background:#0d1b2a;color:#fff;padding:6px 9px;font-size:0.7rem;text-align:left;`;
+  const partsHtml=assessRows.filter(r=>r.section==='parts').map((r,i)=>`<tr><td style="padding:5px 8px;">${i+1}</td><td style="padding:5px 8px;">${r.particulars}</td><td style="padding:5px 8px;text-align:center;">${r.gst}%</td><td style="padding:5px 8px;text-align:right;">${r.partType==='metal'?fa(r.assessed):''}</td><td style="padding:5px 8px;text-align:right;">${r.partType!=='metal'?fa(r.assessed):''}</td></tr>`).join('');
+  const labHtml=assessRows.filter(r=>r.section==='labour'||r.section==='paint').map((r,i)=>`<tr><td style="padding:5px 8px;">${i+1}</td><td style="padding:5px 8px;">${r.particulars}</td><td style="padding:5px 8px;text-align:center;">${r.gst}%</td><td colspan="2" style="padding:5px 8px;text-align:right;">${fa(r.assessed)}</td></tr>`).join('');
+  return`${getSurveyorHeader()}
+<div style="text-align:center;font-weight:700;font-size:1.05rem;margin-bottom:12px;">BILL CHECK REPORT</div>
+<table style="${ts} margin-bottom:12px;"><tr><td style="padding:4px 0;color:#666;width:33%;">Report No.</td><td style="font-weight:600;">${gv('f-report-no')}</td><td style="color:#666;">Date</td><td>${gv('f-report-date')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insurer</td><td colspan="3">${gv('f-insurer')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insured</td><td colspan="3">${gv('f-insured-name')}</td></tr><tr><td style="padding:4px 0;color:#666;">Policy No.</td><td>${gv('f-policy-no')}</td><td style="color:#666;">Vehicle No.</td><td style="font-weight:600;">${gv('f-reg-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Chassis</td><td>${gv('f-chassis')}</td><td style="color:#666;">Engine</td><td>${gv('f-engine')}</td></tr></table>
+<table style="${ts} margin-bottom:12px;"><thead><tr><th style="${th}">Sr.</th><th style="${th}">Particulars</th><th style="${th}text-align:center;">GST%</th><th style="${th}text-align:right;">Nil Dep Metal</th><th style="${th}text-align:right;">Nil Dep Rubber</th></tr></thead><tbody><tr><td colspan="5" style="padding:5px 8px;font-weight:600;background:#ede8df;font-size:0.7rem;">SPARE PARTS</td></tr>${partsHtml}<tr style="background:#e8f5f3;"><td colspan="3" style="padding:5px 8px;font-weight:600;">TOTAL</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(metal)}</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(plastic)}</td></tr><tr><td colspan="5" style="padding:5px 8px;font-weight:600;background:#ede8df;font-size:0.7rem;">LABOUR</td></tr>${labHtml}<tr style="background:#e8f5f3;"><td colspan="3" style="padding:5px 8px;font-weight:600;">TOTAL LABOUR</td><td colspan="2" style="padding:5px 8px;text-align:right;font-weight:600;">${fa(labBase)}</td></tr></tbody></table>
+<table style="${ts} margin-bottom:14px;"><tr><td style="padding:7px;border-bottom:1px solid #ddd;">I) Total Spare Parts (incl. GST)</td><td style="padding:7px;text-align:right;border-bottom:1px solid #ddd;font-weight:600;">₹ ${fa(mGST+pGST)}</td></tr><tr><td style="padding:7px;border-bottom:1px solid #ddd;">II) Total Labour (incl. GST)</td><td style="padding:7px;text-align:right;border-bottom:1px solid #ddd;font-weight:600;">₹ ${fa(lGST)}</td></tr><tr><td style="padding:7px;border-bottom:1px solid #ddd;">Total (I+II)</td><td style="padding:7px;text-align:right;border-bottom:1px solid #ddd;">₹ ${fa(total)}</td></tr><tr><td style="padding:7px;border-bottom:1px solid #ddd;">Less Excess</td><td style="padding:7px;text-align:right;border-bottom:1px solid #ddd;">₹ ${fa(excess)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;">NET LIABILITY</td><td style="padding:9px;text-align:right;font-weight:700;">₹ ${fa(net)}</td></tr></table>
+<div style="font-style:italic;font-size:0.78rem;margin-bottom:14px;">INWORDS : RUPEES ${numberToWords(net)} ONLY</div>
+<div style="font-size:0.76rem;"><strong>ENCL:-</strong> REPAIR BILLS / TAX INVOICE</div>
+${getSigBlock()}`;
+}
+
+function buildRIReportHTML(){
+  const ts=`width:100%;border-collapse:collapse;font-size:0.79rem;`,td=`padding:5px 0;`;
+  const th=`background:#0d1b2a;color:#fff;padding:6px 9px;font-size:0.7rem;text-align:left;`;
+  
+  // Build parts verification table
+  let partsTableHtml = '';
+  if (riParts.length > 0) {
+    const replacedParts = riParts.filter(p => p.status === 'replaced');
+    const notReplacedParts = riParts.filter(p => p.status === 'not-replaced');
+    const repairedParts = riParts.filter(p => p.status === 'repaired');
+    
+    partsTableHtml = `
+<div style="font-weight:700;margin:16px 0 8px;">PARTS REPLACEMENT VERIFICATION</div>
+<table style="${ts} margin-bottom:12px;border:1px solid #ddd;">
+  <thead><tr style="background:#0d1b2a;color:#fff;">
+    <th style="${th}width:30px;">Sr.</th>
+    <th style="${th}">Particulars (From Survey Report)</th>
+    <th style="${th}text-align:center;width:100px;">Status</th>
+    <th style="${th}width:180px;">Remarks</th>
+  </tr></thead>
+  <tbody>
+    ${riParts.map((p, i) => {
+      const statusText = p.status === 'replaced' ? '✓ Replaced' : p.status === 'repaired' ? '⚡ Repaired' : '✗ Not Replaced';
+      const statusColor = p.status === 'replaced' ? '#1e7e52' : p.status === 'repaired' ? '#fbbf24' : '#c0392b';
+      return `<tr style="border-bottom:1px solid #e5e0d8;">
+        <td style="padding:5px 9px;color:#666;">${i+1}</td>
+        <td style="padding:5px 9px;">${p.particulars}</td>
+        <td style="padding:5px 9px;text-align:center;color:${statusColor};font-weight:600;font-size:0.75rem;">${statusText}</td>
+        <td style="padding:5px 9px;font-size:0.75rem;font-style:italic;">${p.remarks || '—'}</td>
+      </tr>`;
+    }).join('')}
+  </tbody>
+</table>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:10px;text-align:center;">
+    <div style="font-size:0.7rem;color:#15803d;margin-bottom:3px;">REPLACED</div>
+    <div style="font-size:1.4rem;font-weight:700;color:#15803d;">${replacedParts.length}</div>
+  </div>
+  <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px;text-align:center;">
+    <div style="font-size:0.7rem;color:#c0392b;margin-bottom:3px;">NOT REPLACED</div>
+    <div style="font-size:1.4rem;font-weight:700;color:#c0392b;">${notReplacedParts.length}</div>
+  </div>
+  <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:10px;text-align:center;">
+    <div style="font-size:0.7rem;color:#92400e;margin-bottom:3px;">REPAIRED ONLY</div>
+    <div style="font-size:1.4rem;font-weight:700;color:#92400e;">${repairedParts.length}</div>
+  </div>
+</div>`;
+  }
+  
+  const repairQuality = gv('ri-repair-quality') || 'satisfactory';
+  const vehicleCond = gv('ri-vehicle-condition') || 'roadworthy';
+  const salvageStatus = gv('ri-salvage-status') || 'collected';
+  const observations = gv('ri-observations') || '';
+  
+  const qualityText = {
+    satisfactory: 'Satisfactory - As per survey report',
+    good: 'Good - Better than expected',
+    partial: 'Partial - Some items pending',
+    unsatisfactory: 'Unsatisfactory - Not as per survey'
+  }[repairQuality];
+  
+  const condText = {
+    roadworthy: 'Road Worthy - Fit for operation',
+    'needs-attention': 'Needs Minor Attention',
+    'not-roadworthy': 'Not Road Worthy'
+  }[vehicleCond];
+  
+  const salvageText = {
+    collected: 'Salvage parts collected and verified',
+    'not-collected': 'Salvage parts not collected',
+    partial: 'Partial salvage collected',
+    na: 'Not Applicable'
+  }[salvageStatus];
+  
+  return`${getSurveyorHeader()}
+<div style="text-align:center;font-weight:700;font-size:1.15rem;margin-bottom:12px;letter-spacing:0.05em;">REINSPECTION REPORT</div>
+<div style="display:flex;justify-content:space-between;margin-bottom:12px;"><div><strong>Ref No. : ${gv('ri-ref')||'RIN/—/2026'}</strong></div><div><strong>Date : ${gv('ri-date')||gv('f-report-date')}</strong></div></div>
+<div style="font-weight:700;margin-bottom:7px;">INSURANCE POLICY PARTICULARS</div>
+<table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Insurer's Name</td><td>${gv('f-insurer').split(',')[0]||''}</td></tr><tr><td style="${td}color:#666;">Policy issuing office</td><td>${gv('f-policy-office')}</td></tr><tr><td style="${td}color:#666;">Address</td><td>${gv('f-insurer')}</td></tr><tr><td style="${td}color:#666;">Insured Name</td><td style="font-weight:600;">${gv('f-insured-name')}</td></tr><tr><td style="${td}color:#666;">Insured's Address</td><td>${gv('f-insured-addr')}</td></tr><tr><td style="${td}color:#666;">Policy Number</td><td style="font-family:monospace;">${gv('f-policy-no')}</td></tr><tr><td style="${td}color:#666;">Claim No</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#666;">Policy Period</td><td>${gv('f-policy-from')} To ${gv('f-policy-to')}</td></tr><tr><td style="${td}color:#666;">Vehicle Finance Details</td><td>${gv('f-hpa')}</td></tr></table>
+<div style="font-weight:700;margin-bottom:7px;">DETAILS OF SURVEY</div>
+<table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Original Survey Report</td><td><strong>${gv('ri-survey-ref')||gv('f-report-no')}</strong> dated ${gv('ri-survey-date')||gv('f-report-date')}</td></tr><tr><td style="${td}color:#666;">Date of Accident</td><td>${gv('f-doa')}</td></tr><tr><td style="${td}color:#666;">Date Of Reinspection</td><td>${gv('ri-date')}</td></tr><tr><td style="${td}color:#666;">Place of Survey</td><td>${gv('f-survey-place')}</td></tr></table>
+<div style="font-weight:700;margin-bottom:7px;">VEHICLE PARTICULARS</div>
+<table style="${ts} margin-bottom:14px;"><tr><td style="${td}color:#666;width:35%;">Registration Number</td><td style="font-weight:600;">${gv('f-reg-no')}</td></tr><tr><td style="${td}color:#666;">Class of Vehicle</td><td>${gv('f-veh-class')}</td></tr><tr><td style="${td}color:#666;">Make of Vehicle</td><td>${gv('f-make')}</td></tr><tr><td style="${td}color:#666;">Model of Vehicle</td><td>${gv('f-model')}</td></tr><tr><td style="${td}color:#666;">Chassis Number</td><td style="font-family:monospace;">${gv('f-chassis')}</td></tr><tr><td style="${td}color:#666;">Engine Number</td><td style="font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#666;">Odometer</td><td>${gv('f-odo')} KM</td></tr></table>
+${partsTableHtml}
+<div style="font-weight:700;margin-bottom:7px;">REPAIR QUALITY & VEHICLE CONDITION</div>
+<table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Repair Quality</td><td style="font-weight:600;">${qualityText}</td></tr><tr><td style="${td}color:#666;">Vehicle Condition</td><td style="font-weight:600;">${condText}</td></tr><tr><td style="${td}color:#666;">Salvage Parts Status</td><td>${salvageText}</td></tr></table>
+${observations ? `<div style="font-weight:700;margin-bottom:7px;">ADDITIONAL OBSERVATIONS</div><p style="font-size:0.8rem;line-height:1.6;margin-bottom:14px;background:#f7f3ed;padding:12px;border-radius:6px;">${observations}</p>` : ''}
+<p style="font-size:0.8rem;line-height:1.75;margin-bottom:18px;text-transform:uppercase;font-weight:500;">WE HAVE RE-INSPECTED THE CAPTIONED VEHICLE &amp; HAVE VERIFIED THE REPAIRS / REPLACEMENTS AS DETAILED ABOVE. THE REPAIRS WERE ${repairQuality === 'satisfactory' || repairQuality === 'good' ? 'CARRIED OUT' : 'PARTIALLY CARRIED OUT'} AS PER OUR FINAL SURVEY REPORT BEARING REF NO ${gv('ri-survey-ref')||gv('f-report-no')} DATED ${gv('ri-survey-date')||gv('f-report-date')}. I HAVE INSPECTED THE SAID VEHICLE &amp; HAVE TAKEN NECESSARY PHOTOGRAPHS OF THE SAME ALONG WITH THE SALVAGE PARTS. THE VEHICLE RE-INSPECTED WAS FOUND TO BE ${vehicleCond === 'roadworthy' ? 'IN ROAD WORTHY CONDITION' : 'REQUIRING ATTENTION'} AT THE TIME OF MY SURVEY.</p>
+${getSigBlock()}
+<div style="font-size:0.72rem;color:#666;margin-top:14px;">ENCL: R.I PHOTOS, SALVAGE PARTS PHOTOS &amp; MY BILL FOR SURVEY.</div>`;
+}
+
+
+function refreshReportPreview(){document.getElementById('survey-report-html').innerHTML=buildSurveyReportHTML();document.getElementById('rp-report-no').textContent=gv('f-report-no')||'—';}
+function refreshBillCheck(){document.getElementById('bill-check-html').innerHTML=buildBillCheckHTML();}
+function refreshRIReport(){document.getElementById('ri-report-html').innerHTML=buildRIReportHTML();}
+
+function printReport(html,title){
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');body{font-family:'DM Sans',sans-serif;font-size:10pt;margin:18mm;color:#000;}@media print{@page{margin:14mm;}}</style></head><body>${html}</body></html>`);
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},600);
+  showToast('Report opened — use Print → Save as PDF');
+}
+
+function generateSurveyReportPDF(){refreshReportPreview();printReport(buildSurveyReportHTML(),'Final Survey Report - '+gv('f-report-no'));}
+function generateBillCheckPDF(){refreshBillCheck();printReport(buildBillCheckHTML(),'Bill Check Report - '+gv('f-report-no'));}
+function generateRIPDF(){refreshRIReport();printReport(buildRIReportHTML(),'Reinspection Report - '+gv('ri-ref'));}
+function generateFeeBillPDF(){
+  calcFeeTotal();
+  const p=parseFloat(gv('fee-prof'))||0,r=parseFloat(gv('fee-ri'))||0,t=parseFloat(gv('fee-travel'))||0,ph=(parseFloat(gv('fee-photos-count'))||0)*(parseFloat(gv('fee-photo-rate'))||0),po=parseFloat(gv('fee-postal'))||0,tot=p+r+t+ph+po;
+  const fa=v=>v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  const html=`${getSurveyorHeader()}<table style="width:100%;border-collapse:collapse;font-size:0.83rem;margin-bottom:10px;"><tr><td style="padding:4px 0;color:#666;">Report No.</td><td>${gv('f-report-no')}</td><td style="color:#666;text-align:right;">Date :</td><td style="text-align:right;font-weight:700;">${gv('f-report-date')}</td></tr><tr><td style="color:#666;">GST No.</td><td>${gv('sp-gst')}</td><td style="color:#666;text-align:right;">Surveyor Code :</td><td style="text-align:right;">${gv('sp-code')}</td></tr><tr><td colspan="4" style="padding:4px 0;">Insurer Name : <strong>${gv('f-insurer')}</strong></td></tr><tr><td colspan="4" style="padding:4px 0;"><strong>Insured :</strong> ${gv('f-insured-name')}, ${gv('f-insured-addr')}</td></tr><tr><td style="color:#666;">Policy No.</td><td>${gv('f-policy-no')}</td><td style="color:#666;text-align:right;">Claim No.</td><td style="text-align:right;">${gv('f-claim-no')}</td></tr></table><table style="width:100%;border-collapse:collapse;font-size:0.83rem;border:1px solid #000;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="padding:6px 9px;text-align:left;width:40px;">Sr.</th><th style="padding:6px 9px;text-align:left;">Particular</th><th style="padding:6px 9px;text-align:right;">Amount Rs</th></tr></thead><tbody><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">1</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Professional Fees Rs.${fa(p)} + R.I Fees Rs.${fa(r)}</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">${fa(p+r)}</td></tr><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">2</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Travelling/Conveyance (${gv('fee-travel-note')})</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">${fa(t)}</td></tr><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">3</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Haltage</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">0.00</td></tr><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">4</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Digital Photo Charges ${gv('fee-photos-count')} No's @ Rs. ${gv('fee-photo-rate')}</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">${fa(ph)}</td></tr><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">5</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Postal/Courier Charges</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">${fa(po)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td colspan="2" style="padding:8px 9px;font-weight:700;text-align:right;">TOTAL :</td><td style="padding:8px 9px;text-align:right;font-weight:700;">${fa(tot)}</td></tr></tbody></table><div style="font-size:0.76rem;margin:7px 0 14px;font-style:italic;">RUPEES ${numberToWords(tot)} ONLY</div>${getSigBlock()}<div style="margin-top:18px;font-size:0.79rem;"><strong>Advance receipt</strong><br/>Bank Name : ${gv('bank-name')}<br/>A/C No. : ${gv('bank-ac')}<br/>IFSC CODE : ${gv('bank-ifsc')}<br/>PAN NO. : ${gv('bank-pan')}</div>`;
+  printReport(html,'Surveyor Fee Bill - '+gv('f-report-no'));
+}
+function generateAllReports(){showToast('Opening all 4 reports...');setTimeout(()=>generateSurveyReportPDF(),200);setTimeout(()=>generateBillCheckPDF(),1400);setTimeout(()=>generateRIPDF(),2600);setTimeout(()=>generateFeeBillPDF(),3800);}
+
+// ============================================================
+// REINSPECTION PARTS VERIFICATION
+// ============================================================
+function loadPartsForRI() {
+  if (assessRows.length === 0) {
+    showToast('No parts in assessment. Complete assessment first.', 'error');
+    return;
+  }
+  
+  // Load parts from assessment into RI tracking
+  riParts = assessRows
+    .filter(r => r.section === 'parts' && r.assessed > 0)
+    .map((r, i) => ({
+      id: 'ri-part-' + i,
+      particulars: r.particulars,
+      assessed: r.assessed,
+      status: 'replaced', // default to replaced
+      remarks: ''
+    }));
+  
+  // Auto-fill survey ref from report no
+  document.getElementById('ri-survey-ref').value = gv('f-report-no');
+  document.getElementById('ri-survey-date').value = gv('f-report-date');
+  
+  renderRIParts();
+  showToast(`Loaded ${riParts.length} parts from assessment`, 'success');
+}
+
+function renderRIParts() {
+  const tbody = document.getElementById('ri-parts-tbody');
+  tbody.innerHTML = '';
+  
+  if (riParts.length === 0) {
+    const tr = tbody.insertRow();
+    tr.innerHTML = '<td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">No parts loaded. Click "Load Parts from Assessment" button above.</td>';
+    updateRISummary();
+    return;
+  }
+  
+  riParts.forEach((part, idx) => {
+    const tr = tbody.insertRow();
+    tr.innerHTML = `
+      <td class="mono" style="color:var(--muted);">${idx + 1}</td>
+      <td>${part.particulars}</td>
+      <td class="text-right mono">₹ ${part.assessed.toFixed(2)}</td>
+      <td class="text-center">
+        <select class="form-select" style="font-size:0.75rem;padding:4px 8px;" onchange="riParts[${idx}].status=this.value;updateRISummary();">
+          <option value="replaced" ${part.status === 'replaced' ? 'selected' : ''}>✓ Replaced</option>
+          <option value="not-replaced" ${part.status === 'not-replaced' ? 'selected' : ''}>✗ Not Replaced</option>
+          <option value="repaired" ${part.status === 'repaired' ? 'selected' : ''}>⚡ Repaired (Not Replaced)</option>
+        </select>
+      </td>
+      <td>
+        <input type="text" class="text-input-cell" style="font-size:0.75rem;" placeholder="Optional remarks..." value="${part.remarks}" onchange="riParts[${idx}].remarks=this.value;">
+      </td>
+    `;
+  });
+  
+  updateRISummary();
+}
+
+function updateRISummary() {
+  const total = riParts.length;
+  const replaced = riParts.filter(p => p.status === 'replaced').length;
+  const notReplaced = riParts.filter(p => p.status === 'not-replaced' || p.status === 'repaired').length;
+  const rate = total > 0 ? Math.round((replaced / total) * 100) : 0;
+  
+  document.getElementById('ri-total-allowed').textContent = total;
+  document.getElementById('ri-parts-replaced').textContent = replaced;
+  document.getElementById('ri-parts-not-replaced').textContent = notReplaced;
+  document.getElementById('ri-replacement-rate').textContent = rate + '%';
+}
+
+// ============================================================
+// VOICE INPUT WITH AI VERIFICATION
+// ============================================================
+function initVoiceRecognition() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    console.warn('Speech recognition not supported');
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  voiceRecognition = new SpeechRecognition();
+  voiceRecognition.continuous = false;
+  voiceRecognition.interimResults = false;
+  voiceRecognition.lang = 'en-IN'; // Indian English
+  
+  voiceRecognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('voice-record-btn').classList.add('recording');
+    document.getElementById('voice-record-icon').textContent = '⏸️';
+    document.getElementById('voice-record-text').textContent = 'Recording...';
+    document.getElementById('voice-status').textContent = 'Listening... Speak now';
+    document.getElementById('voice-status').style.color = 'var(--red)';
+  };
+  
+  voiceRecognition.onresult = async (event) => {
+    const transcript = event.results[0][0].transcript;
+    voiceTranscript = transcript;
+    
+    document.getElementById('voice-transcript').textContent = transcript;
+    document.getElementById('voice-transcript-section').style.display = 'block';
+    document.getElementById('voice-status').textContent = 'Processing with AI...';
+    document.getElementById('voice-status').style.color = '#fbbf24';
+    
+    // Verify and format with Claude AI
+    await verifyVoiceInput(transcript);
+  };
+  
+  voiceRecognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    showToast('Voice input error: ' + event.error, 'error');
+    resetVoiceRecording();
+  };
+  
+  voiceRecognition.onend = () => {
+    resetVoiceRecording();
+  };
+}
+
+async function verifyVoiceInput(transcript) {
+  try {
+    const fieldLabel = currentVoiceFieldLabel || 'field';
+    const prompt = `You are helping fill a motor insurance survey form. The user spoke the following to fill the "${fieldLabel}" field:
+
+"${transcript}"
+
+Your task:
+1. Clean up the transcript (remove filler words, fix grammar)
+2. Format it appropriately for the field type:
+   - If it's a name: proper capitalization
+   - If it's a date: convert to YYYY-MM-DD format
+   - If it's a number: extract just the number
+   - If it's a vehicle registration: format as UPPERCASE with proper spacing (e.g., MH-12-AB-1234)
+   - If it's a chassis/engine number: UPPERCASE, no spaces
+   - If it's an address: proper capitalization, clear formatting
+   - If it's a description: clear, professional language
+3. Return ONLY the cleaned, formatted value. No explanation, no quotes, no extra text.
+
+If the input is unclear or doesn't make sense for this field, return: ERROR: [brief reason]`;
+
+    const verifiedText = await callGemini([{ text: prompt }], 500);
+    
+    if (verifiedText.startsWith('ERROR:')) {
+      document.getElementById('voice-status').textContent = verifiedText;
+      document.getElementById('voice-status').style.color = 'var(--red)';
+      showToast('Could not verify voice input', 'error');
+      return;
+    }
+    
+    voiceVerifiedData = verifiedText;
+    document.getElementById('voice-verified-content').textContent = verifiedText;
+    document.getElementById('voice-verification-section').style.display = 'block';
+    document.getElementById('voice-apply-btn').style.display = 'inline-flex';
+    document.getElementById('voice-status').textContent = '✓ Ready to apply';
+    document.getElementById('voice-status').style.color = 'var(--green)';
+    
+  } catch (error) {
+    console.error('AI verification error:', error);
+    showToast('Verification failed: ' + error.message, 'error');
+    document.getElementById('voice-status').textContent = 'Verification failed';
+    document.getElementById('voice-status').style.color = 'var(--red)';
+  }
+}
+
+function openVoiceInput(fieldId, fieldLabel) {
+  currentVoiceFieldId = fieldId;
+  currentVoiceFieldLabel = fieldLabel;
+  document.getElementById('voice-field-name').textContent = fieldLabel;
+  document.getElementById('voice-modal').classList.add('open');
+  
+  // Reset state
+  voiceTranscript = '';
+  voiceVerifiedData = '';
+  document.getElementById('voice-transcript-section').style.display = 'none';
+  document.getElementById('voice-verification-section').style.display = 'none';
+  document.getElementById('voice-apply-btn').style.display = 'none';
+  document.getElementById('voice-status').textContent = 'Click the microphone to start recording';
+  document.getElementById('voice-status').style.color = 'var(--muted)';
+  
+  // Initialize recognition if needed
+  if (!voiceRecognition) initVoiceRecognition();
+}
+
+function toggleVoiceRecording() {
+  if (!voiceRecognition) {
+    showToast('Voice recognition not supported in this browser', 'error');
+    return;
+  }
+  
+  if (isRecording) {
+    voiceRecognition.stop();
+  } else {
+    voiceRecognition.start();
+  }
+}
+
+function resetVoiceRecording() {
+  isRecording = false;
+  const btn = document.getElementById('voice-record-btn');
+  if (btn) {
+    btn.classList.remove('recording');
+    document.getElementById('voice-record-icon').textContent = '🎤';
+    document.getElementById('voice-record-text').textContent = 'Start Recording';
+  }
+}
+
+function applyVoiceInput() {
+  if (!currentVoiceFieldId || !voiceVerifiedData) return;
+  
+  const field = document.getElementById(currentVoiceFieldId);
+  if (field) {
+    field.value = voiceVerifiedData;
+    field.classList.add('ai-filled');
+    showToast(`Voice input applied to ${currentVoiceFieldLabel}`, 'success');
+    closeVoiceModal();
+  }
+}
+
+function closeVoiceModal() {
+  document.getElementById('voice-modal').classList.remove('open');
+  if (isRecording && voiceRecognition) {
+    voiceRecognition.stop();
+  }
+  currentVoiceFieldId = null;
+  currentVoiceFieldLabel = null;
+}
+
+function addVoiceButtonToField(fieldId, fieldLabel) {
+  const field = document.getElementById(fieldId);
+  if (!field || field.closest('.form-group').querySelector('.voice-btn')) return;
+  
+  const voiceBtn = document.createElement('button');
+  voiceBtn.className = 'voice-btn';
+  voiceBtn.innerHTML = '🎤';
+  voiceBtn.type = 'button';
+  voiceBtn.title = 'Voice input';
+  voiceBtn.onclick = (e) => {
+    e.preventDefault();
+    openVoiceInput(fieldId, fieldLabel);
+  };
+  
+  field.closest('.form-group').style.position = 'relative';
+  field.style.paddingRight = '45px';
+  field.parentElement.appendChild(voiceBtn);
+}
+
+// INIT
+window.addEventListener('load', () => {
+  // Pre-fill surveyor profile defaults
+  document.getElementById('sp-name').value = 'VIKRAM PATIL';
+  document.getElementById('sp-qual').value = 'B.Sc., Dip. in Auto Engg.';
+  document.getElementById('sp-lic').value = 'SLA-34369/2025-2028';
+  document.getElementById('sp-lic-exp').value = '27-11-2028';
+  document.getElementById('sp-iiisla').value = 'F/W/00200';
+  document.getElementById('sp-code').value = 'SU00006883';
+  document.getElementById('sp-categories').value = 'MOTOR, MARINE, ENGG';
+  document.getElementById('sp-email').value = 'vikram.dhule9@gmail.com';
+  document.getElementById('sp-mobile').value = '9518510366, 9423662250';
+  document.getElementById('sp-addr').value = '62, Vighnaharta Colony, Near Aakshwani, Deopur, Dhule- 424005.';
+  document.getElementById('f-report-no').value = '';
+  document.getElementById('f-report-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('bank-name').value = 'State Bank Of India';
+  document.getElementById('bank-ac').value = '30714578614';
+  document.getElementById('bank-ifsc').value = 'SBIN0000366';
+  document.getElementById('bank-pan').value = 'ACJPP9011H';
+  
+  // Add voice input buttons to key fields
+  setTimeout(() => {
+    // Policy & Claim fields
+    addVoiceButtonToField('f-policy-no', 'Policy Number');
+    addVoiceButtonToField('f-claim-no', 'Claim Number');
+    addVoiceButtonToField('f-insurer', 'Insurer Name & Address');
+    addVoiceButtonToField('f-policy-office', 'Policy Issuing Office');
+    addVoiceButtonToField('f-appt-office', 'Appointing Office');
+    
+    // Insured fields
+    addVoiceButtonToField('f-insured-name', 'Insured Name');
+    addVoiceButtonToField('f-insured-mobile', 'Mobile Number');
+    addVoiceButtonToField('f-insured-addr', 'Address');
+    addVoiceButtonToField('f-hpa', 'HPA / Finance With');
+    
+    // Vehicle fields
+    addVoiceButtonToField('f-reg-no', 'Registration Number');
+    addVoiceButtonToField('f-make', 'Make');
+    addVoiceButtonToField('f-model', 'Model / Variant');
+    addVoiceButtonToField('f-chassis', 'Chassis Number');
+    addVoiceButtonToField('f-engine', 'Engine Number');
+    addVoiceButtonToField('f-cc', 'Cubic Capacity');
+    addVoiceButtonToField('f-body-type', 'Body Type');
+    addVoiceButtonToField('f-colour', 'Colour');
+    addVoiceButtonToField('f-rlw', 'RLW / Seating Capacity');
+    addVoiceButtonToField('f-fitness', 'Fitness Cert No.');
+    addVoiceButtonToField('f-route', 'Route / Area');
+    
+    // Driver fields
+    addVoiceButtonToField('f-driver-name', 'Driver Name');
+    addVoiceButtonToField('f-mdl', 'MDL Number');
+    addVoiceButtonToField('f-dl-valid', 'Validity');
+    addVoiceButtonToField('f-dl-auth', 'Issuing Authority');
+    addVoiceButtonToField('f-dl-type', 'Type of License');
+    
+    // Accident fields
+    addVoiceButtonToField('f-poa', 'Place of Accident');
+    addVoiceButtonToField('f-survey-place', 'Place of Survey');
+    addVoiceButtonToField('f-cause', 'Cause & Nature of Accident');
+    addVoiceButtonToField('f-tp', 'Third Party Details');
+    
+    // RI fields
+    addVoiceButtonToField('ri-ref', 'RI Reference Number');
+    
+    // Spot Survey voice inputs
+    addVoiceButtonToField('spot-report-no', 'Spot Report Number');
+    addVoiceButtonToField('spot-accident-place', 'Place of Accident');
+    addVoiceButtonToField('spot-survey-place', 'Place of Survey');
+    addVoiceButtonToField('spot-accident-cause', 'Cause of Accident');
+    addVoiceButtonToField('spot-driver-name', 'Driver Name');
+    addVoiceButtonToField('spot-mdl-no', 'MDL Number');
+    addVoiceButtonToField('spot-dl-authority', 'DL Issuing Authority');
+    addVoiceButtonToField('spot-dl-type', 'Licence Type');
+    addVoiceButtonToField('spot-dl-invalid-remarks', 'DL Invalid Remarks');
+    addVoiceButtonToField('spot-cn-no', 'Challan Number');
+    addVoiceButtonToField('spot-load-desc', 'Load Description');
+    addVoiceButtonToField('spot-police-station', 'Police Station Name');
+    addVoiceButtonToField('spot-diary-no', 'Station Diary Number');
+    addVoiceButtonToField('spot-tp-details', 'Third Party Details');
+    addVoiceButtonToField('spot-damage-details', 'Damage Details');
+    addVoiceButtonToField('spot-comments', 'Additional Comments');
+  }, 500);
+  
+  showPage('dashboard');
+  refreshReportsList();
+  renderSpotDamageRows();
+});
+</script>
+</body>
+</html>
