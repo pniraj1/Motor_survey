@@ -457,11 +457,25 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
     <!-- ====== AI DOCUMENT SCAN ====== -->
     <div id="page-upload" class="tab-panel">
-      <div class="alert alert-ai" style="margin-bottom:18px;">
+      <div class="alert alert-ai" style="margin-bottom:14px;">
         <span>🤖</span>
         <div>
           <strong>AI-Powered Document Extraction</strong> — Upload photos or scanned PDFs below.
           Claude AI will instantly read and auto-fill all form fields. Review and edit extracted values before generating reports.
+        </div>
+      </div>
+
+      <!-- Vehicle Type Toggle -->
+      <div class="card mb-6" style="margin-bottom:16px;">
+        <div class="card-body" style="padding:14px 18px;">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <span style="font-weight:600;font-size:0.9rem;">Vehicle Type:</span>
+            <div class="policy-toggle" id="veh-type-toggle">
+              <button class="active" onclick="setVehicleType('commercial')">🚛 Commercial Vehicle</button>
+              <button onclick="setVehicleType('private')">🚗 Private Vehicle</button>
+            </div>
+            <span id="veh-type-hint" style="font-size:0.78rem;color:var(--muted);font-style:italic;">Permit, Fitness, Authorisation &amp; Lok Challan upload enabled</span>
+          </div>
         </div>
       </div>
 
@@ -582,6 +596,86 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           <div style="margin:0 12px 12px;" id="damage-analysis-btn" class="hidden">
             <button class="btn btn-ai btn-sm" style="width:100%;justify-content:center;" onclick="analyzeSavedPhotos()">🔍 AI Damage Analysis</button>
           </div>
+        </div>
+
+        <!-- PERMIT (Commercial only) -->
+        <div class="doc-card commercial-doc" id="card-permit"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'permit')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">📋</span>
+            <div><div class="doc-type-label">Permit</div><div class="doc-type-sub">Route/National/State Permit</div></div>
+            <span class="badge" style="background:#d97706;color:#fff;font-size:0.6rem;padding:2px 6px;">Commercial</span>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('permit')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> Permit — photo or PDF</div>
+          </div>
+          <input type="file" id="upload-permit" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none" onchange="handleDocFile(this,'permit')"/>
+          <div class="doc-file-preview" id="preview-permit"></div>
+          <div class="doc-status" id="status-permit"></div>
+          <div class="doc-extracted-fields" id="fields-permit"></div>
+        </div>
+
+        <!-- AUTHORISATION (Commercial only) -->
+        <div class="doc-card commercial-doc" id="card-auth"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'auth')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">🪙</span>
+            <div><div class="doc-type-label">Authorisation</div><div class="doc-type-sub">Badge / Authorisation Certificate</div></div>
+            <span class="badge" style="background:#d97706;color:#fff;font-size:0.6rem;padding:2px 6px;">Commercial</span>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('auth')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> Authorisation — photo or PDF</div>
+          </div>
+          <input type="file" id="upload-auth" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none" onchange="handleDocFile(this,'auth')"/>
+          <div class="doc-file-preview" id="preview-auth"></div>
+          <div class="doc-status" id="status-auth"></div>
+          <div class="doc-extracted-fields" id="fields-auth"></div>
+        </div>
+
+        <!-- FITNESS (Commercial only) -->
+        <div class="doc-card commercial-doc" id="card-fitness-doc"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'fitness')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">🔩</span>
+            <div><div class="doc-type-label">Fitness Certificate</div><div class="doc-type-sub">Vehicle Roadworthiness Certificate</div></div>
+            <span class="badge" style="background:#d97706;color:#fff;font-size:0.6rem;padding:2px 6px;">Commercial</span>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('fitness')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> Fitness Cert — photo or PDF</div>
+          </div>
+          <input type="file" id="upload-fitness" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none" onchange="handleDocFile(this,'fitness')"/>
+          <div class="doc-file-preview" id="preview-fitness"></div>
+          <div class="doc-status" id="status-fitness"></div>
+          <div class="doc-extracted-fields" id="fields-fitness"></div>
+        </div>
+
+        <!-- LOK CHALLAN (Commercial only) -->
+        <div class="doc-card commercial-doc" id="card-lok-challan"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDocDrop(event,'lok-challan')">
+          <div class="doc-card-header">
+            <span class="doc-type-icon">📦</span>
+            <div><div class="doc-type-label">Lok Challan</div><div class="doc-type-sub">Goods/Load Challan Document</div></div>
+            <span class="badge" style="background:#d97706;color:#fff;font-size:0.6rem;padding:2px 6px;">Commercial</span>
+          </div>
+          <div class="doc-drop-zone" onclick="triggerDocUpload('lok-challan')">
+            <div class="dz-icon">📤</div>
+            <div class="dz-text"><strong>Click or drag</strong> Lok Challan — photo or PDF</div>
+          </div>
+          <input type="file" id="upload-lok-challan" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none" onchange="handleDocFile(this,'lok-challan')"/>
+          <div class="doc-file-preview" id="preview-lok-challan"></div>
+          <div class="doc-status" id="status-lok-challan"></div>
+          <div class="doc-extracted-fields" id="fields-lok-challan"></div>
         </div>
 
       </div><!-- end doc-upload-grid -->
@@ -818,96 +912,52 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       <div class="flex-between mb-4">
         <div class="alert alert-info" style="margin:0;flex:1;margin-right:14px;">
           <span>📍</span>
-          <span><strong>Spot Survey Report</strong> — On-the-spot accident inspection. Conducted at accident location before vehicle moves to garage.</span>
+          <span><strong>Spot Survey Report</strong> — Independent on-the-spot accident inspection. This report is generated and filed separately from the Final Survey Report.</span>
         </div>
-        <button class="btn btn-gold" onclick="generateSpotSurveyPDF()">📄 Generate PDF</button>
+        <button class="btn btn-gold" onclick="generateSpotSurveyPDF()">📄 Generate &amp; Print PDF</button>
       </div>
 
+      <!-- Report Header -->
       <div class="card mb-4">
-        <div class="card-header"><h3>Spot Survey Details</h3></div>
+        <div class="card-header"><h3>Report Details</h3></div>
         <div class="card-body">
           <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Report No.</label>
-              <input class="form-input" id="spot-report-no" placeholder="e.g. SPO/463/2025"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Date of Report</label>
-              <input class="form-input" type="date" id="spot-report-date"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Date of Allotment</label>
-              <input class="form-input" type="date" id="spot-allot-date"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Date & Time of Survey</label>
-              <input class="form-input" type="datetime-local" id="spot-survey-datetime"/>
-            </div>
+            <div class="form-group"><label class="form-label">Spot Report No.</label><input class="form-input" id="spot-report-no" placeholder="e.g. SPO/463/2025"/></div>
+            <div class="form-group"><label class="form-label">Date of Report</label><input class="form-input" type="date" id="spot-report-date"/></div>
+            <div class="form-group"><label class="form-label">Date of Allotment</label><input class="form-input" type="date" id="spot-allot-date"/></div>
+            <div class="form-group"><label class="form-label">Date &amp; Time of Survey</label><input class="form-input" type="datetime-local" id="spot-survey-datetime"/></div>
           </div>
         </div>
       </div>
 
+      <!-- Accident Details -->
       <div class="card mb-4">
         <div class="card-header"><h3>Accident Details</h3></div>
         <div class="card-body">
           <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Date & Time of Accident</label>
-              <input class="form-input" type="datetime-local" id="spot-accident-datetime"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Place of Accident</label>
-              <input class="form-input" id="spot-accident-place" placeholder="Location details"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Place of Survey</label>
-              <input class="form-input" id="spot-survey-place" placeholder="Survey location"/>
-            </div>
-            <div class="form-group span-2">
-              <label class="form-label">Cause & Nature of Accident</label>
-              <textarea class="form-textarea" id="spot-accident-cause" rows="3" placeholder="Describe how the accident occurred..."></textarea>
-            </div>
+            <div class="form-group"><label class="form-label">Date &amp; Time of Accident</label><input class="form-input" type="datetime-local" id="spot-accident-datetime"/></div>
+            <div class="form-group"><label class="form-label">Place of Accident</label><input class="form-input" id="spot-accident-place" placeholder="Location details"/></div>
+            <div class="form-group"><label class="form-label">Place of Survey (Workshop)</label><input class="form-input" id="spot-survey-place" placeholder="Survey location"/></div>
+            <div class="form-group span-2"><label class="form-label">Cause &amp; Nature of Accident</label><textarea class="form-textarea" id="spot-accident-cause" rows="3" placeholder="Describe how the accident occurred..."></textarea></div>
           </div>
         </div>
       </div>
 
+      <!-- Driver's Particulars -->
       <div class="card mb-4">
         <div class="card-header">
-          <h3>Driver's Particulars & DL Verification</h3>
+          <h3>Driver's Particulars &amp; DL Verification</h3>
           <span class="badge" id="dl-validity-badge" style="background:var(--muted);">Not Verified</span>
         </div>
         <div class="card-body">
-          <div class="alert alert-ai" style="margin-bottom:14px;">
-            <span>⚠️</span>
-            <span><strong>DL Validity Check Required:</strong> If driving licence is invalid/expired, add remarks in the report.</span>
-          </div>
           <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Driver Name</label>
-              <input class="form-input" id="spot-driver-name" placeholder="Full name" onchange="checkDLValidity()"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">MDL Number</label>
-              <input class="form-input" id="spot-mdl-no" placeholder="e.g. RJ0520160011747" onchange="checkDLValidity()"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Issuing Authority</label>
-              <input class="form-input" id="spot-dl-authority" placeholder="RTO/Sub Office"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Date of Issue</label>
-              <input class="form-input" type="date" id="spot-dl-issue" onchange="checkDLValidity()"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Valid Upto</label>
-              <input class="form-input" type="date" id="spot-dl-valid" onchange="checkDLValidity()"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Type of Licence</label>
-              <input class="form-input" id="spot-dl-type" placeholder="LMV, MCWG, TRANS"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">MDL Verification Status</label>
+            <div class="form-group"><label class="form-label">Driver Name</label><input class="form-input" id="spot-driver-name" placeholder="Full name" onchange="checkDLValidity()"/></div>
+            <div class="form-group"><label class="form-label">MDL Number</label><input class="form-input" id="spot-mdl-no" placeholder="e.g. RJ0520160011747" onchange="checkDLValidity()"/></div>
+            <div class="form-group"><label class="form-label">Issuing Authority</label><input class="form-input" id="spot-dl-authority" placeholder="RTO/Sub Office"/></div>
+            <div class="form-group"><label class="form-label">Date of Issue</label><input class="form-input" type="date" id="spot-dl-issue" onchange="checkDLValidity()"/></div>
+            <div class="form-group"><label class="form-label">Valid Upto</label><input class="form-input" type="date" id="spot-dl-valid" onchange="checkDLValidity()"/></div>
+            <div class="form-group"><label class="form-label">Type of Licence</label><input class="form-input" id="spot-dl-type" placeholder="LMV, MCWG, TRANS"/></div>
+            <div class="form-group"><label class="form-label">MDL Verification Status</label>
               <select class="form-select" id="spot-mdl-verified" onchange="checkDLValidity()">
                 <option value="verified">Original MDL Verified</option>
                 <option value="photocopy">Photocopy Verified</option>
@@ -915,152 +965,104 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
               </select>
             </div>
             <div class="form-group span-2" id="dl-invalid-remarks-section" style="display:none;">
-              <label class="form-label" style="color:var(--red);font-weight:600;">⚠️ DL Invalid - Mandatory Remarks</label>
-              <textarea class="form-textarea" id="spot-dl-invalid-remarks" rows="2" placeholder="Explain DL invalidity issue (expired, wrong class, not present, etc.)..."></textarea>
+              <label class="form-label" style="color:var(--red);font-weight:600;">⚠️ DL Invalid — Mandatory Remarks</label>
+              <textarea class="form-textarea" id="spot-dl-invalid-remarks" rows="2" placeholder="Explain DL invalidity (expired, wrong class, not present, etc.)..."></textarea>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card mb-4">
-        <div class="card-header"><h3>Load/Challan Details</h3></div>
+      <!-- Commercial Vehicle Docs Section -->
+      <div class="card mb-4" id="spot-commercial-section">
+        <div class="card-header"><h3>🚛 Commercial Vehicle Documents</h3><span class="badge" style="background:#d97706;color:#fff;">Commercial Only</span></div>
         <div class="card-body">
           <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">CN/Challan Number</label>
-              <input class="form-input" id="spot-cn-no" placeholder="e.g. 340867"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">CN Date</label>
-              <input class="form-input" type="date" id="spot-cn-date"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Load Carrying Capacity (KG)</label>
-              <input class="form-input" type="number" id="spot-load-capacity" placeholder="e.g. 20350"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Actual Load Weight (KG)</label>
-              <input class="form-input" type="number" id="spot-actual-load" placeholder="e.g. 17500"/>
-            </div>
-            <div class="form-group span-2">
-              <label class="form-label">Load Description</label>
-              <textarea class="form-textarea" id="spot-load-desc" rows="2" placeholder="Details of load/cargo (items, quantity, from-to locations)..."></textarea>
-            </div>
+            <div class="form-group"><label class="form-label">Permit No.</label><input class="form-input" id="spot-permit-no" placeholder="e.g. RJ/14/GEN/2245"/></div>
+            <div class="form-group"><label class="form-label">Permit Type</label><input class="form-input" id="spot-permit-type" placeholder="National/State/Route"/></div>
+            <div class="form-group"><label class="form-label">Permit Valid From</label><input class="form-input" type="date" id="spot-permit-from"/></div>
+            <div class="form-group"><label class="form-label">Permit Valid Upto</label><input class="form-input" type="date" id="spot-permit-to"/></div>
+            <div class="form-group"><label class="form-label">Authorisation No.</label><input class="form-input" id="spot-auth-no" placeholder="Badge/Auth number"/></div>
+            <div class="form-group"><label class="form-label">Auth Valid Upto</label><input class="form-input" type="date" id="spot-auth-valid"/></div>
+            <div class="form-group"><label class="form-label">Fitness Cert. No.</label><input class="form-input" id="spot-fitness-no" placeholder="Fitness certificate number"/></div>
+            <div class="form-group"><label class="form-label">Fitness Valid Upto</label><input class="form-input" type="date" id="spot-fitness-valid"/></div>
           </div>
         </div>
       </div>
 
+      <!-- Load / Lok Challan -->
+      <div class="card mb-4" id="spot-challan-section">
+        <div class="card-header"><h3>Load / Lok Challan Details</h3><span class="badge" style="background:#d97706;color:#fff;">Commercial Only</span></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">CN/Challan Number</label><input class="form-input" id="spot-cn-no" placeholder="e.g. 340867"/></div>
+            <div class="form-group"><label class="form-label">CN Date</label><input class="form-input" type="date" id="spot-cn-date"/></div>
+            <div class="form-group"><label class="form-label">Load Carrying Capacity (KG)</label><input class="form-input" type="number" id="spot-load-capacity" placeholder="e.g. 20350"/></div>
+            <div class="form-group"><label class="form-label">Actual Load Weight (KG)</label><input class="form-input" type="number" id="spot-actual-load" placeholder="e.g. 17500"/></div>
+            <div class="form-group"><label class="form-label">Origin</label><input class="form-input" id="spot-load-origin" placeholder="Loading point"/></div>
+            <div class="form-group"><label class="form-label">Destination</label><input class="form-input" id="spot-load-dest" placeholder="Delivery point"/></div>
+            <div class="form-group span-2"><label class="form-label">Load Description (Goods)</label><textarea class="form-textarea" id="spot-load-desc" rows="2" placeholder="Nature of goods, quantity, consignee..."></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Police Case -->
       <div class="card mb-4">
         <div class="card-header"><h3>Police Case Particulars</h3></div>
         <div class="card-body">
           <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Accident Reported to Police?</label>
-              <select class="form-select" id="spot-police-reported">
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+            <div class="form-group"><label class="form-label">Reported to Police?</label>
+              <select class="form-select" id="spot-police-reported"><option value="no">No</option><option value="yes">Yes</option></select>
             </div>
-            <div class="form-group">
-              <label class="form-label">Police Station Name</label>
-              <input class="form-input" id="spot-police-station" placeholder="Station name"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Station Diary No.</label>
-              <input class="form-input" id="spot-diary-no" placeholder="FIR/Diary number"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Panchanama Done?</label>
-              <select class="form-select" id="spot-panchanama">
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+            <div class="form-group"><label class="form-label">Police Station</label><input class="form-input" id="spot-police-station" placeholder="Station name"/></div>
+            <div class="form-group"><label class="form-label">Station Diary / FIR No.</label><input class="form-input" id="spot-diary-no" placeholder="FIR/Diary number"/></div>
+            <div class="form-group"><label class="form-label">Panchanama Done?</label>
+              <select class="form-select" id="spot-panchanama"><option value="no">No</option><option value="yes">Yes</option></select>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Third Party -->
       <div class="card mb-4">
         <div class="card-header"><h3>Third Party Details</h3></div>
         <div class="card-body">
           <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Third Party Involved?</label>
+            <div class="form-group"><label class="form-label">Third Party Involved?</label>
               <select class="form-select" id="spot-tp-involved">
                 <option value="no">No</option>
                 <option value="tppd">TPPD (Property Damage)</option>
                 <option value="tppi">TPPI (Personal Injury)</option>
-                <option value="both">Both TPPD & TPPI</option>
+                <option value="both">Both TPPD &amp; TPPI</option>
               </select>
             </div>
-            <div class="form-group span-2">
-              <label class="form-label">Third Party Details</label>
-              <textarea class="form-textarea" id="spot-tp-details" rows="2" placeholder="Vehicle number, driver details, injury/damage details..."></textarea>
-            </div>
+            <div class="form-group span-2"><label class="form-label">Third Party Details</label><textarea class="form-textarea" id="spot-tp-details" rows="2" placeholder="Vehicle number, driver details, injury/damage details..."></textarea></div>
           </div>
         </div>
       </div>
 
+      <!-- Damage at Spot -->
       <div class="card mb-4">
         <div class="card-header"><h3>Damage Assessment at Spot</h3></div>
         <div class="card-body">
-          <div class="alert alert-warning" style="margin-bottom:14px;">
-            <span>📸</span>
-            <span>Document all visible damages. Hidden damages may be found during garage inspection.</span>
-          </div>
-          
-          <!-- Damage Summary -->
           <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:18px;">
-            <div class="form-group">
-              <label class="form-label">Damage Severity</label>
-              <select class="form-select" id="spot-damage-severity">
-                <option value="minor">Minor</option>
-                <option value="moderate">Moderate</option>
-                <option value="major">Major</option>
-              </select>
+            <div class="form-group"><label class="form-label">Damage Severity</label>
+              <select class="form-select" id="spot-damage-severity"><option value="minor">Minor</option><option value="moderate">Moderate</option><option value="major">Major</option></select>
             </div>
-            <div class="form-group">
-              <label class="form-label">Airbags Deployed</label>
-              <select class="form-select" id="spot-airbags">
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
+            <div class="form-group"><label class="form-label">Airbags Deployed</label>
+              <select class="form-select" id="spot-airbags"><option value="no">No</option><option value="yes">Yes</option></select>
             </div>
-            <div class="form-group">
-              <label class="form-label">Vehicle Drivable</label>
-              <select class="form-select" id="spot-drivable">
-                <option value="yes">Yes</option>
-                <option value="no">No — Towed</option>
-                <option value="limited">Limited — Cautiously</option>
-              </select>
+            <div class="form-group"><label class="form-label">Vehicle Drivable</label>
+              <select class="form-select" id="spot-drivable"><option value="yes">Yes</option><option value="no">No — Towed</option><option value="limited">Limited — Cautiously</option></select>
             </div>
           </div>
-
-          <!-- Component Damage Table -->
           <div style="background:var(--navy);color:white;padding:10px 14px;border-radius:6px 6px 0 0;display:grid;grid-template-columns:200px 1fr 50px;gap:12px;font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">
-            <div>System / Component</div>
-            <div>Damage Observed at Spot</div>
-            <div>Action</div>
+            <div>System / Component</div><div>Damage Observed at Spot</div><div>Del</div>
           </div>
-          
-          <div id="spot-damage-rows" style="border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;">
-            <!-- Rows will be rendered here -->
-          </div>
-          
+          <div id="spot-damage-rows" style="border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;"></div>
           <button class="btn btn-secondary" style="margin-top:12px;" onclick="addSpotDamageRow()">+ Add Component</button>
-          
           <div class="form-group" style="margin-top:18px;">
-            <label class="form-label">Additional Comments/Recommendations</label>
+            <label class="form-label">Additional Comments / Vehicle will be shifted to</label>
             <textarea class="form-textarea" id="spot-comments" rows="3" placeholder="Vehicle will be shifted to... Garage inspection required for... Any hidden damages to be noted during dismantling..."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="report-preview">
-        <div class="report-header-bar"><span>Spot Survey Report — Preview</span></div>
-        <div class="report-doc" id="spot-survey-html">
-          <div style="text-align:center;padding:36px;color:var(--muted);">
-            <button class="btn btn-primary" onclick="refreshSpotSurvey()">Generate Preview</button>
           </div>
         </div>
       </div>
@@ -1451,6 +1453,7 @@ async function callGemini(parts, maxTokens = 3000) {
 // STATE
 // ============================================================
 let depType = 'nil';
+let vehicleType = 'commercial'; // 'commercial' | 'private'
 let currentModal = null;
 let assessRows = [];
 let sigDataUrl = null;
@@ -1629,14 +1632,96 @@ Return ONLY a JSON object:
   "overall_damage_summary": "",
   "recommended_repairs": []
 }
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  permit: `You are an expert at reading Indian commercial vehicle permit documents (Route Permit, National Permit, State Permit). Extract ALL visible fields. Return ONLY a JSON object:
+{
+  "permit_no": "",
+  "permit_type": "",
+  "vehicle_number": "",
+  "validity_from": "",
+  "validity_to": "",
+  "route": "",
+  "issuing_authority": "",
+  "goods_category": ""
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  auth: `You are an expert at reading Indian commercial vehicle authorisation certificates (Badge, Authorisation). Extract ALL visible fields. Return ONLY a JSON object:
+{
+  "auth_no": "",
+  "auth_type": "",
+  "vehicle_number": "",
+  "validity_from": "",
+  "validity_to": "",
+  "issuing_authority": "",
+  "remarks": ""
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  fitness: `You are an expert at reading Indian vehicle fitness certificates (roadworthiness certificate issued by RTO). Extract ALL visible fields. Return ONLY a JSON object:
+{
+  "fitness_cert_no": "",
+  "vehicle_number": "",
+  "chassis_number": "",
+  "engine_number": "",
+  "validity_from": "",
+  "validity_to": "",
+  "issuing_authority": "",
+  "gross_weight": "",
+  "unladen_weight": ""
+}
+Return ONLY the JSON. No explanation, no markdown, no backticks.`,
+
+  'lok-challan': `You are an expert at reading Indian goods transport Lok Challan / Consignment Note documents. Extract ALL visible fields. Return ONLY a JSON object:
+{
+  "challan_no": "",
+  "challan_date": "",
+  "vehicle_number": "",
+  "origin": "",
+  "destination": "",
+  "consignor": "",
+  "consignee": "",
+  "goods_description": "",
+  "weight_kg": "",
+  "freight_amount": "",
+  "remarks": ""
+}
 Return ONLY the JSON. No explanation, no markdown, no backticks.`
 };
 
-function triggerDocUpload(type) { document.getElementById('upload-' + type).click(); }
+// ── Vehicle Type Toggle ──
+function setVehicleType(type) {
+  vehicleType = type;
+  document.querySelectorAll('#veh-type-toggle button').forEach((b,i) => {
+    b.classList.toggle('active', (type==='commercial'&&i===0)||(type==='private'&&i===1));
+  });
+  const hint = document.getElementById('veh-type-hint');
+  const isComm = type === 'commercial';
+  if (hint) hint.textContent = isComm
+    ? 'Permit, Fitness, Authorisation & Lok Challan upload enabled'
+    : 'Standard documents only';
+  // Show/hide commercial doc cards on upload page
+  document.querySelectorAll('.commercial-doc').forEach(el => {
+    el.style.display = isComm ? '' : 'none';
+  });
+  // Show/hide commercial sections on spot survey page
+  const commSec = document.getElementById('spot-commercial-section');
+  const challSec = document.getElementById('spot-challan-section');
+  if (commSec) commSec.style.display = isComm ? '' : 'none';
+  if (challSec) challSec.style.display = isComm ? '' : 'none';
+}
+
+function triggerDocUpload(type) {
+  const el = document.getElementById('upload-' + type);
+  if (el) el.click();
+}
 
 function handleDocDrop(e, type) {
   e.preventDefault();
-  document.getElementById('card-' + type).classList.remove('dragover');
+  const cardId = type === 'fitness' ? 'card-fitness-doc' : type === 'lok-challan' ? 'card-lok-challan' : 'card-' + type;
+  const card = document.getElementById(cardId);
+  if (card) card.classList.remove('dragover');
   const files = Array.from(e.dataTransfer.files);
   if (!files.length) return;
   if (type === 'photos') { savedPhotoFiles = files; document.getElementById('damage-analysis-btn').classList.remove('hidden'); }
@@ -1654,7 +1739,6 @@ function handleDocFile(input, type) {
     savedPhotoFiles = files;
     document.getElementById('damage-analysis-btn').classList.remove('hidden');
   }
-  // For estimate and photos allow multiple image files — process together
   if ((type === 'estimate' || type === 'photos') && files.length > 1) {
     processMultipleFiles(files, type);
   } else {
@@ -2044,16 +2128,13 @@ function applyExtractedData(type, data) {
   }
 
   if (type === 'photos') {
-    // Add damage description to cause field
     if (data.overall_damage_summary) {
       const causeEl = document.getElementById('f-cause');
       if (causeEl && !causeEl.value) { causeEl.value = data.overall_damage_summary; count++; }
-      // ── Mirror to Spot Survey ──
       const spotDamageEl = document.getElementById('spot-damage-details');
       if (spotDamageEl && !spotDamageEl.value) { spotDamageEl.value = data.overall_damage_summary; count++; }
     }
     if (data.damaged_parts && Array.isArray(data.damaged_parts) && data.damaged_parts.length > 0) {
-      // Set damage severity in spot survey based on AI analysis
       const severities = data.damaged_parts.map(p => (p.severity||'').toLowerCase());
       const spotSev = document.getElementById('spot-damage-severity');
       if (spotSev) {
@@ -2063,6 +2144,36 @@ function applyExtractedData(type, data) {
         count++;
       }
     }
+  }
+
+  if (type === 'permit') {
+    setField('spot-permit-no', data.permit_no);
+    setField('spot-permit-type', data.permit_type);
+    setField('f-route', data.route || data.permit_type);
+    if (data.validity_from) setField('spot-permit-from', tryDate(data.validity_from));
+    if (data.validity_to)   setField('spot-permit-to',   tryDate(data.validity_to));
+  }
+
+  if (type === 'auth') {
+    setField('spot-auth-no', data.auth_no);
+    if (data.validity_to) setField('spot-auth-valid', tryDate(data.validity_to));
+  }
+
+  if (type === 'fitness') {
+    setField('spot-fitness-no', data.fitness_cert_no);
+    setField('f-fitness', data.fitness_cert_no);
+    if (data.validity_to) setField('spot-fitness-valid', tryDate(data.validity_to));
+    if (data.gross_weight) setField('spot-load-capacity', data.gross_weight);
+    if (data.gross_weight) setField('f-rlw', data.gross_weight);
+  }
+
+  if (type === 'lok-challan') {
+    setField('spot-cn-no', data.challan_no);
+    setField('spot-load-desc', data.goods_description);
+    setField('spot-load-origin', data.origin);
+    setField('spot-load-dest', data.destination);
+    if (data.weight_kg) setField('spot-actual-load', data.weight_kg);
+    if (data.challan_date) setField('spot-cn-date', tryDate(data.challan_date));
   }
   return count;
 }
@@ -2434,11 +2545,200 @@ function renderSpotDamageRows(){const container=document.getElementById('spot-da
 
 function checkDLValidity(){const validUpto=document.getElementById('spot-dl-valid').value;const badge=document.getElementById('dl-validity-badge');const remarksSection=document.getElementById('dl-invalid-remarks-section');const mdlVerified=document.getElementById('spot-mdl-verified').value;if(!validUpto){badge.textContent='Not Verified';badge.style.background='var(--muted)';remarksSection.style.display='none';return;}const validDate=new Date(validUpto);const today=new Date();today.setHours(0,0,0,0);if(validDate<today){badge.textContent='❌ EXPIRED';badge.style.background='var(--red)';remarksSection.style.display='block';showToast('DL EXPIRED - Add mandatory remarks','error');}else if(mdlVerified==='not-available'){badge.textContent='⚠️ NOT AVAILABLE';badge.style.background='#fbbf24';remarksSection.style.display='block';showToast('DL not available - Add remarks','error');}else{badge.textContent='✓ VALID';badge.style.background='var(--green)';remarksSection.style.display='none';}}
 
-function refreshSpotSurvey(){document.getElementById('spot-survey-html').innerHTML=buildSpotSurveyHTML();showToast('Spot survey preview generated','success');}
+function refreshSpotSurvey(){showToast('Spot survey PDF opening...','success');}
+function generateSpotSurveyPDF(){ printReport(buildSpotSurveyHTML(), 'Spot Survey — '+(gv('spot-report-no')||gv('f-reg-no'))); }
 
-function buildSpotSurveyHTML(){const reportNo=gv('spot-report-no')||'SPO/—/2025';const reportDate=gv('spot-report-date')||gv('f-report-date');const accidentDate=gv('spot-accident-datetime');const surveyDate=gv('spot-survey-datetime');const accidentPlace=gv('spot-accident-place');const surveyPlace=gv('spot-survey-place');const cause=gv('spot-accident-cause');const driverName=gv('spot-driver-name');const mdlNo=gv('spot-mdl-no');const dlAuthority=gv('spot-dl-authority');const dlIssue=gv('spot-dl-issue');const dlValid=gv('spot-dl-valid');const dlType=gv('spot-dl-type');const mdlVerified=gv('spot-mdl-verified');const dlInvalidRemarks=gv('spot-dl-invalid-remarks');const cnNo=gv('spot-cn-no');const cnDate=gv('spot-cn-date');const loadCapacity=gv('spot-load-capacity');const actualLoad=gv('spot-actual-load');const loadDesc=gv('spot-load-desc');const policeReported=gv('spot-police-reported');const policeStation=gv('spot-police-station');const diaryNo=gv('spot-diary-no');const panchanama=gv('spot-panchanama');const tpInvolved=gv('spot-tp-involved');const tpDetails=gv('spot-tp-details');const comments=gv('spot-comments');const damageSeverity=gv('spot-damage-severity');const airbags=gv('spot-airbags');const drivable=gv('spot-drivable');const ts=`width:100%;border-collapse:collapse;font-size:0.79rem;`;const td=`padding:5px 0;`;const dlValidDate=new Date(dlValid);const today=new Date();const isDLExpired=dlValid&&dlValidDate<today;const dlStatus=mdlVerified==='verified'?'ORIGINAL MDL VERIFIED':mdlVerified==='photocopy'?'PHOTOCOPY VERIFIED':'NOT AVAILABLE';const dlValidityText=isDLExpired?`<span style="color:var(--red);font-weight:700;">EXPIRED</span>`:dlValid?`Valid till ${dlValid}`:'—';let dlRemarksHTML='';if((isDLExpired||mdlVerified==='not-available')&&dlInvalidRemarks){dlRemarksHTML=`<div style="background:#fff3cd;border:2px solid #ffc107;padding:12px;margin:12px 0;border-radius:6px;"><div style="font-weight:700;color:#856404;margin-bottom:6px;">⚠️ DRIVING LICENCE INVALIDITY REMARKS:</div><div style="font-size:0.85rem;line-height:1.6;">${dlInvalidRemarks}</div></div>`;}let damageHTML='';if(spotDamageRows.length>0){spotDamageRows.forEach(row=>{if(row.component&&row.damage){damageHTML+=`<div style="margin-bottom:8px;"><strong style="text-transform:uppercase;">${row.component}</strong><div style="font-size:0.85rem;line-height:1.6;margin-top:4px;">${row.damage}</div></div>`;}});}else{damageHTML='<div style="font-style:italic;color:#666;">No damages documented.</div>';}return `${getSurveyorHeader()}<div style="text-align:center;font-weight:700;font-size:1.2rem;margin-bottom:14px;letter-spacing:0.05em;color:var(--red);">PRIVATE AND CONFIDENTIAL</div><div style="text-align:center;font-weight:700;font-size:1.15rem;margin-bottom:14px;letter-spacing:0.05em;">MOTOR SPOT SURVEY REPORT</div><div style="font-size:0.75rem;font-style:italic;margin-bottom:12px;text-align:center;">This report is issued by me/us as Licensed Surveyor without prejudice, in respect of cause, nature and extent of loss/damage and subject to the terms and conditions of the insurance policy.</div><div style="display:flex;justify-content:space-between;margin-bottom:12px;"><div><strong>Report No. : ${reportNo}</strong></div><div><strong>Date : ${reportDate}</strong></div></div><div style="font-weight:700;margin-bottom:7px;">1. INSURER</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Name</td><td>${gv('f-insurer').split(',')[0]||'—'}</td></tr><tr><td style="${td}color:#666;">Office</td><td>${gv('f-policy-office')}</td></tr><tr><td style="${td}color:#666;">Policy No.</td><td style="font-family:monospace;">${gv('f-policy-no')}</td></tr><tr><td style="${td}color:#666;">Policy Period</td><td>${gv('f-policy-from')} to ${gv('f-policy-to')}</td></tr><tr><td style="${td}color:#666;">I.D.V.</td><td>₹ ${gv('f-idv')}</td></tr><tr><td style="${td}color:#666;">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">2. INSURED</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Name</td><td style="font-weight:600;">${gv('f-insured-name')}</td></tr><tr><td style="${td}color:#666;">Address</td><td>${gv('f-insured-addr')}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">3. H.P.A. WITH</div><table style="${ts} margin-bottom:12px;"><tr><td>${gv('f-hpa')||'NIL'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">4. VEHICLE PARTICULARS</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Registration Number</td><td style="font-weight:600;">${gv('f-reg-no')}</td></tr><tr><td style="${td}color:#666;">Date of Registration</td><td>${gv('f-reg-date')}</td></tr><tr><td style="${td}color:#666;">Chassis No.</td><td style="font-family:monospace;">${gv('f-chassis')}</td></tr><tr><td style="${td}color:#666;">Engine No.</td><td style="font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#666;">Make / Model</td><td>${gv('f-make')} / ${gv('f-model')}</td></tr><tr><td style="${td}color:#666;">Type of Body</td><td>${gv('f-body-type')}</td></tr><tr><td style="${td}color:#666;">Class of Vehicle</td><td>${gv('f-veh-class')}</td></tr><tr><td style="${td}color:#666;">Pre-accident Condition</td><td>${gv('f-condition')}</td></tr><tr><td style="${td}color:#666;">R.L.W. / Seating Capacity</td><td>${gv('f-rlw')} KG</td></tr><tr><td style="${td}color:#666;">Fitness Cert. No.</td><td>${gv('f-fitness')}</td></tr><tr><td style="${td}color:#666;">Type of Permit</td><td>${gv('f-route')}</td></tr><tr><td style="${td}color:#666;">Fuel Used</td><td>${gv('f-fuel')}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">5. DRIVER'S PARTICULARS : ${dlStatus}</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Name of Driver</td><td style="font-weight:600;">${driverName||'—'}</td></tr><tr><td style="${td}color:#666;">M.D.L. No.</td><td style="font-family:monospace;">${mdlNo||'—'}</td></tr><tr><td style="${td}color:#666;">Issuing Authority</td><td>${dlAuthority||'—'}</td></tr><tr><td style="${td}color:#666;">Date of Issue</td><td>${dlIssue||'—'}</td></tr><tr><td style="${td}color:#666;">Validity</td><td>${dlValidityText}</td></tr><tr><td style="${td}color:#666;">Type of Licence</td><td>${dlType||'—'}</td></tr></table>${dlRemarksHTML}<div style="font-weight:700;margin-bottom:7px;">6. DETAILS OF ACCIDENT & SURVEY</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Date & Time of Accident</td><td>${accidentDate||'—'}</td></tr><tr><td style="${td}color:#666;">Place of Accident</td><td>${accidentPlace||'—'}</td></tr><tr><td style="${td}color:#666;">Place of Survey</td><td>${surveyPlace||'—'}</td></tr><tr><td style="${td}color:#666;">Date of Allotment of Survey</td><td>${gv('spot-allot-date')||'—'}</td></tr><tr><td style="${td}color:#666;">Date & Time of Survey</td><td>${surveyDate||'—'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">7. DETAILS OF LOAD/CHALLAN</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">CN Number & Date</td><td>${cnNo||'—'} dated ${cnDate||'—'}</td></tr><tr><td style="${td}color:#666;">Load Carrying Capacity</td><td>${loadCapacity||'—'} KG</td></tr><tr><td style="${td}color:#666;">Actual Load</td><td>${actualLoad||'—'} KG</td></tr><tr><td style="${td}color:#666;">Load Description</td><td>${loadDesc||'—'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">8. POLICE CASE PARTICULARS</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Accident Reported to Police</td><td>${policeReported==='yes'?'YES':'NO'}</td></tr><tr><td style="${td}color:#666;">Police Station</td><td>${policeStation||'NIL'}</td></tr><tr><td style="${td}color:#666;">Station Diary No.</td><td>${diaryNo||'NIL'}</td></tr><tr><td style="${td}color:#666;">Panchanama Carried Out</td><td>${panchanama==='yes'?'YES':'NO'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">THIRD PARTY DETAILS</div><table style="${ts} margin-bottom:12px;"><tr><td>${tpInvolved==='no'?'NIL':tpDetails||'—'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;">9. CAUSE & NATURE OF ACCIDENT</div><p style="font-size:0.85rem;line-height:1.75;margin-bottom:14px;text-align:justify;">${cause||'—'}</p><div style="font-weight:700;margin-bottom:7px;">DAMAGE ASSESSMENT SUMMARY</div><table style="${ts} margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Damage Severity</td><td style="font-weight:600;text-transform:uppercase;">${damageSeverity||'—'}</td></tr><tr><td style="${td}color:#666;">Airbags Deployed</td><td>${airbags==='yes'?'YES':'NO'}</td></tr><tr><td style="${td}color:#666;">Vehicle Drivable</td><td>${drivable||'—'}</td></tr></table><div style="font-weight:700;margin-bottom:7px;font-size:1rem;">DETAILS OF LOSS/DAMAGES</div><div style="background:var(--cream);padding:14px;border-radius:6px;margin-bottom:14px;font-size:0.85rem;line-height:1.7;">${damageHTML}</div><div style="font-weight:700;margin-bottom:7px;">10. VEHICLE WILL BE SHIFTED TO / ADDITIONAL COMMENTS</div><p style="font-size:0.85rem;margin-bottom:14px;line-height:1.6;">${comments||'—'}</p><p style="font-size:0.8rem;line-height:1.6;margin-bottom:14px;font-style:italic;">We noted down maximum possible visible damages at accident spot. Any other unseen/hidden damages which are related to cause of accident if noticed may be considered on dismantled checkup. This report is issued without prejudice subject to policy terms and condition and the damages stated in this report are based on physical inspection of accidental I.V. on the spot of the accident.</p>${getSigBlock()}<div style="font-size:0.72rem;color:#666;margin-top:14px;">Encl: DIGITAL PHOTOS & MY BILL FOR SURVEY.</div>`;}
+function buildSpotSurveyHTML() {
+  const isComm = vehicleType === 'commercial';
+  const ts  = 'width:100%;border-collapse:collapse;font-size:7.8pt;margin-bottom:4px;';
+  const th  = 'background:#0d1b2a;color:#fff;padding:2px 4px;font-size:6.8pt;letter-spacing:0.02em;';
+  const td  = 'padding:2px 4px;border:0.4pt solid #bbb;vertical-align:top;';
+  const sec = 'font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin:4px 0 2px;letter-spacing:0.04em;display:block;';
+  const lbl = 'color:#555;font-size:6.8pt;';
 
-function generateSpotSurveyPDF(){refreshSpotSurvey();setTimeout(()=>{const opt={margin:[10,10,15,10],filename:'Spot_Survey_'+(gv('spot-report-no')||'Report')+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,letterRendering:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};html2pdf().set(opt).from(document.getElementById('spot-survey-html')).save();showToast('Spot survey PDF downloading...','success');},300);}
+  const dlValid = gv('spot-dl-valid');
+  const mdlVerified = gv('spot-mdl-verified');
+  const isDLExpired = dlValid && new Date(dlValid) < new Date();
+  const dlStatus = mdlVerified==='verified' ? 'ORIGINAL MDL VERIFIED'
+    : mdlVerified==='photocopy' ? 'PHOTOCOPY VERIFIED' : 'NOT AVAILABLE';
+  const dlValidText = isDLExpired
+    ? '<b style="color:#c00;">EXPIRED (' + dlValid + ')</b>'
+    : (dlValid ? 'Valid till ' + dlValid : '—');
+  const dlRemarks = gv('spot-dl-invalid-remarks');
+  const dlRemarksHTML = (isDLExpired || mdlVerified==='not-available') && dlRemarks
+    ? '<div style="border:1pt solid #ffc107;background:#fff8e1;padding:3px 5px;margin:3px 0;font-size:7pt;"><b>⚠ DL INVALIDITY REMARKS:</b> ' + dlRemarks + '</div>' : '';
+
+  function expired(dateStr) {
+    return dateStr && new Date(dateStr) < new Date();
+  }
+  function expLabel(dateStr) {
+    if (!dateStr) return '—';
+    return dateStr + (expired(dateStr) ? ' <b style="color:#c00;">⚠ EXPIRED</b>' : '');
+  }
+
+  let damageHTML = '';
+  if (spotDamageRows && spotDamageRows.length > 0) {
+    damageHTML = '<table style="' + ts + '"><thead><tr><th style="' + th + ';width:36%;">Component</th><th style="' + th + '">Damage Observed at Spot</th></tr></thead><tbody>';
+    spotDamageRows.forEach(r => { if (r.component && r.damage) damageHTML += '<tr><td style="' + td + 'font-weight:600;">' + r.component + '</td><td style="' + td + '">' + r.damage + '</td></tr>'; });
+    damageHTML += '</tbody></table>';
+  } else { damageHTML = '<p style="font-size:7pt;font-style:italic;color:#666;margin:0;">No component damages documented.</p>'; }
+
+  const commDocsHTML = !isComm ? '' : `
+<div style="${sec}">COMMERCIAL VEHICLE DOCUMENTS</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}${lbl}width:26%;">Permit No.</td><td style="${td}font-family:monospace;">${gv('spot-permit-no')||'—'}</td>
+    <td style="${td}${lbl}width:26%;">Permit Type</td><td style="${td}">${gv('spot-permit-type')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Permit Valid From</td><td style="${td}">${gv('spot-permit-from')||'—'}</td>
+    <td style="${td}${lbl}">Permit Valid Upto</td><td style="${td}">${expLabel(gv('spot-permit-to'))}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Authorisation No.</td><td style="${td}font-family:monospace;">${gv('spot-auth-no')||'—'}</td>
+    <td style="${td}${lbl}">Auth Valid Upto</td><td style="${td}">${expLabel(gv('spot-auth-valid'))}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Fitness Cert. No.</td><td style="${td}font-family:monospace;">${gv('spot-fitness-no')||gv('f-fitness')||'—'}</td>
+    <td style="${td}${lbl}">Fitness Valid Upto</td><td style="${td}">${expLabel(gv('spot-fitness-valid'))}</td>
+  </tr>
+</table>`;
+
+  const challanHTML = !isComm ? '' : `
+<div style="${sec}">LOAD / LOK CHALLAN DETAILS</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}${lbl}width:26%;">CN / Challan No.</td><td style="${td}font-family:monospace;">${gv('spot-cn-no')||'—'}</td>
+    <td style="${td}${lbl}width:26%;">CN Date</td><td style="${td}">${gv('spot-cn-date')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Load Capacity (KG)</td><td style="${td}">${gv('spot-load-capacity')||'—'}</td>
+    <td style="${td}${lbl}">Actual Load (KG)</td><td style="${td}">${gv('spot-actual-load')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Origin</td><td style="${td}">${gv('spot-load-origin')||'—'}</td>
+    <td style="${td}${lbl}">Destination</td><td style="${td}">${gv('spot-load-dest')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Goods Description</td><td style="${td}" colspan="3">${gv('spot-load-desc')||'—'}</td>
+  </tr>
+</table>`;
+
+  let sn = 1;
+  return getSurveyorHeader() + `
+<div style="text-align:center;font-weight:700;font-size:9pt;margin-bottom:2px;letter-spacing:0.05em;">MOTOR SPOT SURVEY REPORT</div>
+<div style="text-align:center;font-size:6.8pt;font-style:italic;margin-bottom:4px;color:#444;">Private &amp; Confidential — Without Prejudice — Subject to Policy Terms &amp; Conditions</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}${lbl}width:22%;">Report No.</td><td style="${td}font-weight:700;width:28%;">${gv('spot-report-no')||'—'}</td>
+    <td style="${td}${lbl}width:22%;">Date of Report</td><td style="${td}font-weight:700;">${gv('spot-report-date')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Allotment Date</td><td style="${td}">${gv('spot-allot-date')||'—'}</td>
+    <td style="${td}${lbl}">Date &amp; Time of Survey</td><td style="${td}">${gv('spot-survey-datetime')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Vehicle Type</td><td style="${td}font-weight:700;" colspan="3">${isComm ? 'COMMERCIAL VEHICLE' : 'PRIVATE VEHICLE'} &nbsp;|&nbsp; ${gv('f-veh-class')||''}</td>
+  </tr>
+</table>
+
+<div style="${sec}">${sn++}. INSURER DETAILS</div>
+<table style="${ts}">
+  <tr><td style="${td}${lbl}width:26%;">Insurer</td><td style="${td}" colspan="3">${gv('f-insurer')||'—'} | Office: ${gv('f-policy-office')||'—'}</td></tr>
+  <tr>
+    <td style="${td}${lbl}">Policy No.</td><td style="${td}font-family:monospace;">${gv('f-policy-no')||'—'}</td>
+    <td style="${td}${lbl}">Claim No.</td><td style="${td}font-family:monospace;">${gv('f-claim-no')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Policy Period</td><td style="${td}">${gv('f-policy-from')||'—'} to ${gv('f-policy-to')||'—'}</td>
+    <td style="${td}${lbl}">I.D.V.</td><td style="${td}font-weight:600;">₹ ${fmt2(gv('f-idv'))}</td>
+  </tr>
+</table>
+
+<div style="${sec}">${sn++}. INSURED DETAILS</div>
+<table style="${ts}">
+  <tr><td style="${td}${lbl}width:26%;">Name</td><td style="${td}font-weight:600;" colspan="3">${gv('f-insured-name')||'—'}</td></tr>
+  <tr><td style="${td}${lbl}">Address</td><td style="${td}" colspan="3">${gv('f-insured-addr')||'—'}</td></tr>
+  <tr><td style="${td}${lbl}">H.P.A. With</td><td style="${td}" colspan="3">${gv('f-hpa')||'NIL'}</td></tr>
+</table>
+
+<div style="${sec}">${sn++}. VEHICLE PARTICULARS</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}${lbl}width:26%;">Reg. No.</td><td style="${td}font-weight:700;">${gv('f-reg-no')||'—'}</td>
+    <td style="${td}${lbl}width:26%;">Date of Reg.</td><td style="${td}">${gv('f-reg-date')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Make / Model / Year</td><td style="${td}" colspan="3"><b>${gv('f-make')||'—'}</b> / ${gv('f-model')||'—'} / ${gv('f-year')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Chassis No.</td><td style="${td}font-family:monospace;">${gv('f-chassis')||'—'}</td>
+    <td style="${td}${lbl}">Engine No.</td><td style="${td}font-family:monospace;">${gv('f-engine')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Body / Colour / Fuel</td><td style="${td}" colspan="3">${gv('f-body-type')||'—'} / ${gv('f-colour')||'—'} / ${gv('f-fuel')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">R.L.W. / Seating</td><td style="${td}">${gv('f-rlw')||'—'}</td>
+    <td style="${td}${lbl}">Pre-accident Cond.</td><td style="${td}">${gv('f-condition')||'—'}</td>
+  </tr>
+  ${isComm ? `<tr>
+    <td style="${td}${lbl}">Permit / Route</td><td style="${td}">${gv('f-route')||'—'}</td>
+    <td style="${td}${lbl}">Fitness Cert. No.</td><td style="${td}">${gv('spot-fitness-no')||gv('f-fitness')||'—'}</td>
+  </tr>` : ''}
+</table>
+
+<div style="${sec}">${sn++}. DRIVER'S PARTICULARS — ${dlStatus}</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}${lbl}width:26%;">Driver Name</td><td style="${td}font-weight:600;">${gv('spot-driver-name')||'—'}</td>
+    <td style="${td}${lbl}width:26%;">M.D.L. No.</td><td style="${td}font-family:monospace;">${gv('spot-mdl-no')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Issuing Authority</td><td style="${td}">${gv('spot-dl-authority')||'—'}</td>
+    <td style="${td}${lbl}">Date of Issue</td><td style="${td}">${gv('spot-dl-issue')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Valid Upto</td><td style="${td}">${dlValidText}</td>
+    <td style="${td}${lbl}">Licence Type</td><td style="${td}">${gv('spot-dl-type')||'—'}</td>
+  </tr>
+</table>
+${dlRemarksHTML}
+${commDocsHTML}
+${challanHTML}
+
+<div style="${sec}">${sn++}. ACCIDENT &amp; SURVEY DETAILS</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}${lbl}width:26%;">Date &amp; Time of Accident</td><td style="${td}">${gv('spot-accident-datetime')||'—'}</td>
+    <td style="${td}${lbl}width:26%;">Place of Accident</td><td style="${td}">${gv('spot-accident-place')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Date &amp; Time of Survey</td><td style="${td}">${gv('spot-survey-datetime')||'—'}</td>
+    <td style="${td}${lbl}">Place of Survey</td><td style="${td}">${gv('spot-survey-place')||'—'}</td>
+  </tr>
+</table>
+
+<div style="${sec}">${sn++}. POLICE CASE &amp; THIRD PARTY</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}${lbl}width:26%;">Reported to Police</td><td style="${td}">${gv('spot-police-reported')==='yes'?'YES':'NO'}</td>
+    <td style="${td}${lbl}width:26%;">Police Station</td><td style="${td}">${gv('spot-police-station')||'NIL'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Diary / FIR No.</td><td style="${td}">${gv('spot-diary-no')||'NIL'}</td>
+    <td style="${td}${lbl}">Panchanama</td><td style="${td}">${gv('spot-panchanama')==='yes'?'YES':'NO'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Third Party</td><td style="${td}" colspan="3">${gv('spot-tp-involved')==='no'?'NIL':(gv('spot-tp-details')||'—')}</td>
+  </tr>
+</table>
+
+<div style="${sec}">${sn++}. CAUSE &amp; NATURE OF ACCIDENT</div>
+<div style="font-size:7.2pt;padding:3px 4px;border:0.4pt solid #bbb;background:#fafaf7;margin-bottom:4px;line-height:1.5;">${gv('spot-accident-cause')||'—'}</div>
+
+<div style="${sec}">${sn++}. DAMAGE ASSESSMENT AT SPOT</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}${lbl}width:26%;">Damage Severity</td><td style="${td}font-weight:700;text-transform:uppercase;">${gv('spot-damage-severity')||'—'}</td>
+    <td style="${td}${lbl}width:26%;">Airbags Deployed</td><td style="${td}">${gv('spot-airbags')==='yes'?'YES':'NO'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Vehicle Drivable</td><td style="${td}" colspan="3">${gv('spot-drivable')||'—'}</td>
+  </tr>
+</table>
+<div style="font-weight:600;font-size:7pt;margin:3px 0 2px;">Component-wise damages observed:</div>
+${damageHTML}
+
+<div style="${sec}">${sn++}. COMMENTS / VEHICLE TO BE SHIFTED TO</div>
+<div style="font-size:7.2pt;padding:3px 4px;border:0.4pt solid #bbb;background:#fafaf7;margin-bottom:4px;line-height:1.5;">${gv('spot-comments')||'—'}</div>
+
+<p style="font-size:6.5pt;line-height:1.5;margin:5px 0;text-align:justify;color:#444;">We noted down maximum possible visible damages at the accident spot. Any other unseen/hidden damages related to the cause of accident noticed during dismantling may be considered accordingly. This report is issued without prejudice, subject to policy terms and conditions, based on physical inspection of the vehicle at the accident spot.</p>
+` + getSigBlock() + `
+<div style="font-size:6pt;color:#666;margin-top:3px;border-top:0.4pt solid #ccc;padding-top:2px;">Encl: DIGITAL PHOTOS &amp; SURVEYOR BILL</div>`;
+}
+
 
 function calcFeeTotal(){const p=parseFloat(gv('fee-prof'))||0,r=parseFloat(gv('fee-ri'))||0,t=parseFloat(gv('fee-travel'))||0,ph=(parseFloat(gv('fee-photos-count'))||0)*(parseFloat(gv('fee-photo-rate'))||0),po=parseFloat(gv('fee-postal'))||0,h=parseFloat(gv('fee-haltage'))||0,tot=p+r+t+ph+po+h;document.getElementById('fs-prof').textContent='₹ '+fmt2(p);document.getElementById('fs-ri').textContent='₹ '+fmt2(r);document.getElementById('fs-travel').textContent='₹ '+fmt2(t);document.getElementById('fs-photos').textContent='₹ '+fmt2(ph);document.getElementById('fs-postal').textContent='₹ '+fmt2(po);document.getElementById('fs-total').textContent='₹ '+fmt2(tot);}
 
