@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Motor Survey & Loss Assessment System v2</title>
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<!-- PDF.js for converting PDF pages to images before sending to Groq -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 :root {
   --navy: #0d1b2a; --navy2: #1b2d3e; --teal: #1a7a6e; --teal-light: #22a99a;
@@ -476,9 +478,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           </div>
           <div class="doc-drop-zone" onclick="triggerDocUpload('rc')">
             <div class="dz-icon">📤</div>
-            <div class="dz-text"><strong>Click or drag</strong> RC Book photo (JPG/PNG)</div>
+            <div class="dz-text"><strong>Click or drag</strong> RC Book — photo or PDF</div>
           </div>
-          <input type="file" id="upload-rc" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="handleDocFile(this,'rc')"/>
+          <input type="file" id="upload-rc" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none" onchange="handleDocFile(this,'rc')"/>
           <div class="doc-file-preview" id="preview-rc"></div>
           <div class="doc-status" id="status-rc"></div>
           <div class="doc-extracted-fields" id="fields-rc"></div>
@@ -495,9 +497,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           </div>
           <div class="doc-drop-zone" onclick="triggerDocUpload('dl')">
             <div class="dz-icon">📤</div>
-            <div class="dz-text"><strong>Click or drag</strong> DL photo (JPG/PNG)</div>
+            <div class="dz-text"><strong>Click or drag</strong> DL — photo or PDF</div>
           </div>
-          <input type="file" id="upload-dl" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="handleDocFile(this,'dl')"/>
+          <input type="file" id="upload-dl" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none" onchange="handleDocFile(this,'dl')"/>
           <div class="doc-file-preview" id="preview-dl"></div>
           <div class="doc-status" id="status-dl"></div>
           <div class="doc-extracted-fields" id="fields-dl"></div>
@@ -514,9 +516,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           </div>
           <div class="doc-drop-zone" onclick="triggerDocUpload('policy')">
             <div class="dz-icon">📤</div>
-            <div class="dz-text"><strong>Click or drag</strong> Policy photo (JPG/PNG)</div>
+            <div class="dz-text"><strong>Click or drag</strong> Policy — photo or PDF</div>
           </div>
-          <input type="file" id="upload-policy" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="handleDocFile(this,'policy')"/>
+          <input type="file" id="upload-policy" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none" onchange="handleDocFile(this,'policy')"/>
           <div class="doc-file-preview" id="preview-policy"></div>
           <div class="doc-status" id="status-policy"></div>
           <div class="doc-extracted-fields" id="fields-policy"></div>
@@ -533,9 +535,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           </div>
           <div class="doc-drop-zone" onclick="triggerDocUpload('claim')">
             <div class="dz-icon">📤</div>
-            <div class="dz-text"><strong>Click or drag</strong> Claim form photo (JPG/PNG)</div>
+            <div class="dz-text"><strong>Click or drag</strong> Claim form — photo or PDF</div>
           </div>
-          <input type="file" id="upload-claim" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="handleDocFile(this,'claim')"/>
+          <input type="file" id="upload-claim" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none" onchange="handleDocFile(this,'claim')"/>
           <div class="doc-file-preview" id="preview-claim"></div>
           <div class="doc-status" id="status-claim"></div>
           <div class="doc-extracted-fields" id="fields-claim"></div>
@@ -552,9 +554,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           </div>
           <div class="doc-drop-zone" onclick="triggerDocUpload('estimate')">
             <div class="dz-icon">📤</div>
-            <div class="dz-text"><strong>Click or drag</strong> Estimate photo (JPG/PNG)</div>
+            <div class="dz-text"><strong>Click or drag</strong> Estimate — multiple images or PDF (all pages read)</div>
           </div>
-          <input type="file" id="upload-estimate" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="handleDocFile(this,'estimate')"/>
+          <input type="file" id="upload-estimate" accept=".jpg,.jpeg,.png,.webp,.pdf" multiple style="display:none" onchange="handleDocFile(this,'estimate')"/>
           <div class="doc-file-preview" id="preview-estimate"></div>
           <div class="doc-status" id="status-estimate"></div>
           <div class="doc-extracted-fields" id="fields-estimate"></div>
@@ -571,9 +573,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           </div>
           <div class="doc-drop-zone" onclick="triggerDocUpload('photos')">
             <div class="dz-icon">📤</div>
-            <div class="dz-text"><strong>Click or drag</strong> Photos (JPG/PNG, multiple)</div>
+            <div class="dz-text"><strong>Click or drag</strong> Photos — JPG/PNG/PDF</div>
           </div>
-          <input type="file" id="upload-photos" accept=".jpg,.jpeg,.png,.webp" multiple style="display:none" onchange="handleDocFile(this,'photos')"/>
+          <input type="file" id="upload-photos" accept=".jpg,.jpeg,.png,.webp,.pdf" multiple style="display:none" onchange="handleDocFile(this,'photos')"/>
           <div class="doc-file-preview" id="preview-photos"></div>
           <div class="doc-status" id="status-photos"></div>
           <div class="doc-extracted-fields" id="fields-photos"></div>
@@ -747,20 +749,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
             <table class="assess-table" id="assess-table">
               <thead>
                 <tr>
-                  <th style="width:30px;">Sr.</th><th>Particulars</th>
-                  <th class="text-center">GST%</th>
-                  <th class="text-center" colspan="2">Estimated</th>
-                  <th class="text-center" colspan="3">Assessed</th>
-                  <th class="text-center" style="width:60px;">Del</th>
-                </tr>
-                <tr style="background:#0d2035;">
-                  <th></th><th></th><th></th>
-                  <th class="text-center" style="background:#0d2035;font-size:0.65rem;">₹ Amt</th>
-                  <th class="text-center" style="background:#0d2035;font-size:0.65rem;">Status</th>
-                  <th class="text-center" style="background:#1a4a30;font-size:0.65rem;">Metal</th>
-                  <th class="text-center" style="background:#1a3a4a;font-size:0.65rem;">Plastic/Rub</th>
-                  <th class="text-center" style="background:#2a2a1a;font-size:0.65rem;">Glass 0%</th>
-                  <th></th>
+                  <th style="width:28px;">Sr.</th>
+                  <th>Particulars</th>
+                  <th style="width:80px;text-align:center;">Part Type</th>
+                  <th style="width:62px;text-align:center;">GST%</th>
+                  <th style="width:90px;text-align:right;">Estimated ₹</th>
+                  <th style="width:90px;text-align:right;">Assessed ₹</th>
+                  <th style="width:52px;text-align:center;">Dep%</th>
+                  <th style="width:90px;text-align:right;">After Dep ₹</th>
+                  <th style="width:70px;text-align:center;">Status</th>
+                  <th style="width:36px;"></th>
                 </tr>
               </thead>
               <tbody id="assess-tbody"></tbody>
@@ -1336,42 +1334,54 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 <!-- VOICE INPUT MODAL -->
 <div class="modal-overlay" id="voice-modal">
-  <div class="modal">
+  <div class="modal" style="max-width:560px;">
     <div class="modal-head">
       <h2>🎤 Voice Input</h2>
       <button class="modal-close" onclick="closeVoiceModal()">✕</button>
     </div>
     <div class="modal-body voice-modal-content">
-      <div style="text-align:center;margin-bottom:16px;">
-        <div id="voice-status" style="font-size:0.85rem;color:var(--muted);margin-bottom:8px;">Click the microphone to start recording</div>
-        <div id="voice-hint" style="font-size:0.75rem;color:var(--gold);margin-bottom:12px;font-style:italic;"></div>
-        <button id="voice-record-btn" class="btn btn-ai btn-lg" onclick="toggleVoiceRecording()" style="width:auto;">
+
+      <!-- Field name -->
+      <div style="text-align:center;margin-bottom:14px;font-size:0.78rem;color:var(--muted);">
+        Filling: <strong id="voice-field-name" style="color:var(--navy);">—</strong>
+      </div>
+
+      <!-- Step 1: Record -->
+      <div id="voice-step-record" style="text-align:center;margin-bottom:16px;">
+        <button id="voice-record-btn" class="btn btn-ai btn-lg" onclick="toggleVoiceRecording()" style="width:auto;min-width:200px;">
           <span id="voice-record-icon">🎤</span>
           <span id="voice-record-text">Start Recording</span>
         </button>
-      </div>
-      
-      <div id="voice-transcript-section" style="display:none;margin-top:16px;">
-        <div style="background:var(--cream);border-radius:6px;padding:12px;margin-bottom:12px;">
-          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:var(--navy2);margin-bottom:6px;">What you said:</div>
-          <div id="voice-transcript" style="font-size:0.85rem;line-height:1.6;color:var(--text);font-style:italic;"></div>
+        <div id="voice-status" style="font-size:0.78rem;color:var(--muted);margin-top:8px;">
+          Press Start — speak freely — press Stop when done
         </div>
       </div>
 
-      <div id="voice-verification-section" style="display:none;margin-top:16px;">
-        <div style="background:#f0fdf8;border:1px solid #bbf7d0;border-radius:6px;padding:12px;">
-          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:var(--green);margin-bottom:8px;">✓ Auto-Formatted:</div>
-          <div id="voice-verified-content" style="font-size:0.85rem;line-height:1.6;color:var(--text);"></div>
-        </div>
+      <!-- Live raw transcript (shown while recording) -->
+      <div id="voice-raw-section" style="display:none;margin-bottom:12px;">
+        <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:var(--navy2);margin-bottom:4px;">📝 What you said:</div>
+        <div id="voice-raw-text" style="background:var(--cream);border-radius:6px;padding:10px;font-size:0.85rem;line-height:1.7;color:var(--text);font-style:italic;min-height:50px;"></div>
       </div>
 
-      <div id="voice-field-info" style="margin-top:12px;font-size:0.75rem;color:var(--muted);text-align:center;">
-        Filling: <strong id="voice-field-name">—</strong>
+      <!-- Step 2: AI formatted result — editable -->
+      <div id="voice-ai-section" style="display:none;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:var(--green);">✨ AI Formatted — edit if needed:</div>
+          <div id="voice-ai-spinner" style="display:none;"><div class="spinner spinner-green"></div></div>
+        </div>
+        <textarea id="voice-ai-text"
+          style="width:100%;min-height:90px;padding:10px;border:2px solid #bbf7d0;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.92rem;line-height:1.7;resize:vertical;outline:none;background:#f0fdf8;color:var(--text);"
+          placeholder="AI formatted text will appear here..."></textarea>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:3px;">✏️ You can correct spellings, names, or any text directly above — corrections improve future suggestions</div>
       </div>
+
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-secondary" onclick="closeVoiceModal()">Cancel</button>
-      <button class="btn btn-primary" id="voice-apply-btn" onclick="applyVoiceInput()" style="display:none;">Apply to Field</button>
+    <div class="modal-foot" style="justify-content:space-between;align-items:center;">
+      <div id="voice-correction-badge" style="display:none;font-size:0.7rem;color:var(--teal);"><span id="voice-correction-count">0</span> correction(s) learned this session</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="closeVoiceModal()">Cancel</button>
+        <button class="btn btn-primary" id="voice-apply-btn" style="display:none;" onclick="applyVoiceInput()">✅ Apply to Field</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1401,7 +1411,7 @@ const GROQ_API_KEY = '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';
 // ============================================================
 
 // Helper: call Groq API (supports images via LLaMA 4 Scout vision model)
-async function callGemini(parts, maxTokens = 2000) {
+async function callGemini(parts, maxTokens = 3000) {
   // Build content array for Groq (OpenAI-compatible format)
   const userContent = [];
   for (const part of parts) {
@@ -1627,15 +1637,134 @@ function triggerDocUpload(type) { document.getElementById('upload-' + type).clic
 function handleDocDrop(e, type) {
   e.preventDefault();
   document.getElementById('card-' + type).classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
-  if (file) processDocFile(file, type);
+  const files = Array.from(e.dataTransfer.files);
+  if (!files.length) return;
+  if (type === 'photos') { savedPhotoFiles = files; document.getElementById('damage-analysis-btn').classList.remove('hidden'); }
+  if ((type === 'estimate' || type === 'photos') && files.length > 1) {
+    processMultipleFiles(files, type);
+  } else {
+    processDocFile(files[0], type);
+  }
 }
 
 function handleDocFile(input, type) {
-  const file = input.files[0];
-  if (!file) return;
-  if(type==='photos'&&input.files.length>0){savedPhotoFiles=Array.from(input.files);document.getElementById('damage-analysis-btn').classList.remove('hidden');}
-  processDocFile(file, type);
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  if (type === 'photos') {
+    savedPhotoFiles = files;
+    document.getElementById('damage-analysis-btn').classList.remove('hidden');
+  }
+  // For estimate and photos allow multiple image files — process together
+  if ((type === 'estimate' || type === 'photos') && files.length > 1) {
+    processMultipleFiles(files, type);
+  } else {
+    processDocFile(files[0], type);
+  }
+}
+
+// ── Convert ALL pages of a PDF to base64 image array ──
+async function pdfToImages(file, statusEl) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfjsLib = window['pdfjs-dist/build/pdf'];
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const totalPages = pdf.numPages;
+  const images = []; // [{base64, dataUrl}]
+
+  for (let p = 1; p <= totalPages; p++) {
+    if (statusEl) statusEl.innerHTML = `<div class="spinner"></div> Converting PDF page ${p} of ${totalPages}...`;
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    images.push({ base64: dataUrl.split(',')[1], dataUrl, mimeType: 'image/jpeg' });
+  }
+  return images;
+}
+
+// ── Process multiple image files together (estimate / photos) ──
+async function processMultipleFiles(files, type) {
+  const card = document.getElementById('card-' + type);
+  const previewEl = document.getElementById('preview-' + type);
+  const statusEl = document.getElementById('status-' + type);
+  const fieldsEl = document.getElementById('fields-' + type);
+  const logEl = document.getElementById('extraction-log');
+  const progressCard = document.getElementById('extraction-progress-card');
+  const typeLabel = { estimate: 'Repair Estimate', photos: 'Damage Photos' };
+
+  progressCard.style.display = 'block';
+  card.className = 'doc-card processing';
+  statusEl.className = 'doc-status processing';
+  statusEl.innerHTML = `<div class="spinner"></div> Preparing ${files.length} files...`;
+  fieldsEl.className = 'doc-extracted-fields';
+  fieldsEl.style.display = 'none';
+
+  appendLog(logEl, `📂 Processing ${files.length} files for ${typeLabel[type]}...`);
+
+  try {
+    // Collect all images from all files (images directly, PDFs converted)
+    const allImages = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      statusEl.innerHTML = `<div class="spinner"></div> Reading file ${i+1}/${files.length}: ${f.name}`;
+      if (f.type === 'application/pdf') {
+        const pages = await pdfToImages(f, statusEl);
+        allImages.push(...pages);
+        appendLog(logEl, `  📄 ${f.name} → ${pages.length} page(s) converted`);
+      } else {
+        const base64 = await fileToBase64(f);
+        let mt = f.type || 'image/jpeg';
+        if (!['image/jpeg','image/png','image/webp','image/gif'].includes(mt)) mt = 'image/jpeg';
+        allImages.push({ base64, dataUrl: `data:${mt};base64,${base64}`, mimeType: mt });
+        appendLog(logEl, `  🖼 ${f.name} added`);
+      }
+    }
+
+    // Show preview grid of all images
+    previewEl.style.display = 'block';
+    previewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:4px;padding:6px;">
+      ${allImages.map((img,i) => `<img src="${img.dataUrl}" style="width:100%;height:60px;object-fit:cover;border-radius:4px;" title="Page/Image ${i+1}"/>`).join('')}
+    </div><div style="padding:4px 8px;font-size:0.7rem;color:var(--muted);">${allImages.length} image(s) total</div>`;
+
+    appendLog(logEl, `🤖 Sending all ${allImages.length} images to AI in one call...`);
+    statusEl.innerHTML = `<div class="spinner"></div> AI reading all ${allImages.length} pages/images...`;
+
+    // Build parts — all images first, then the prompt
+    const parts = [
+      ...allImages.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.base64 } })),
+      { text: `You are reading ${allImages.length} pages/images of a document. Extract ALL data across ALL pages combined.\n\n` + DOC_PROMPTS[type] }
+    ];
+
+    const rawText = await callGemini(parts, 4000);
+    let extracted;
+    try {
+      extracted = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+    } catch(e) {
+      throw new Error('Could not parse AI response — try fewer pages');
+    }
+
+    const fieldCount = applyExtractedData(type, extracted);
+    card.className = 'doc-card done';
+    statusEl.className = 'doc-status done';
+    statusEl.innerHTML = `✅ ${allImages.length} pages read — ${fieldCount} items extracted`;
+    showExtractedSummary(type, extracted, fieldsEl);
+    aiStatusMap[type] = true;
+    updateAIStatusDots();
+    appendLog(logEl, `✅ ${typeLabel[type]} — ${fieldCount} items from ${allImages.length} pages`);
+    showToast(`${typeLabel[type]}: ${fieldCount} items from ${allImages.length} pages!`, 'success');
+    const doneCount = Object.values(aiStatusMap).filter(Boolean).length;
+    if (doneCount >= 2) document.getElementById('go-to-form-btn').classList.remove('hidden');
+
+  } catch(err) {
+    card.className = 'doc-card error';
+    statusEl.className = 'doc-status error';
+    statusEl.innerHTML = `⚠️ ${err.message}`;
+    appendLog(logEl, `❌ ${typeLabel[type]} — ${err.message}`);
+    showToast('Error: ' + err.message, 'error');
+  }
 }
 
 async function processDocFile(file, type) {
@@ -1647,58 +1776,56 @@ async function processDocFile(file, type) {
   const progressCard = document.getElementById('extraction-progress-card');
 
   progressCard.style.display = 'block';
-  
-  // Show file preview
   previewEl.style.display = 'block';
   if (file.type.startsWith('image/')) {
     const reader = new FileReader();
-    reader.onload = e => { 
-      previewEl.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:110px;object-fit:cover;"/>`;
-    };
+    reader.onload = e => { previewEl.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:110px;object-fit:cover;"/>`; };
     reader.readAsDataURL(file);
   } else {
     previewEl.innerHTML = `<div class="pdf-prev">📄 ${file.name}<br/><span style="font-size:0.68rem;color:var(--muted);">${(file.size/1024).toFixed(0)} KB</span></div>`;
   }
 
-  // Set processing state
   card.className = 'doc-card processing';
   statusEl.className = 'doc-status processing';
   statusEl.innerHTML = `<div class="spinner"></div> AI is reading document...`;
   fieldsEl.className = 'doc-extracted-fields';
   fieldsEl.style.display = 'none';
 
-  const typeLabel = { 
-    rc: 'RC Book', 
-    dl: 'Driving Licence', 
-    policy: 'Insurance Policy', 
-    claim: 'Claim Form', 
-    estimate: 'Repair Estimate', 
-    photos: 'Damage Photos' 
-  };
-  appendLog(logEl, `📄 Processing ${typeLabel[type]} with Claude AI...`);
+  const typeLabel = { rc:'RC Book', dl:'Driving Licence', policy:'Insurance Policy', claim:'Claim Form', estimate:'Repair Estimate', photos:'Damage Photos' };
+  appendLog(logEl, `📄 Processing ${typeLabel[type]}...`);
 
   try {
-    // Block PDFs — Groq vision only supports images
+    let parts;
+
     if (file.type === 'application/pdf') {
-      throw new Error('PDF not supported. Please upload a JPG or PNG photo of the document instead.');
+      // Convert ALL pages to images
+      statusEl.innerHTML = `<div class="spinner"></div> Converting PDF pages...`;
+      const images = await pdfToImages(file, statusEl);
+
+      // Show preview strip
+      previewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:4px;padding:6px;">
+        ${images.map((img,i) => `<img src="${img.dataUrl}" style="width:100%;height:60px;object-fit:cover;border-radius:4px;" title="Page ${i+1}"/>`).join('')}
+      </div><div style="padding:4px 8px;font-size:0.7rem;color:var(--muted);">${images.length} page(s)</div>`;
+
+      appendLog(logEl, `  📄 ${images.length} page(s) converted — sending to AI...`);
+      statusEl.innerHTML = `<div class="spinner"></div> AI reading all ${images.length} page(s)...`;
+
+      parts = [
+        ...images.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.base64 } })),
+        { text: images.length > 1 ? `You are reading a ${images.length}-page document. Extract ALL data across ALL pages.\n\n` + DOC_PROMPTS[type] : DOC_PROMPTS[type] }
+      ];
+
+    } else {
+      const base64 = await fileToBase64(file);
+      let mediaType = file.type || 'image/jpeg';
+      if (!['image/jpeg','image/png','image/webp','image/gif'].includes(mediaType)) mediaType = 'image/jpeg';
+      parts = [
+        { inlineData: { mimeType: mediaType, data: base64 } },
+        { text: DOC_PROMPTS[type] }
+      ];
     }
 
-    // Convert file to base64
-    const base64 = await fileToBase64(file);
-
-    // Normalize mimeType — Groq only accepts these image formats
-    let mediaType = file.type || 'image/jpeg';
-    if (!['image/jpeg','image/png','image/webp','image/gif'].includes(mediaType)) {
-      mediaType = 'image/jpeg';
-    }
-
-    // Build parts for Groq vision
-    const parts = [
-      { inlineData: { mimeType: mediaType, data: base64 } },
-      { text: DOC_PROMPTS[type] }
-    ];
-
-    const rawText = await callGemini(parts, 2000);
+    const rawText = await callGemini(parts, 4000);
 
     // Parse JSON from response
     let extracted;
@@ -1948,86 +2075,182 @@ function closeModal() { document.getElementById('add-row-modal').classList.remov
 function confirmAddRow() {
   const particulars = document.getElementById('modal-particulars').value.trim();
   const estimated = parseFloat(document.getElementById('modal-estimated').value) || 0;
-  const assessed = parseFloat(document.getElementById('modal-assessed').value) || 0;
+  const assessed = parseFloat(document.getElementById('modal-assessed').value) || estimated;
   const partType = document.getElementById('modal-part-type').value;
   const gst = parseInt(document.getElementById('modal-gst').value) || 18;
   if (!particulars) { showToast('Please enter a description', 'error'); return; }
-  assessRows.push({ particulars, estimated, assessed, partType, gst, section: currentModal });
+  assessRows.push({ particulars, estimated, assessed, partType, gst, section: currentModal, allowed: true });
   renderAssessTable();
   closeModal();
   showToast('Item added');
 }
 function deleteRow(idx) { assessRows.splice(idx, 1); renderAssessTable(); }
+function toggleAllowed(idx) {
+  assessRows[idx].allowed = !assessRows[idx].allowed;
+  renderAssessTable();
+}
+
+// IRDAI standard depreciation rates by vehicle age
+function getDepRate(partType) {
+  if (depType === 'nil') return 0;
+  if (partType === 'glass') return 0;
+  if (partType === 'plastic') return 50;
+  if (partType === 'labour' || partType === 'paint') return 0;
+  // Metal parts — based on year of manufacture
+  const mfgYear = parseInt(gv('f-year')) || new Date().getFullYear();
+  const ageMonths = (new Date().getFullYear() - mfgYear) * 12;
+  if (ageMonths <= 6)   return 0;
+  if (ageMonths <= 12)  return 5;
+  if (ageMonths <= 24)  return 10;
+  if (ageMonths <= 36)  return 15;
+  if (ageMonths <= 48)  return 25;
+  if (ageMonths <= 60)  return 35;
+  if (ageMonths <= 120) return 40;
+  return 50;
+}
 
 function renderAssessTable() {
   const tbody = document.getElementById('assess-tbody');
   tbody.innerHTML = '';
-  const sections = [{ key: 'parts', label: 'SPARE PARTS' }, { key: 'labour', label: 'LABOUR' }, { key: 'paint', label: 'PAINTING CHARGES' }];
+  const sections = [
+    { key: 'parts',  label: 'SPARE PARTS' },
+    { key: 'labour', label: 'LABOUR CHARGES' },
+    { key: 'paint',  label: 'PAINTING CHARGES' }
+  ];
+
+  const ptOptions = `
+    <option value="metal">Metal</option>
+    <option value="plastic">Plastic/Rubber</option>
+    <option value="glass">Glass</option>
+    <option value="labour">Labour</option>
+    <option value="paint">Paint</option>`;
+
   sections.forEach(sec => {
-    const rows = assessRows.map((r,i) => ({...r,origIdx:i})).filter(r => r.section === sec.key);
+    const rows = assessRows.map((r,i) => ({...r, origIdx:i})).filter(r => r.section === sec.key);
     if (!rows.length) return;
-    const hr = tbody.insertRow(); hr.className = 'section-row';
-    hr.innerHTML = `<td colspan="9">${sec.label}</td>`;
-    rows.forEach((row, li) => {
-      const idx = row.origIdx; const tr = tbody.insertRow();
-      let metal = '', plastic = '', glass = '';
-      if (row.partType === 'metal') metal = row.assessed;
-      else if (row.partType === 'plastic') plastic = row.assessed;
-      else if (row.partType === 'glass') glass = row.assessed;
-      else metal = row.assessed;
-      const tag = row.estimated === row.assessed ? '<span class="allowed-tag tag-allowed">✓ Allowed</span>' : '<span class="allowed-tag tag-partial">↓ Partial</span>';
+
+    // Section header row
+    const hr = tbody.insertRow();
+    hr.className = 'section-row';
+    hr.innerHTML = `<td colspan="10">${sec.label}</td>`;
+
+    let secSrNo = 1;
+    rows.forEach(row => {
+      const idx = row.origIdx;
+      if (row.allowed === undefined) assessRows[idx].allowed = true;
+      const allowed = assessRows[idx].allowed;
+      const depRate = getDepRate(row.partType);
+      const afterDep = allowed ? row.assessed * (1 - depRate / 100) : 0;
+      const tr = tbody.insertRow();
+      tr.style.opacity = allowed ? '1' : '0.45';
+
       tr.innerHTML = `
-        <td class="mono" style="color:var(--muted);">${li+1}</td>
-        <td><input class="text-input-cell" value="${row.particulars.replace(/"/g,'&quot;')}" onchange="assessRows[${idx}].particulars=this.value"/></td>
-        <td class="text-center mono">${row.gst}%</td>
-        <td class="text-right"><input class="num-input" value="${row.estimated.toFixed(2)}" onchange="assessRows[${idx}].estimated=parseFloat(this.value)||0;recalcSummary()"/></td>
-        <td class="text-center">${tag}</td>
-        <td class="text-right mono" style="background:rgba(26,122,110,0.04);">${metal!==''?'₹ '+parseFloat(metal).toFixed(2):'—'}</td>
-        <td class="text-right mono" style="background:rgba(37,99,235,0.04);">${plastic!==''?'₹ '+parseFloat(plastic).toFixed(2):'—'}</td>
-        <td class="text-right mono" style="background:rgba(234,179,8,0.04);">${glass!==''?'₹ '+parseFloat(glass).toFixed(2):'—'}</td>
-        <td class="text-center"><button class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="deleteRow(${idx})">🗑</button></td>`;
+        <td class="mono" style="color:var(--muted);font-size:0.75rem;">${secSrNo++}</td>
+        <td><input class="text-input-cell" value="${row.particulars.replace(/"/g,'&quot;')}"
+          onchange="assessRows[${idx}].particulars=this.value"/></td>
+        <td>
+          <select class="text-input-cell" style="font-size:0.73rem;padding:3px 4px;"
+            onchange="assessRows[${idx}].partType=this.value;renderAssessTable()">
+            ${ptOptions.replace(`value="${row.partType}"`,`value="${row.partType}" selected`)}
+          </select>
+        </td>
+        <td class="text-center">
+          <input class="num-input" style="width:46px;text-align:center;"
+            value="${row.gst}"
+            onchange="assessRows[${idx}].gst=parseInt(this.value)||18;recalcSummary()"/>%
+        </td>
+        <td class="text-right">
+          <input class="num-input" value="${row.estimated.toFixed(2)}"
+            onchange="assessRows[${idx}].estimated=parseFloat(this.value)||0;recalcSummary()"/>
+        </td>
+        <td class="text-right">
+          <input class="num-input" style="background:${allowed?'#f0fdf8':'#fef2f2'};"
+            value="${row.assessed.toFixed(2)}"
+            onchange="assessRows[${idx}].assessed=parseFloat(this.value)||0;renderAssessTable()"/>
+        </td>
+        <td class="text-center mono" style="font-size:0.75rem;color:${depRate>0?'var(--gold)':'var(--muted)'};">
+          ${depRate}%
+        </td>
+        <td class="text-right mono" style="font-weight:600;color:${allowed?'var(--teal)':'var(--red)'};">
+          ${allowed ? '₹ '+afterDep.toFixed(2) : 'DISALLOWED'}
+        </td>
+        <td class="text-center">
+          <button onclick="toggleAllowed(${idx})"
+            style="font-size:0.68rem;padding:3px 7px;border-radius:4px;border:none;cursor:pointer;font-weight:600;
+              background:${allowed?'#d1fae5':'#fee2e2'};color:${allowed?'var(--green)':'var(--red)'};">
+            ${allowed ? '✓ Allow' : '✗ Disallow'}
+          </button>
+        </td>
+        <td class="text-center">
+          <button class="btn btn-danger btn-sm" style="padding:3px 7px;" onclick="deleteRow(${idx})">🗑</button>
+        </td>`;
     });
+
+    // Section subtotal
+    const subRows = rows.map(r => assessRows[r.origIdx]);
+    const subAfterDep = subRows.reduce((s,r) => s + (r.allowed!==false ? r.assessed*(1-getDepRate(r.partType)/100) : 0), 0);
+    const subtr = tbody.insertRow();
+    subtr.className = 'subtotal-row';
+    subtr.innerHTML = `<td colspan="7" style="text-align:right;font-size:0.75rem;">Sub-Total ${sec.label}</td>
+      <td colspan="2" class="text-right mono">₹ ${subAfterDep.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</td>
+      <td></td>`;
   });
+
   recalcSummary();
 }
 
 function recalcSummary() {
-  let metal=0, plastic=0, glass=0, labour=0;
-  assessRows.filter(r=>r.section==='parts').forEach(r=>{
-    if(r.partType==='metal') metal+=r.assessed;
-    else if(r.partType==='glass') glass+=r.assessed;
-    else plastic+=r.assessed;
+  let metal=0, plastic=0, glass=0, labBase=0;
+
+  assessRows.filter(r => r.section==='parts').forEach(r => {
+    if (r.allowed === false) return;
+    const dep = getDepRate(r.partType);
+    const afterDep = r.assessed * (1 - dep/100);
+    if (r.partType==='metal')        metal   += afterDep;
+    else if (r.partType==='glass')   glass   += afterDep;
+    else                             plastic += afterDep;
   });
-  assessRows.filter(r=>r.section==='labour'||r.section==='paint').forEach(r=>labour+=r.assessed);
-  const partsBase=metal+plastic+glass, labBase=labour;
-  const pCGST=partsBase*0.09, lGST=labBase*0.18;
-  const pTotal=partsBase+pCGST*2, lTotal=labBase+lGST, grand=pTotal+lTotal;
-  const salvage=parseFloat(document.getElementById('sum-salvage').value)||0;
-  const excess=parseFloat(document.getElementById('sum-excess').value)||500;
-  const net=Math.max(0,grand-salvage-excess);
-  const f=v=>'₹ '+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  document.getElementById('sum-parts-base').textContent=f(partsBase);
-  document.getElementById('sum-parts-cgst').textContent=f(pCGST);
-  document.getElementById('sum-parts-sgst').textContent=f(pCGST);
-  document.getElementById('sum-parts-total').textContent=f(pTotal);
-  document.getElementById('sum-labour-base').textContent=f(labBase);
-  document.getElementById('sum-labour-gst').textContent=f(lGST);
-  document.getElementById('sum-labour-total').textContent=f(lTotal);
-  document.getElementById('sum-grand').textContent=f(grand);
-  document.getElementById('sum-net').textContent=f(net);
-  document.getElementById('sum-inwords').textContent='RUPEES '+numberToWords(net)+' ONLY';
-  document.getElementById('bd-metal').textContent=f(metal);
-  document.getElementById('bd-plastic').textContent=f(plastic);
-  document.getElementById('bd-glass').textContent=f(glass);
-  // estimate compare
-  let estTotal=0;
-  assessRows.forEach(r=>{ estTotal += r.estimated*(1+(r.gst/100)); });
-  document.getElementById('cmp-est').textContent=f(estTotal);
-  document.getElementById('cmp-ass').textContent=f(grand);
-  document.getElementById('cmp-diff').textContent=f(Math.abs(estTotal-grand));
-  document.getElementById('dash-est').textContent=f(estTotal);
-  document.getElementById('dash-assessed').textContent=f(grand);
-  document.getElementById('dash-net').textContent=f(net);
+
+  assessRows.filter(r => r.section==='labour' || r.section==='paint').forEach(r => {
+    if (r.allowed === false) return;
+    labBase += r.assessed;
+  });
+
+  const partsBase = metal + plastic + glass;
+  const pGST = partsBase * 0.09; // CGST+SGST each 9%
+  const pTotal = partsBase + pGST * 2;
+  const lGST = labBase * 0.18;
+  const lTotal = labBase + lGST;
+  const grand = pTotal + lTotal;
+  const salvage = parseFloat(document.getElementById('sum-salvage').value) || 0;
+  const excess  = parseFloat(document.getElementById('sum-excess').value)  || 500;
+  const net = Math.max(0, grand - salvage - excess);
+
+  const f = v => '₹ ' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+
+  document.getElementById('sum-parts-base').textContent  = f(partsBase);
+  document.getElementById('sum-parts-cgst').textContent  = f(pGST);
+  document.getElementById('sum-parts-sgst').textContent  = f(pGST);
+  document.getElementById('sum-parts-total').textContent = f(pTotal);
+  document.getElementById('sum-labour-base').textContent = f(labBase);
+  document.getElementById('sum-labour-gst').textContent  = f(lGST);
+  document.getElementById('sum-labour-total').textContent= f(lTotal);
+  document.getElementById('sum-grand').textContent       = f(grand);
+  document.getElementById('sum-net').textContent         = f(net);
+  document.getElementById('sum-inwords').textContent     = 'RUPEES ' + numberToWords(net) + ' ONLY';
+  document.getElementById('bd-metal').textContent        = f(metal);
+  document.getElementById('bd-plastic').textContent      = f(plastic);
+  document.getElementById('bd-glass').textContent        = f(glass);
+
+  // estimate compare (include GST)
+  let estTotal = 0;
+  assessRows.forEach(r => { estTotal += r.estimated * (1 + r.gst/100); });
+  document.getElementById('cmp-est').textContent  = f(estTotal);
+  document.getElementById('cmp-ass').textContent  = f(grand);
+  document.getElementById('cmp-diff').textContent = f(Math.abs(estTotal - grand));
+  if (document.getElementById('dash-est'))      document.getElementById('dash-est').textContent      = f(estTotal);
+  if (document.getElementById('dash-assessed')) document.getElementById('dash-assessed').textContent = f(grand);
+  if (document.getElementById('dash-net'))      document.getElementById('dash-net').textContent      = f(net);
 }
 
 // ============================================================
@@ -2035,7 +2258,14 @@ function recalcSummary() {
 // ============================================================
 function gv(id){return (document.getElementById(id)||{}).value||'';}
 function fmt2(v){return parseFloat(v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
-function setDepType(t){depType=t;document.querySelectorAll('#dep-toggle button').forEach((b,i)=>{b.classList.toggle('active',(t==='nil'&&i===0)||(t==='standard'&&i===1));});document.getElementById('assess-policy-badge').textContent=t==='nil'?'0% Dep. Policy':'Standard Dep.';}
+function setDepType(t){
+  depType=t;
+  document.querySelectorAll('#dep-toggle button').forEach((b,i)=>{
+    b.classList.toggle('active',(t==='nil'&&i===0)||(t==='standard'&&i===1));
+  });
+  document.getElementById('assess-policy-badge').textContent = t==='nil'?'0% Dep. Policy':'Standard Dep. (IRDAI)';
+  renderAssessTable(); // re-render so dep% column updates
+}
 function handleSigUpload(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{sigDataUrl=e.target.result;document.getElementById('sig-placeholder').classList.add('hidden');const img=document.getElementById('sig-preview-img');img.src=sigDataUrl;img.classList.remove('hidden');};r.readAsDataURL(f);}
 function handleStampUpload(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{stampDataUrl=e.target.result;document.getElementById('stamp-placeholder').classList.add('hidden');const img=document.getElementById('stamp-preview-img');img.src=stampDataUrl;img.classList.remove('hidden');};r.readAsDataURL(f);}
 function showToast(msg,type='success'){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;document.getElementById('toast-icon').textContent=type==='error'?'✕':type==='ai'?'🤖':'✓';t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3200);}
@@ -2164,50 +2394,221 @@ function numberToWords(num){
 // ============================================================
 function getSurveyorHeader(){
   const name=gv('sp-name')||'SURVEYOR NAME',qual=gv('sp-qual')||'B.Sc., Dip. in Auto Engg.',addr=gv('sp-addr')||'Address',lic=gv('sp-lic')||'—',exp=gv('sp-lic-exp')||'—',iiisla=gv('sp-iiisla')||'—',email=gv('sp-email')||'—',mob=gv('sp-mobile')||'—',cats=gv('sp-categories')||'MOTOR,MARINE,ENGG';
-  return`<div style="border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:16px;"><div style="text-align:center;"><div style="font-size:1.5rem;font-weight:700;letter-spacing:0.03em;">${name}</div><div style="font-size:0.82rem;">${qual}</div><div style="font-size:0.9rem;font-weight:700;letter-spacing:0.04em;margin-top:3px;">INSURANCE SURVEYOR, LOSS ASSESSOR &amp; VALUER</div></div><div style="display:flex;justify-content:space-between;margin-top:10px;font-size:0.75rem;"><div><div>Lic. No. : ${lic}</div><div>Expiry on : ${exp}</div><div>IIISLA No. : ${iiisla}</div><div>E-mail : ${email}</div><div>CELL : ${mob}</div></div><div style="text-align:right;"><div style="font-weight:700;">${cats}</div><div>${addr}</div></div></div></div>`;
+  return`<div style="border-bottom:1.2pt solid #000;padding-bottom:5px;margin-bottom:6px;"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div style="flex:1;text-align:center;"><div style="font-size:13pt;font-weight:700;letter-spacing:0.03em;line-height:1.1;">${name}</div><div style="font-size:7pt;margin-top:1px;">${qual}</div><div style="font-size:7.5pt;font-weight:700;letter-spacing:0.04em;margin-top:2px;">INSURANCE SURVEYOR, LOSS ASSESSOR &amp; VALUER</div></div></div><div style="display:flex;justify-content:space-between;margin-top:4px;font-size:6.8pt;"><div style="line-height:1.5;"><span>Lic. No.: <b>${lic}</b></span> &nbsp;|&nbsp; <span>Expiry: <b>${exp}</b></span> &nbsp;|&nbsp; <span>IIISLA: <b>${iiisla}</b></span> &nbsp;|&nbsp; <span>E-mail: ${email}</span> &nbsp;|&nbsp; <span>Cell: ${mob}</span></div><div style="text-align:right;font-weight:700;">${cats}<br/><span style="font-weight:400;">${addr}</span></div></div></div>`;
 }
 function getSigBlock(){
   const sig=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:48px;max-width:90px;object-fit:contain;"/>`:'';
   const stamp=stampDataUrl?`<img src="${stampDataUrl}" style="max-height:55px;max-width:70px;object-fit:contain;"/>`:'';
   const name=gv('sp-name')||'SURVEYOR NAME';
-  return`<div style="display:flex;justify-content:flex-end;align-items:flex-end;margin-top:28px;gap:10px;">${stamp}<div style="text-align:center;">${sig}<div style="font-weight:700;font-size:0.87rem;margin-top:3px;">${name}</div></div></div>`;
+  return`<div style="display:flex;justify-content:flex-end;align-items:flex-end;margin-top:14px;gap:8px;">${stamp}<div style="text-align:center;">${sig}<div style="font-weight:700;font-size:7.5pt;margin-top:2px;">${name}</div><div style="font-size:6.5pt;color:#555;">Licenced Surveyor &amp; Loss Assessor</div></div></div>`;
 }
 
 function buildSurveyReportHTML(){
+  // Recalculate with depreciation applied correctly
   let metal=0,plastic=0,glass=0,labBase=0;
-  assessRows.filter(r=>r.section==='parts').forEach(r=>{if(r.partType==='metal')metal+=r.assessed;else if(r.partType==='glass')glass+=r.assessed;else plastic+=r.assessed;});
-  assessRows.filter(r=>r.section==='labour'||r.section==='paint').forEach(r=>labBase+=r.assessed);
+  assessRows.filter(r=>r.section==='parts').forEach(r=>{
+    if(r.allowed===false) return;
+    const dep=getDepRate(r.partType);
+    const ad=r.assessed*(1-dep/100);
+    if(r.partType==='metal') metal+=ad;
+    else if(r.partType==='glass') glass+=ad;
+    else plastic+=ad;
+  });
+  assessRows.filter(r=>r.section==='labour'||r.section==='paint').forEach(r=>{
+    if(r.allowed!==false) labBase+=r.assessed;
+  });
   const partsBase=metal+plastic+glass,pCGST=partsBase*0.09,pTotal=partsBase+pCGST*2,lGST=labBase*0.18,lTotal=labBase+lGST,grand=pTotal+lTotal;
   const salvage=parseFloat(document.getElementById('sum-salvage').value)||0,excess=parseFloat(document.getElementById('sum-excess').value)||500,net=Math.max(0,grand-salvage-excess);
   const fa=v=>'₹ '+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  const ts=`width:100%;border-collapse:collapse;font-size:0.77rem;`,th=`background:#0d1b2a;color:#fff;padding:6px 8px;text-align:left;font-size:0.67rem;`,td=`padding:5px 8px;border-bottom:1px solid #e5e0d8;`;
-  const partsHtml=assessRows.filter(r=>r.section==='parts').map((r,i)=>`<tr><td>${i+1}</td><td>${r.particulars}</td><td>${r.gst}%</td><td style="text-align:right;">${r.partType==='metal'?fa(r.assessed):''}</td><td style="text-align:right;">${r.partType==='plastic'?fa(r.assessed):''}</td><td style="text-align:right;">${r.partType==='glass'?fa(r.assessed):''}</td></tr>`).join('');
-  const labHtml=assessRows.filter(r=>r.section==='labour'||r.section==='paint').map((r,i)=>`<tr><td>${i+1}</td><td>${r.particulars}</td><td>${r.gst}%</td><td colspan="3" style="text-align:right;">${fa(r.assessed)}</td></tr>`).join('');
-  return`${getSurveyorHeader()}
-<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #000;padding:7px 11px;margin-bottom:11px;"><div><strong>Report No. : ${gv('f-report-no')}</strong>&nbsp;&nbsp;Note : (${depType==='nil'?'0% Dep. Policy':'Standard Dep.'})</div><div><strong>Date : ${gv('f-report-date')}</strong></div></div>
-<div style="text-align:center;font-size:1rem;font-weight:700;margin-bottom:12px;text-decoration:underline;">Private And Confidential Motor (Final) Survey Report</div>
-<p style="font-size:0.72rem;font-style:italic;margin-bottom:12px;">This report is issued by us as licenced Surveyors without prejudice, in respect of cause, nature &amp; extent of loss / damage and subject to the terms &amp; conditions of the Insurance policy.</p>
-<table style="${ts} margin-bottom:12px;"><tr><td style="${td}width:30%;color:#666;">Policy No.</td><td style="${td}">${gv('f-policy-no')}</td><td style="${td}width:25%;color:#666;">Claim No.</td><td style="${td}">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#666;">Period</td><td style="${td}">${gv('f-policy-from')} To ${gv('f-policy-to')}</td><td style="${td}color:#666;">I.D.V.</td><td style="${td}">₹ ${fmt2(gv('f-idv'))}</td></tr><tr><td colspan="4" style="${td}">Policy Type : <strong>${gv('f-policy-type')}</strong></td></tr></table>
-<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">1. INSURER :</div><div style="margin-left:14px;font-size:0.78rem;margin-bottom:9px;">${gv('f-insurer')}<br/>Appointing Office : ${gv('f-appt-office')}</div>
-<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">2. INSURED :</div><div style="margin-left:14px;font-size:0.78rem;margin-bottom:9px;">${gv('f-insured-name')}<br/>Address : ${gv('f-insured-addr')}<br/>Mobile No. : ${gv('f-insured-mobile')}</div>
-<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">3. H.P.A. WITH : <span style="font-weight:400;">${gv('f-hpa')}</span></div>
-<div style="font-weight:700;margin:8px 0 5px;font-size:0.83rem;">4. VEHICLE PARTICULARS : <span style="font-size:0.72rem;font-style:italic;">RC VERIFIED</span></div>
-<table style="${ts} margin-bottom:12px;"><tr><td style="${td}width:33%;color:#666;">Registration No.</td><td style="${td}">${gv('f-reg-no')}</td><td style="${td}width:33%;color:#666;">Date of Registration</td><td style="${td}">${gv('f-reg-date')}</td></tr><tr><td style="${td}color:#666;">Make / Model / Year</td><td style="${td}" colspan="3">${gv('f-make')} / ${gv('f-model')} / ${gv('f-year')}</td></tr><tr><td style="${td}color:#666;">Chassis No.</td><td style="${td}">${gv('f-chassis')}</td><td style="${td}color:#666;">Engine No.</td><td style="${td}">${gv('f-engine')}</td></tr><tr><td style="${td}color:#666;">Colour</td><td style="${td}">${gv('f-colour')}</td><td style="${td}color:#666;">Odometer</td><td style="${td}">${gv('f-odo')} KM</td></tr><tr><td style="${td}color:#666;">Fuel</td><td style="${td}">${gv('f-fuel')}</td><td style="${td}color:#666;">Pre-accident Condition</td><td style="${td}">${gv('f-condition')}</td></tr></table>
-<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">5. DRIVER'S PARTICULARS : <span style="font-size:0.72rem;font-style:italic;">ORIGINAL MDL VERIFIED</span></div>
-<table style="${ts} margin-bottom:12px;"><tr><td style="${td}width:33%;color:#666;">Name of Driver</td><td style="${td}" colspan="3">${gv('f-driver-name')}</td></tr><tr><td style="${td}color:#666;">M.D.L. No.</td><td style="${td}">${gv('f-mdl')}</td><td style="${td}color:#666;">Date of Birth</td><td style="${td}">${gv('f-dob')}</td></tr><tr><td style="${td}color:#666;">Validity</td><td style="${td}">${gv('f-dl-valid')}</td><td style="${td}color:#666;">Issuing Authority</td><td style="${td}">${gv('f-dl-auth')}</td></tr></table>
-<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">6. DETAILS OF ACCIDENT &amp; SURVEY :</div>
-<table style="${ts} margin-bottom:12px;"><tr><td style="${td}width:33%;color:#666;">Date &amp; Time</td><td style="${td}">${gv('f-doa')}</td><td style="${td}width:33%;color:#666;">Place of Accident</td><td style="${td}">${gv('f-poa')}</td></tr><tr><td style="${td}color:#666;">Place of Survey</td><td style="${td}" colspan="3">${gv('f-survey-place')}</td></tr></table>
-<div style="font-weight:700;margin-bottom:5px;font-size:0.83rem;">7. SUMMARY OF ASSESSMENT :</div>
-<table style="${ts} margin-bottom:12px;"><tr><td style="${td}"></td><td style="${td}text-align:right;color:#666;font-size:0.7rem;">Original Estimate</td><td style="${td}text-align:right;color:#666;font-size:0.7rem;">Assessed</td></tr><tr><td style="${td}">Labour Charges</td><td style="${td}text-align:right;">${fa(labBase)}</td><td style="${td}text-align:right;">${fa(lTotal)}</td></tr><tr><td style="${td}">Plus Total Cost of Parts</td><td style="${td}text-align:right;">${fa(partsBase)}</td><td style="${td}text-align:right;">${fa(pTotal)}</td></tr><tr><td style="${td}font-weight:600;">TOTAL</td><td style="${td}text-align:right;font-weight:600;">${fa(partsBase+labBase)}</td><td style="${td}text-align:right;font-weight:600;">${fa(grand)}</td></tr><tr><td style="${td}">Less Excess</td><td></td><td style="${td}text-align:right;">${fa(excess)}</td></tr><tr><td style="${td}">Less Salvage</td><td></td><td style="${td}text-align:right;">${fa(salvage)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td style="padding:8px;font-weight:700;">NET LOSS ASSESSED</td><td></td><td style="padding:8px;text-align:right;font-weight:700;">${fa(net)}</td></tr></table>
-<div style="font-weight:700;margin-bottom:3px;font-size:0.83rem;">9. CAUSE AND NATURE OF ACCIDENT</div>
-<div style="font-size:0.78rem;margin-bottom:12px;padding:8px;background:#f7f3ed;border-radius:4px;">${gv('f-cause')}</div>
-<div style="font-weight:700;margin-bottom:8px;font-size:0.83rem;">10. DETAILS OF ASSESSMENT :</div>
-<table style="${ts} margin-bottom:8px;"><thead><tr><th style="${th}">Sr.</th><th style="${th}">Particulars</th><th style="${th}text-align:center;">GST%</th><th style="${th}text-align:right;">Nil Dep Metal</th><th style="${th}text-align:right;">Nil Dep Plastic</th><th style="${th}text-align:right;">Glass 0%</th></tr></thead><tbody><tr><td colspan="6" style="padding:5px 8px;font-weight:600;background:#ede8df;font-size:0.7rem;">SPARE PARTS</td></tr>${partsHtml}<tr style="background:#e8f5f3;"><td colspan="3" style="padding:5px 8px;font-weight:600;">SUB TOTAL</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(metal)}</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(plastic)}</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(glass)}</td></tr><tr><td colspan="6" style="padding:5px 8px;font-weight:600;background:#ede8df;font-size:0.7rem;">LABOUR</td></tr>${labHtml}<tr style="background:#e8f5f3;"><td colspan="3" style="padding:5px 8px;font-weight:600;">SUB TOTAL LABOUR</td><td colspan="3" style="padding:5px 8px;text-align:right;font-weight:600;">${fa(labBase)}</td></tr></tbody></table>
-<table style="${ts} margin-bottom:14px;"><tr><td style="${td}">Total Parts (Base)</td><td style="${td}text-align:right;">${fa(partsBase)}</td><td style="${td}">CGST 9%</td><td style="${td}text-align:right;">${fa(pCGST)}</td></tr><tr><td style="${td}">SGST 9%</td><td style="${td}text-align:right;">${fa(pCGST)}</td><td style="${td}font-weight:600;">TOTAL PARTS</td><td style="${td}text-align:right;font-weight:600;">${fa(pTotal)}</td></tr><tr><td style="${td}">Total Labour (Base)</td><td style="${td}text-align:right;">${fa(labBase)}</td><td style="${td}">GST 18%</td><td style="${td}text-align:right;">${fa(lGST)}</td></tr><tr><td style="${td}font-weight:600;">TOTAL LABOUR</td><td colspan="3" style="${td}text-align:right;font-weight:600;">${fa(lTotal)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;font-size:0.92rem;">NET ASSESSED LOSS</td><td></td><td></td><td style="padding:9px;text-align:right;font-weight:700;font-size:0.92rem;">${fa(net)}</td></tr></table>
-<div style="font-style:italic;font-size:0.78rem;margin-bottom:14px;">(${numberToWords(net)} ONLY)</div>
-<div style="font-size:0.76rem;font-style:italic;text-align:center;font-weight:700;margin-bottom:14px;">"ISSUED WITHOUT PREJUDICE"</div>
+
+  // Compact print CSS variables — optimised for A4
+  const ts=`width:100%;border-collapse:collapse;font-size:7.8pt;margin-bottom:4px;`;
+  const th=`background:#0d1b2a;color:#fff;padding:2px 4px;font-size:6.8pt;letter-spacing:0.02em;`;
+  const td=`padding:2px 4px;border:0.4pt solid #bbb;vertical-align:top;`;
+  const tdr=`padding:2px 4px;border:0.4pt solid #bbb;text-align:right;white-space:nowrap;`;
+  const sec=`padding:2px 4px;font-weight:700;background:#e8e3da;font-size:6.8pt;letter-spacing:0.04em;text-transform:uppercase;border:0.4pt solid #bbb;`;
+  const sub=`padding:2px 4px;font-weight:700;background:#dff0ec;color:#1a5a50;border:0.4pt solid #bbb;`;
+
+  const mfgYear=parseInt(gv('f-year'))||new Date().getFullYear();
+  const metalDep=depType==='nil'?0:getDepRate('metal');
+  const plastDep=depType==='nil'?0:50;
+
+  // Parts table rows
+  let partsSrNo=1;
+  const partsHtml=assessRows.filter(r=>r.section==='parts').map(r=>{
+    const dep=getDepRate(r.partType);
+    const ad=r.allowed===false?0:r.assessed*(1-dep/100);
+    return `<tr${r.allowed===false?' style="opacity:0.55;"':''}>
+      <td style="${td}text-align:center;">${partsSrNo++}</td>
+      <td style="${td}${r.allowed===false?'text-decoration:line-through;color:#a00;':''}">${r.particulars}${r.allowed===false?' <i style="font-size:6pt;">(Disallowed)</i>':''}</td>
+      <td style="${td}text-align:center;">${r.partType.charAt(0).toUpperCase()+r.partType.slice(1)}</td>
+      <td style="${tdr}">${r.allowed!==false?fa(r.assessed):'—'}</td>
+      <td style="${tdr}">${dep}%</td>
+      <td style="${tdr}">${r.partType==='metal'&&r.allowed!==false?fa(ad):'—'}</td>
+      <td style="${tdr}">${r.partType==='plastic'&&r.allowed!==false?fa(ad):'—'}</td>
+      <td style="${tdr}">${r.partType==='glass'&&r.allowed!==false?fa(ad):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  let labSrNo=1;
+  const labHtml=assessRows.filter(r=>r.section==='labour'||r.section==='paint').map(r=>{
+    return `<tr${r.allowed===false?' style="opacity:0.55;"':''}>
+      <td style="${td}text-align:center;">${labSrNo++}</td>
+      <td style="${td}${r.allowed===false?'text-decoration:line-through;color:#a00;':''}">${r.particulars}${r.allowed===false?' <i style="font-size:6pt;">(Disallowed)</i>':''}</td>
+      <td style="${td}text-align:center;">${r.section==='paint'?'Paint':'Labour'}</td>
+      <td style="${tdr}">${r.gst}%</td>
+      <td colspan="4" style="${tdr}">${r.allowed!==false?fa(r.assessed):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const depNote=depType==='standard'?` | Metal: ${metalDep}% Dep | Plastic: ${plastDep}% Dep | Glass: 0%`:'';
+
+  return `${getSurveyorHeader()}
+<div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:3px;text-decoration:underline;letter-spacing:0.05em;">PRIVATE AND CONFIDENTIAL — MOTOR (FINAL) SURVEY REPORT</div>
+<p style="font-size:6.5pt;font-style:italic;margin-bottom:4px;text-align:justify;color:#444;">This report is issued by us as Licenced Surveyors without prejudice, in respect of cause, nature &amp; extent of loss/damage, subject to the terms &amp; conditions of the Insurance policy.</p>
+
+<table style="${ts}">
+  <tr>
+    <td style="${td}color:#444;width:18%;font-size:6.8pt;">Report No.</td><td style="${td}font-weight:700;width:32%;">${gv('f-report-no')}</td>
+    <td style="${td}color:#444;width:18%;font-size:6.8pt;">Date</td><td style="${td}font-weight:700;">${gv('f-report-date')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Policy No.</td><td style="${td}font-family:monospace;">${gv('f-policy-no')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">Claim No.</td><td style="${td}font-family:monospace;">${gv('f-claim-no')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Policy Period</td><td style="${td}">${gv('f-policy-from')} to ${gv('f-policy-to')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">I.D.V.</td><td style="${td}font-weight:600;">₹ ${fmt2(gv('f-idv'))}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Policy Type</td><td style="${td}" colspan="3">${gv('f-policy-type')} &nbsp;—&nbsp; <b>${depType==='nil'?'Nil Depreciation (0%)':'Standard Depreciation (IRDAI)'+depNote}</b></td>
+  </tr>
+</table>
+
+<table style="${ts}">
+  <tr><td style="${td}font-weight:700;width:18%;background:#f5f2ee;font-size:6.8pt;">1. INSURER</td><td style="${td}" colspan="3">${gv('f-insurer')} &nbsp;|&nbsp; Appointing: ${gv('f-appt-office')}</td></tr>
+  <tr><td style="${td}font-weight:700;background:#f5f2ee;font-size:6.8pt;">2. INSURED</td><td style="${td}font-weight:600;width:32%;">${gv('f-insured-name')}</td><td style="${td}color:#444;font-size:6.8pt;">Mobile</td><td style="${td}">${gv('f-insured-mobile')}</td></tr>
+  <tr><td style="${td}color:#444;font-size:6.8pt;">Address</td><td style="${td}" colspan="3">${gv('f-insured-addr')}</td></tr>
+  <tr><td style="${td}font-weight:700;background:#f5f2ee;font-size:6.8pt;">3. H.P.A.</td><td style="${td}" colspan="3">${gv('f-hpa')||'NIL'}</td></tr>
+</table>
+
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;letter-spacing:0.04em;">4. VEHICLE PARTICULARS &nbsp;<span style="font-weight:400;font-style:italic;font-size:6.5pt;">RC VERIFIED</span></div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">Reg. No.</td><td style="${td}font-weight:700;width:32%;">${gv('f-reg-no')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">Date of Reg.</td><td style="${td}">${gv('f-reg-date')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Make / Model / Year</td><td style="${td}" colspan="3"><b>${gv('f-make')}</b> / ${gv('f-model')} / ${gv('f-year')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Chassis No.</td><td style="${td}font-family:monospace;">${gv('f-chassis')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">Engine No.</td><td style="${td}font-family:monospace;">${gv('f-engine')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Body / Colour / Fuel</td><td style="${td}" colspan="3">${gv('f-body-type')} / ${gv('f-colour')} / ${gv('f-fuel')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">CC / Odometer</td><td style="${td}">${gv('f-cc')} / ${gv('f-odo')} KM</td>
+    <td style="${td}color:#444;font-size:6.8pt;">Pre-accident Cond.</td><td style="${td}">${gv('f-condition')}</td>
+  </tr>
+</table>
+
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;letter-spacing:0.04em;">5. DRIVER'S PARTICULARS &nbsp;<span style="font-weight:400;font-style:italic;font-size:6.5pt;">ORIGINAL MDL VERIFIED</span></div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">Driver Name</td><td style="${td}font-weight:600;width:32%;">${gv('f-driver-name')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">M.D.L. No.</td><td style="${td}font-family:monospace;">${gv('f-mdl')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Date of Birth</td><td style="${td}">${gv('f-dob')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">DL Validity</td><td style="${td}">${gv('f-dl-valid')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Issuing Authority</td><td style="${td}">${gv('f-dl-auth')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">Licence Type</td><td style="${td}">${gv('f-dl-type')}</td>
+  </tr>
+</table>
+
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;letter-spacing:0.04em;">6. ACCIDENT &amp; SURVEY DETAILS</div>
+<table style="${ts}">
+  <tr>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">Date &amp; Time</td><td style="${td};width:32%;">${gv('f-doa')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">Place of Accident</td><td style="${td}">${gv('f-poa')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Date of Survey</td><td style="${td}">${gv('f-survey-date')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">Place of Survey</td><td style="${td}">${gv('f-survey-place')}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Third Party</td><td style="${td}" colspan="3">${gv('f-tp')||'NIL'}</td>
+  </tr>
+</table>
+
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;letter-spacing:0.04em;">7. CAUSE &amp; NATURE OF ACCIDENT</div>
+<div style="font-size:7.2pt;margin-bottom:4px;padding:2px 4px;border:0.4pt solid #bbb;background:#fafaf7;line-height:1.5;">${gv('f-cause')||'—'}</div>
+
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;letter-spacing:0.04em;">8. ASSESSMENT SUMMARY</div>
+<table style="${ts}">
+  <thead><tr>
+    <th style="${th};width:40%;text-align:left;">Head</th>
+    <th style="${th};text-align:right;">Original Estimate</th>
+    <th style="${th};text-align:right;">Assessed (after Dep.)</th>
+    <th style="${th};text-align:right;">Incl. GST</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="${td}">Spare Parts</td><td style="${tdr}">${fa(assessRows.filter(r=>r.section==='parts'&&r.allowed!==false).reduce((s,r)=>s+r.estimated,0))}</td><td style="${tdr}">${fa(partsBase)}</td><td style="${tdr}">${fa(pTotal)}</td></tr>
+    <tr><td style="${td}">Labour &amp; Painting</td><td style="${tdr}">${fa(assessRows.filter(r=>(r.section==='labour'||r.section==='paint')&&r.allowed!==false).reduce((s,r)=>s+r.estimated,0))}</td><td style="${tdr}">${fa(labBase)}</td><td style="${tdr}">${fa(lTotal)}</td></tr>
+    <tr style="background:#e8f5f3;"><td style="${td}font-weight:700;">GRAND TOTAL</td><td style="${tdr}font-weight:700;background:#e8f5f3;"></td><td style="${tdr}font-weight:700;background:#e8f5f3;"></td><td style="${tdr}font-weight:700;background:#e8f5f3;">${fa(grand)}</td></tr>
+    <tr><td style="${td}">Less: Policy Excess</td><td colspan="2" style="border:0.4pt solid #bbb;"></td><td style="${tdr}">( ${fa(excess)} )</td></tr>
+    <tr><td style="${td}">Less: Salvage Value</td><td colspan="2" style="border:0.4pt solid #bbb;"></td><td style="${tdr}">( ${fa(salvage)} )</td></tr>
+    <tr style="background:#0d1b2a;color:#fff;"><td style="padding:3px 4px;font-weight:700;font-size:8pt;">NET ASSESSED LOSS</td><td colspan="2" style="border:none;"></td><td style="padding:3px 4px;text-align:right;font-weight:700;font-size:8pt;">${fa(net)}</td></tr>
+    <tr><td colspan="4" style="${td}font-style:italic;font-size:6.5pt;color:#444;">RUPEES ${numberToWords(net)} ONLY</td></tr>
+  </tbody>
+</table>
+
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;letter-spacing:0.04em;">9. DETAILS OF ASSESSMENT</div>
+<table style="${ts}">
+  <thead><tr>
+    <th style="${th};width:18pt;text-align:center;">Sr.</th>
+    <th style="${th}">Particulars</th>
+    <th style="${th};width:38pt;text-align:center;">Type</th>
+    <th style="${th};text-align:right;width:46pt;">Assessed ₹</th>
+    <th style="${th};text-align:center;width:28pt;">Dep%</th>
+    <th style="${th};text-align:right;width:48pt;">Metal ₹</th>
+    <th style="${th};text-align:right;width:48pt;">Plastic ₹</th>
+    <th style="${th};text-align:right;width:44pt;">Glass ₹</th>
+  </tr></thead>
+  <tbody>
+    <tr><td colspan="8" style="${sec}">SPARE PARTS</td></tr>
+    ${partsHtml}
+    <tr>
+      <td colspan="5" style="${sub}text-align:right;font-size:6.8pt;">Sub-Total Spare Parts</td>
+      <td style="${sub}text-align:right;">${fa(metal)}</td>
+      <td style="${sub}text-align:right;">${fa(plastic)}</td>
+      <td style="${sub}text-align:right;">${fa(glass)}</td>
+    </tr>
+    <tr><td colspan="8" style="${sec}">LABOUR &amp; PAINTING CHARGES</td></tr>
+    <tr>
+      <th style="${th};width:18pt;text-align:center;">Sr.</th>
+      <th style="${th}">Particulars</th>
+      <th style="${th};width:38pt;text-align:center;">Type</th>
+      <th style="${th};text-align:center;width:28pt;">GST%</th>
+      <th colspan="4" style="${th};text-align:right;">Amount ₹</th>
+    </tr>
+    ${labHtml}
+    <tr>
+      <td colspan="4" style="${sub}text-align:right;font-size:6.8pt;">Sub-Total Labour &amp; Paint (excl. GST)</td>
+      <td colspan="4" style="${sub}text-align:right;">${fa(labBase)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="${ts}margin-bottom:5px;">
+  <tr>
+    <td style="${td}color:#444;font-size:6.8pt;width:25%;">Parts Base (after dep.)</td><td style="${tdr}width:25%;">${fa(partsBase)}</td>
+    <td style="${td}color:#444;font-size:6.8pt;width:25%;">CGST @9%</td><td style="${tdr}">${fa(pCGST)}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Labour Base</td><td style="${tdr}">${fa(labBase)}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">SGST @9%</td><td style="${tdr}">${fa(pCGST)}</td>
+  </tr><tr>
+    <td style="${td}"></td><td></td>
+    <td style="${td}color:#444;font-size:6.8pt;">GST on Labour @18%</td><td style="${tdr}">${fa(lGST)}</td>
+  </tr>
+</table>
+
+<p style="font-size:6.5pt;line-height:1.5;margin-bottom:5px;text-align:justify;color:#333;">We have carried out survey of the above motor vehicle in connection with the captioned claim and assessed the loss. The survey was made in accordance with the Surveyors and Loss Assessors Regulations 2015 issued under the Insurance Act 1938. This is a final report without prejudice and subject to terms and conditions of the policy, including any applicable policy excess and depreciation as per IRDAI guidelines.</p>
 ${getSigBlock()}
-<hr style="margin:14px 0;border:none;border-top:1px solid #ccc;"/><div style="font-size:0.72rem;color:#666;"><strong>Enclose:</strong> CLAIM FORM, ESTIMATE, DIGITAL PHOTOS &amp; MY BILL FOR SURVEY.</div>`;
+<div style="font-size:6pt;color:#666;margin-top:4px;border-top:0.4pt solid #ccc;padding-top:2px;">Encl: Repair Estimate / Tax Invoice &amp; Digital Photographs</div>`;
 }
 
 function buildBillCheckHTML(){
@@ -2328,7 +2729,7 @@ function refreshRIReport(){document.getElementById('ri-report-html').innerHTML=b
 
 function printReport(html,title){
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');body{font-family:'DM Sans',sans-serif;font-size:10pt;margin:18mm;color:#000;}@media print{@page{margin:14mm;}}</style></head><body>${html}</body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');@page{margin:8mm 10mm;size:A4 portrait;}*{box-sizing:border-box;}body{font-family:'DM Sans',Arial,sans-serif;font-size:7.8pt;line-height:1.3;color:#000;margin:0;padding:0;}table{border-collapse:collapse;width:100%;font-size:7.8pt;}td,th{padding:2px 4px;}p{margin:0 0 4px 0;}@media print{@page{margin:8mm 10mm;}body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}tr{page-break-inside:avoid;}}</style></head><body>${html}</body></html>`);
   w.document.close();
   setTimeout(()=>{w.focus();w.print();},600);
   showToast('Report opened — use Print → Save as PDF');
@@ -2420,8 +2821,12 @@ function updateRISummary() {
 }
 
 // ============================================================
-// VOICE INPUT WITH AI VERIFICATION
+// VOICE INPUT — CONTINUOUS RECORDING + AI VERIFICATION + CORRECTION LEARNING
 // ============================================================
+
+// Session-level corrections store: [{field, raw, aiFormatted, corrected}]
+const voiceCorrections = [];
+
 function initVoiceRecognition() {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     console.warn('Speech recognition not supported');
@@ -2429,116 +2834,130 @@ function initVoiceRecognition() {
   }
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   voiceRecognition = new SpeechRecognition();
-  voiceRecognition.continuous = false;
-  voiceRecognition.interimResults = false;
-  voiceRecognition.lang = 'en-IN'; // Indian English
-  
+  voiceRecognition.continuous = true;
+  voiceRecognition.interimResults = true;
+  voiceRecognition.lang = 'en-IN';
+
   voiceRecognition.onstart = () => {
     isRecording = true;
     document.getElementById('voice-record-btn').classList.add('recording');
-    document.getElementById('voice-record-icon').textContent = '⏸️';
-    document.getElementById('voice-record-text').textContent = 'Recording...';
-    document.getElementById('voice-status').textContent = 'Listening... Speak now';
+    document.getElementById('voice-record-icon').textContent = '⏹️';
+    document.getElementById('voice-record-text').textContent = 'Stop Recording';
+    document.getElementById('voice-status').textContent = '🔴 Listening... speak freely, press Stop when done';
     document.getElementById('voice-status').style.color = 'var(--red)';
+    document.getElementById('voice-raw-section').style.display = 'block';
+    document.getElementById('voice-ai-section').style.display = 'none';
+    document.getElementById('voice-apply-btn').style.display = 'none';
   };
-  
-  voiceRecognition.onresult = async (event) => {
-    const transcript = event.results[0][0].transcript;
-    voiceTranscript = transcript;
-    
-    document.getElementById('voice-transcript').textContent = transcript;
-    document.getElementById('voice-transcript-section').style.display = 'block';
-    document.getElementById('voice-status').textContent = 'Processing with AI...';
-    document.getElementById('voice-status').style.color = '#fbbf24';
-    
-    // Verify and format with Claude AI
-    await verifyVoiceInput(transcript);
+
+  voiceRecognition.onresult = (event) => {
+    let finalText = '';
+    let interimText = '';
+    for (let i = 0; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        finalText += event.results[i][0].transcript + ' ';
+      } else {
+        interimText += event.results[i][0].transcript;
+      }
+    }
+    document.getElementById('voice-raw-text').textContent = (finalText + interimText).trim();
   };
-  
+
   voiceRecognition.onerror = (event) => {
-    console.error('Speech recognition error:', event.error);
-    showToast('Voice input error: ' + event.error, 'error');
+    if (event.error === 'no-speech') return;
+    if (event.error !== 'aborted') showToast('Voice error: ' + event.error, 'error');
     resetVoiceRecording();
   };
-  
+
   voiceRecognition.onend = () => {
-    resetVoiceRecording();
+    if (isRecording) {
+      // Browser stopped on its own — restart to keep going
+      try { voiceRecognition.start(); } catch(e) { resetVoiceRecording(); }
+    } else {
+      resetVoiceRecording();
+      // Recording was manually stopped — now run AI verification
+      const rawText = document.getElementById('voice-raw-text').textContent.trim();
+      if (rawText) runAIVoiceVerification(rawText);
+    }
   };
 }
 
-async function verifyVoiceInput(transcript) {
+async function runAIVoiceVerification(rawTranscript) {
+  const aiSection = document.getElementById('voice-ai-section');
+  const aiText = document.getElementById('voice-ai-text');
+  const aiSpinner = document.getElementById('voice-ai-spinner');
+  const applyBtn = document.getElementById('voice-apply-btn');
+
+  aiSection.style.display = 'block';
+  aiSpinner.style.display = 'inline-flex';
+  aiText.value = '';
+  applyBtn.style.display = 'none';
+  document.getElementById('voice-status').textContent = '✨ AI is formatting your text...';
+  document.getElementById('voice-status').style.color = '#6366f1';
+
   try {
     const fieldLabel = currentVoiceFieldLabel || 'field';
-    const prompt = `You are helping fill a motor insurance survey form. The user spoke the following to fill the "${fieldLabel}" field:
 
-"${transcript}"
-
-Your task:
-1. Clean up the transcript (remove filler words, fix grammar)
-2. Format it appropriately for the field type:
-   - If it's a name: proper capitalization
-   - If it's a date: convert to YYYY-MM-DD format
-   - If it's a number: extract just the number
-   - If it's a vehicle registration: format as UPPERCASE with proper spacing (e.g., MH-12-AB-1234)
-   - If it's a chassis/engine number: UPPERCASE, no spaces
-   - If it's an address: proper capitalization, clear formatting
-   - If it's a description: clear, professional language
-3. Return ONLY the cleaned, formatted value. No explanation, no quotes, no extra text.
-
-If the input is unclear or doesn't make sense for this field, return: ERROR: [brief reason]`;
-
-    const verifiedText = await callGemini([{ text: prompt }], 500);
-    
-    if (verifiedText.startsWith('ERROR:')) {
-      document.getElementById('voice-status').textContent = verifiedText;
-      document.getElementById('voice-status').style.color = 'var(--red)';
-      showToast('Could not verify voice input', 'error');
-      return;
+    // Build few-shot examples from past corrections this session
+    let correctionExamples = '';
+    const relevantCorrections = voiceCorrections.slice(-5); // last 5 corrections
+    if (relevantCorrections.length > 0) {
+      correctionExamples = '\n\nLearn from these past corrections the surveyor made:\n';
+      relevantCorrections.forEach(c => {
+        correctionExamples += `Field: "${c.field}" | Raw: "${c.raw}" | AI said: "${c.aiFormatted}" | Surveyor corrected to: "${c.corrected}"\n`;
+      });
+      correctionExamples += '\nApply the same correction style going forward.\n';
     }
-    
-    voiceVerifiedData = verifiedText;
-    document.getElementById('voice-verified-content').textContent = verifiedText;
-    document.getElementById('voice-verification-section').style.display = 'block';
-    document.getElementById('voice-apply-btn').style.display = 'inline-flex';
-    document.getElementById('voice-status').textContent = '✓ Ready to apply';
-    document.getElementById('voice-status').style.color = 'var(--green)';
-    
-  } catch (error) {
-    console.error('AI verification error:', error);
-    showToast('Verification failed: ' + error.message, 'error');
-    document.getElementById('voice-status').textContent = 'Verification failed';
-    document.getElementById('voice-status').style.color = 'var(--red)';
-  }
-}
 
-function openVoiceInput(fieldId, fieldLabel) {
-  currentVoiceFieldId = fieldId;
-  currentVoiceFieldLabel = fieldLabel;
-  document.getElementById('voice-field-name').textContent = fieldLabel;
-  document.getElementById('voice-modal').classList.add('open');
-  
-  // Reset state
-  voiceTranscript = '';
-  voiceVerifiedData = '';
-  document.getElementById('voice-transcript-section').style.display = 'none';
-  document.getElementById('voice-verification-section').style.display = 'none';
-  document.getElementById('voice-apply-btn').style.display = 'none';
-  document.getElementById('voice-status').textContent = 'Click the microphone to start recording';
-  document.getElementById('voice-status').style.color = 'var(--muted)';
-  
-  // Initialize recognition if needed
-  if (!voiceRecognition) initVoiceRecognition();
+    const prompt = `You are helping an Indian motor insurance surveyor fill a survey form using voice input.
+
+Field being filled: "${fieldLabel}"
+Raw speech transcript: "${rawTranscript}"
+${correctionExamples}
+Your task — clean and format the transcript for this field:
+- Names: Proper capitalization (e.g. "VIKRAM PATIL")
+- Vehicle registration: UPPERCASE with hyphens (e.g. "MH-15-CK-7321")
+- Chassis/Engine numbers: UPPERCASE, no spaces
+- Dates: DD-MM-YYYY format
+- Amounts: numbers only (e.g. "45000")
+- Accident/damage descriptions: clean professional Hindi-English mixed language is OK, keep full meaning intact, do NOT shorten
+- Addresses: proper capitalization, keep full address
+- Remove filler words (um, uh, like, basically) but keep all actual content
+
+Return ONLY the cleaned formatted value. No explanation, no quotes.`;
+
+    const result = await callGemini([{ text: prompt }], 600);
+    const cleaned = result.trim();
+
+    aiText.value = cleaned;
+    aiText.dataset.aiOriginal = cleaned; // save for correction tracking
+    aiSpinner.style.display = 'none';
+    applyBtn.style.display = 'inline-flex';
+    document.getElementById('voice-status').textContent = '✅ Review and edit above if needed, then click Apply';
+    document.getElementById('voice-status').style.color = 'var(--green)';
+
+  } catch (err) {
+    // AI failed — fall back to raw transcript so user isn't stuck
+    aiSpinner.style.display = 'none';
+    aiText.value = rawTranscript;
+    applyBtn.style.display = 'inline-flex';
+    document.getElementById('voice-status').textContent = '⚠️ AI formatting failed — raw transcript shown, edit as needed';
+    document.getElementById('voice-status').style.color = 'var(--gold)';
+  }
 }
 
 function toggleVoiceRecording() {
   if (!voiceRecognition) {
-    showToast('Voice recognition not supported in this browser', 'error');
+    showToast('Voice recording not supported in this browser. Use Chrome.', 'error');
     return;
   }
-  
   if (isRecording) {
+    isRecording = false; // set BEFORE stop so onend doesn't restart
     voiceRecognition.stop();
   } else {
+    document.getElementById('voice-raw-text').textContent = '';
+    document.getElementById('voice-ai-section').style.display = 'none';
+    document.getElementById('voice-apply-btn').style.display = 'none';
     voiceRecognition.start();
   }
 }
@@ -2553,23 +2972,65 @@ function resetVoiceRecording() {
   }
 }
 
+function openVoiceInput(fieldId, fieldLabel) {
+  currentVoiceFieldId = fieldId;
+  currentVoiceFieldLabel = fieldLabel;
+  document.getElementById('voice-field-name').textContent = fieldLabel;
+  document.getElementById('voice-raw-text').textContent = '';
+  document.getElementById('voice-raw-section').style.display = 'none';
+  document.getElementById('voice-ai-section').style.display = 'none';
+  document.getElementById('voice-apply-btn').style.display = 'none';
+  document.getElementById('voice-status').textContent = 'Press Start — speak freely — press Stop when done';
+  document.getElementById('voice-status').style.color = 'var(--muted)';
+  // Update correction badge
+  const badge = document.getElementById('voice-correction-badge');
+  const count = document.getElementById('voice-correction-count');
+  if (voiceCorrections.length > 0) {
+    badge.style.display = 'block';
+    count.textContent = voiceCorrections.length;
+  } else {
+    badge.style.display = 'none';
+  }
+  document.getElementById('voice-modal').classList.add('open');
+  if (!voiceRecognition) initVoiceRecognition();
+}
+
 function applyVoiceInput() {
-  if (!currentVoiceFieldId || !voiceVerifiedData) return;
-  
+  if (!currentVoiceFieldId) return;
+  const aiText = document.getElementById('voice-ai-text').value.trim();
+  const rawText = document.getElementById('voice-raw-text').textContent.trim();
+  if (!aiText && !rawText) { showToast('Nothing recorded yet', 'error'); return; }
+
+  const finalText = aiText || rawText;
+
+  // Record correction if surveyor edited the AI output
+  const aiOriginal = document.getElementById('voice-ai-text').dataset.aiOriginal || '';
+  if (aiOriginal && aiOriginal !== finalText && rawText) {
+    voiceCorrections.push({
+      field: currentVoiceFieldLabel,
+      raw: rawText,
+      aiFormatted: aiOriginal,
+      corrected: finalText
+    });
+    // Update badge
+    document.getElementById('voice-correction-count').textContent = voiceCorrections.length;
+    document.getElementById('voice-correction-badge').style.display = 'block';
+    showToast('Correction saved — AI will learn from it', 'ai');
+  }
+
   const field = document.getElementById(currentVoiceFieldId);
   if (field) {
-    field.value = voiceVerifiedData;
+    field.value = finalText;
     field.classList.add('ai-filled');
-    showToast(`Voice input applied to ${currentVoiceFieldLabel}`, 'success');
+    showToast(`Applied to ${currentVoiceFieldLabel}`, 'success');
     closeVoiceModal();
   }
 }
 
 function closeVoiceModal() {
+  isRecording = false;
+  if (voiceRecognition) { try { voiceRecognition.stop(); } catch(e) {} }
   document.getElementById('voice-modal').classList.remove('open');
-  if (isRecording && voiceRecognition) {
-    voiceRecognition.stop();
-  }
   currentVoiceFieldId = null;
   currentVoiceFieldLabel = null;
 }
