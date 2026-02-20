@@ -646,7 +646,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         <div class="card-body">
           <div class="form-grid-3">
             <div class="form-group"><label class="form-label">Registration No.</label><input class="form-input" id="f-reg-no" style="text-transform:uppercase;"/></div>
-            <div class="form-group"><label class="form-label">Date of Registration</label><input class="form-input" type="date" id="f-reg-date"/></div>
+            <div class="form-group"><label class="form-label">Date of Registration</label><input class="form-input" type="date" id="f-reg-date" onchange="if(depType==='standard')setDepType('standard')"/></div>
             <div class="form-group"><label class="form-label">Class of Vehicle</label><select class="form-select" id="f-veh-class"><option>LGV</option><option>HGV</option><option>Car</option><option>Two Wheeler</option><option>Bus</option><option>Taxi</option></select></div>
             <div class="form-group"><label class="form-label">Make</label><input class="form-input" id="f-make"/></div>
             <div class="form-group"><label class="form-label">Model / Variant</label><input class="form-input" id="f-model"/></div>
@@ -686,7 +686,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         <div class="card-header"><h3>Accident &amp; Survey Details</h3></div>
         <div class="card-body">
           <div class="form-grid">
-            <div class="form-group"><label class="form-label">Date &amp; Time of Accident</label><input class="form-input" id="f-doa" type="datetime-local"/></div>
+            <div class="form-group"><label class="form-label">Date &amp; Time of Accident</label><input class="form-input" id="f-doa" type="datetime-local" onchange="if(depType==='standard')setDepType('standard')"/></div>
             <div class="form-group"><label class="form-label">Place of Accident</label><input class="form-input" id="f-poa"/></div>
             <div class="form-group"><label class="form-label">Date of Survey Allotment</label><input class="form-input" type="date" id="f-allot-date"/></div>
             <div class="form-group"><label class="form-label">Date of Survey</label><input class="form-input" id="f-survey-date"/></div>
@@ -1930,6 +1930,9 @@ function applyExtractedData(type, data) {
       if (fuelEl) { const opt = [...fuelEl.options].find(o => o.text.toLowerCase().includes(data.fuel.toLowerCase())); if (opt) { fuelEl.value = opt.value; count++; } }
     }
     if (data.date_of_registration) setField('f-reg-date', tryDate(data.date_of_registration));
+    // ── Mirror to Spot Survey ──
+    setField('f-insured-name', data.owner_name);  // already set above
+    if (data.gross_weight) setField('spot-load-capacity', data.gross_weight);
   }
 
   if (type === 'dl') {
@@ -1940,6 +1943,13 @@ function applyExtractedData(type, data) {
     setField('f-dl-type', data.vehicle_classes);
     if (data.date_of_birth) setField('f-dob', tryDate(data.date_of_birth));
     if (data.date_of_issue) setField('f-dl-issue', tryDate(data.date_of_issue));
+    // ── Mirror to Spot Survey ──
+    setField('spot-driver-name', data.holder_name);
+    setField('spot-mdl-no', data.licence_number);
+    setField('spot-dl-authority', data.issuing_authority || data.rto);
+    setField('spot-dl-type', data.vehicle_classes);
+    if (data.validity_non_transport) setField('spot-dl-valid', tryDate(data.validity_non_transport));
+    if (data.date_of_issue) setField('spot-dl-issue', tryDate(data.date_of_issue));
   }
 
   if (type === 'policy') {
@@ -1960,6 +1970,8 @@ function applyExtractedData(type, data) {
       const sel = document.getElementById('f-policy-type');
       if (sel) { const opt = [...sel.options].find(o => o.text.toLowerCase().includes((data.policy_type || '').toLowerCase().substring(0,6))); if (opt) { sel.value = opt.value; count++; } }
     }
+    // ── Mirror to Spot Survey ──
+    // Policy data doesn't directly feed spot survey fields — no mirror needed
   }
 
   if (type === 'claim') {
@@ -1978,6 +1990,23 @@ function applyExtractedData(type, data) {
       setField('f-doa', dt + 'T' + (time.includes(':') ? time.substring(0,5) : '00:00'));
     }
     if (data.vehicle_number) setField('f-reg-no', data.vehicle_number);
+    // ── Mirror to Spot Survey ──
+    setField('spot-accident-place', data.place_of_accident);
+    setField('spot-accident-cause', data.cause_of_accident);
+    setField('spot-driver-name', data.driver_name);
+    setField('spot-mdl-no', data.driver_licence_no);
+    setField('spot-survey-place', data.workshop_name || data.place_of_repair);
+    setField('spot-tp-details', data.third_party_details);
+    if (data.third_party_details && data.third_party_details.toLowerCase() !== 'nil' && data.third_party_details.trim() !== '') {
+      const tpSel = document.getElementById('spot-tp-involved');
+      if (tpSel) { tpSel.value = 'yes'; count++; }
+    }
+    if (data.date_of_accident) {
+      const dt = tryDate(data.date_of_accident);
+      const time = data.time_of_accident || '00:00';
+      const timeStr = time.includes(':') ? time.substring(0,5) : '00:00';
+      setField('spot-accident-datetime', dt + 'T' + timeStr);
+    }
   }
 
   if (type === 'estimate') {
@@ -2019,6 +2048,20 @@ function applyExtractedData(type, data) {
     if (data.overall_damage_summary) {
       const causeEl = document.getElementById('f-cause');
       if (causeEl && !causeEl.value) { causeEl.value = data.overall_damage_summary; count++; }
+      // ── Mirror to Spot Survey ──
+      const spotDamageEl = document.getElementById('spot-damage-details');
+      if (spotDamageEl && !spotDamageEl.value) { spotDamageEl.value = data.overall_damage_summary; count++; }
+    }
+    if (data.damaged_parts && Array.isArray(data.damaged_parts) && data.damaged_parts.length > 0) {
+      // Set damage severity in spot survey based on AI analysis
+      const severities = data.damaged_parts.map(p => (p.severity||'').toLowerCase());
+      const spotSev = document.getElementById('spot-damage-severity');
+      if (spotSev) {
+        if (severities.includes('major')) spotSev.value = 'major';
+        else if (severities.includes('moderate')) spotSev.value = 'moderate';
+        else spotSev.value = 'minor';
+        count++;
+      }
     }
   }
   return count;
@@ -2091,21 +2134,47 @@ function toggleAllowed(idx) {
 }
 
 // IRDAI standard depreciation rates by vehicle age
+// IRDAI depreciation — calculated from Date of Registration to Date of Accident (exact months)
+function getVehicleAgeMonths() {
+  // Prefer exact registration date; fall back to Jan 1 of manufacture year
+  const regDateStr = gv('f-reg-date');
+  const mfgYear    = parseInt(gv('f-year'));
+  let startDate;
+  if (regDateStr) {
+    startDate = new Date(regDateStr);
+  } else if (mfgYear) {
+    startDate = new Date(mfgYear, 0, 1); // Jan 1 of manufacture year
+  } else {
+    return 0; // no data — assume new vehicle
+  }
+
+  // Reference: date of accident; fall back to today only if not filled
+  const doaStr = gv('f-doa');
+  const refDate = doaStr ? new Date(doaStr) : new Date();
+
+  if (isNaN(startDate.getTime()) || isNaN(refDate.getTime())) return 0;
+  if (refDate < startDate) return 0;
+
+  const years  = refDate.getFullYear() - startDate.getFullYear();
+  const months = refDate.getMonth()    - startDate.getMonth();
+  return years * 12 + months;
+}
+
 function getDepRate(partType) {
   if (depType === 'nil') return 0;
-  if (partType === 'glass') return 0;
-  if (partType === 'plastic') return 50;
+  if (partType === 'glass')                      return 0;
+  if (partType === 'plastic')                    return 50;
   if (partType === 'labour' || partType === 'paint') return 0;
-  // Metal parts — based on year of manufacture
-  const mfgYear = parseInt(gv('f-year')) || new Date().getFullYear();
-  const ageMonths = (new Date().getFullYear() - mfgYear) * 12;
-  if (ageMonths <= 6)   return 0;
-  if (ageMonths <= 12)  return 5;
-  if (ageMonths <= 24)  return 10;
-  if (ageMonths <= 36)  return 15;
-  if (ageMonths <= 48)  return 25;
-  if (ageMonths <= 60)  return 35;
-  if (ageMonths <= 120) return 40;
+
+  // Metal parts — IRDAI slab by exact vehicle age at time of accident
+  const age = getVehicleAgeMonths();
+  if (age <= 6)   return 0;
+  if (age <= 12)  return 5;
+  if (age <= 24)  return 10;
+  if (age <= 36)  return 15;
+  if (age <= 48)  return 25;
+  if (age <= 60)  return 35;
+  if (age <= 120) return 40;
   return 50;
 }
 
@@ -2263,8 +2332,12 @@ function setDepType(t){
   document.querySelectorAll('#dep-toggle button').forEach((b,i)=>{
     b.classList.toggle('active',(t==='nil'&&i===0)||(t==='standard'&&i===1));
   });
-  document.getElementById('assess-policy-badge').textContent = t==='nil'?'0% Dep. Policy':'Standard Dep. (IRDAI)';
-  renderAssessTable(); // re-render so dep% column updates
+  const age = getVehicleAgeMonths();
+  const ageText = age > 0 ? ` · ${Math.floor(age/12)}y ${age%12}m old` : '';
+  const metalDep = t==='nil' ? 0 : getDepRate('metal');
+  document.getElementById('assess-policy-badge').textContent =
+    t==='nil' ? '0% Dep. Policy' : `Std. Dep. — Metal ${metalDep}%${ageText}`;
+  renderAssessTable();
 }
 function handleSigUpload(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{sigDataUrl=e.target.result;document.getElementById('sig-placeholder').classList.add('hidden');const img=document.getElementById('sig-preview-img');img.src=sigDataUrl;img.classList.remove('hidden');};r.readAsDataURL(f);}
 function handleStampUpload(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{stampDataUrl=e.target.result;document.getElementById('stamp-placeholder').classList.add('hidden');const img=document.getElementById('stamp-preview-img');img.src=stampDataUrl;img.classList.remove('hidden');};r.readAsDataURL(f);}
@@ -2429,9 +2502,11 @@ function buildSurveyReportHTML(){
   const sec=`padding:2px 4px;font-weight:700;background:#e8e3da;font-size:6.8pt;letter-spacing:0.04em;text-transform:uppercase;border:0.4pt solid #bbb;`;
   const sub=`padding:2px 4px;font-weight:700;background:#dff0ec;color:#1a5a50;border:0.4pt solid #bbb;`;
 
-  const mfgYear=parseInt(gv('f-year'))||new Date().getFullYear();
+  const age = getVehicleAgeMonths();
+  const ageLabel = age > 0 ? `${Math.floor(age/12)}yr ${age%12}mo (Reg: ${gv('f-reg-date')} → Accident: ${gv('f-doa')?gv('f-doa').substring(0,10):'?'})` : '';
   const metalDep=depType==='nil'?0:getDepRate('metal');
   const plastDep=depType==='nil'?0:50;
+  const depNote=depType==='standard'?` | Vehicle Age: ${ageLabel} | Metal: ${metalDep}% | Plastic: 50% | Glass: 0%`:'';
 
   // Parts table rows
   let partsSrNo=1;
@@ -2460,8 +2535,6 @@ function buildSurveyReportHTML(){
       <td colspan="4" style="${tdr}">${r.allowed!==false?fa(r.assessed):'—'}</td>
     </tr>`;
   }).join('');
-
-  const depNote=depType==='standard'?` | Metal: ${metalDep}% Dep | Plastic: ${plastDep}% Dep | Glass: 0%`:'';
 
   return `${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:3px;text-decoration:underline;letter-spacing:0.05em;">PRIVATE AND CONFIDENTIAL — MOTOR (FINAL) SURVEY REPORT</div>
