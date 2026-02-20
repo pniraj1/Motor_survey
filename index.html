@@ -40,6 +40,25 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .topbar-title { font-family: 'Crimson Pro', serif; font-size: 1.3rem; font-weight: 600; color: var(--navy); }
 .topbar-meta { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
+.autosave-dot { width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;transition:background 0.4s,transform 0.2s; }
+.autosave-dot.saving { background:#fbbf24;transform:scale(1.3); }
+.autosave-dot.saved  { background:var(--green); }
+.autosave-label { font-size:0.68rem;color:var(--muted);letter-spacing:0.03em;transition:color 0.3s; }
+.autosave-label.saved { color:var(--green); }
+.model-badge { font-size:0.65rem;padding:2px 7px;border-radius:20px;border:1px solid var(--border);color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;transition:all 0.2s; }
+.model-badge:hover { border-color:var(--teal);color:var(--teal); }
+.share-fab { position:fixed;bottom:24px;right:24px;z-index:200;background:var(--teal);color:#fff;border:none;border-radius:50px;padding:10px 18px;font-size:0.8rem;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.18);display:flex;align-items:center;gap:7px;transition:opacity 0.3s,transform 0.2s; }
+.share-fab:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.22); }
+.share-fab.hidden { opacity:0;pointer-events:none;transform:translateY(12px); }
+.preflight-modal { position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s; }
+.preflight-modal.open { opacity:1;pointer-events:all; }
+.preflight-box { background:#fff;border-radius:12px;padding:24px;width:440px;max-width:94vw;box-shadow:0 12px 48px rgba(0,0,0,0.22); }
+.preflight-row { display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--cream2);font-size:0.83rem; }
+.preflight-row:last-child { border:none; }
+.preflight-icon { font-size:1rem;width:22px;text-align:center; }
+.pwa-banner { position:fixed;bottom:0;left:0;right:0;background:var(--navy);color:#fff;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;z-index:300;font-size:0.82rem;transform:translateY(100%);transition:transform 0.3s; }
+.pwa-banner.show { transform:translateY(0); }
+.fee-auto-row { background:#f0fdf8;border-radius:8px;padding:10px 14px;font-size:0.8rem;border:1px dashed var(--teal);display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px; }
 .page-body { padding: 24px 28px; flex: 1; }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
@@ -314,9 +333,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       <div class="topbar-meta" id="page-meta">Motor Insurance Survey & Loss Assessment</div>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-ai btn-sm" onclick="showPage('upload')">🤖 AI Scan Docs</button>
+      <div style="display:flex;align-items:center;gap:5px;" title="Auto-saves every 30 seconds">
+        <span class="autosave-dot" id="autosave-dot"></span>
+        <span class="autosave-label" id="autosave-label">Auto-save on</span>
+      </div>
+      <span class="model-badge" id="model-badge" onclick="cycleModel()" title="Click to switch AI model">⚡ Scout</span>
+      <button class="btn btn-ai btn-sm" onclick="showPage('upload')">🤖 AI Scan</button>
       <button class="btn btn-secondary btn-sm" onclick="saveAll()">💾 Save</button>
-      <button class="btn btn-gold btn-sm" onclick="generateAllReports()">📄 Generate Reports</button>
+      <button class="btn btn-gold btn-sm" onclick="preflightThenGenerate()">📄 Generate Reports</button>
     </div>
   </header>
 
@@ -1256,7 +1280,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         <div class="card">
           <div class="card-header"><h3>Fee Details</h3></div>
           <div class="card-body" style="display:flex;flex-direction:column;gap:11px;">
-            <div class="form-group"><label class="form-label">Professional Fee (₹)</label><input class="form-input" id="fee-prof" type="number" value="1500"/></div>
+            <div class="fee-auto-row">
+              <div>
+                <div style="font-weight:600;color:var(--teal);">⚡ IRDAI Auto-Calculate</div>
+                <div style="color:var(--muted);font-size:0.72rem;">Based on net assessed loss — IRDAI scale</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="autoCalcIRDAIFee()" style="white-space:nowrap;">Calculate Fee</button>
+            </div>
+            <div class="form-group"><label class="form-label">Professional Fee (₹)</label><input class="form-input" id="fee-prof" type="number" value="1500" oninput="calcFeeTotal()"/></div>
             <div class="form-group"><label class="form-label">RI Fees (₹)</label><input class="form-input" id="fee-ri" type="number" value="1000"/></div>
             <div class="form-group"><label class="form-label">Travelling / Conveyance (₹)</label><input class="form-input" id="fee-travel" type="number" value="1000"/></div>
             <div class="form-group"><label class="form-label">Travel Notes</label><input class="form-input" id="fee-travel-note" value="Local 2 Visits Including R.I"/></div>
@@ -1344,6 +1375,91 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
   </div><!-- end page-body -->
 </main>
+
+<!-- ── Share FAB ── -->
+<button class="share-fab hidden" id="share-fab" onclick="openShareMenu()">
+  📲 Share Report
+</button>
+
+<!-- ── Share Menu Modal ── -->
+<div class="preflight-modal" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="preflight-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="font-family:'Crimson Pro',serif;font-size:1.1rem;color:var(--navy);margin:0;">Share Report</h3>
+      <button onclick="document.getElementById('share-modal').classList.remove('open')" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary" onclick="shareViaWhatsApp()" style="justify-content:flex-start;gap:10px;">
+        💬 Send via WhatsApp
+      </button>
+      <button class="btn btn-secondary" onclick="shareViaEmail()" style="justify-content:flex-start;gap:10px;">
+        📧 Send via Email
+      </button>
+      <button class="btn btn-secondary" onclick="copyReportSummary()" style="justify-content:flex-start;gap:10px;">
+        📋 Copy Summary to Clipboard
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Pre-flight Validation Modal ── -->
+<div class="preflight-modal" id="preflight-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="preflight-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="font-family:'Crimson Pro',serif;font-size:1.1rem;color:var(--navy);margin:0;">📋 Report Checklist</h3>
+      <button onclick="document.getElementById('preflight-modal').classList.remove('open')" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <p style="font-size:0.78rem;color:var(--muted);margin:0 0 14px;">Verify before generating. Missing fields may leave blanks in the report.</p>
+    <div id="preflight-checks"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="document.getElementById('preflight-modal').classList.remove('open');doGenerateAllReports()">Generate Anyway →</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('preflight-modal').classList.remove('open')">Go Back & Fix</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PWA Install Banner ── -->
+<div class="pwa-banner" id="pwa-banner">
+  <span>📱 Install this app for offline use — works without internet on the field!</span>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-gold btn-sm" id="pwa-install-btn" onclick="installPWA()">Install</button>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('pwa-banner').classList.remove('show');localStorage.setItem('pwa-dismissed','1')">✕</button>
+  </div>
+</div>
+
+<!-- ── Model Selector Modal ── -->
+<div class="preflight-modal" id="model-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="preflight-box" style="width:360px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="font-family:'Crimson Pro',serif;font-size:1.1rem;color:var(--navy);margin:0;">🤖 AI Model</h3>
+      <button onclick="document.getElementById('model-modal').classList.remove('open')" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;" id="model-options">
+      <label class="preflight-row" style="cursor:pointer;border-radius:8px;padding:10px 12px;background:var(--cream);border:1px solid var(--border);">
+        <input type="radio" name="groq-model" value="meta-llama/llama-4-scout-17b-16e-instruct" checked style="accent-color:var(--teal);"/>
+        <div>
+          <div style="font-weight:600;font-size:0.82rem;">⚡ Llama 4 Scout <span style="color:var(--teal);font-size:0.7rem;">FAST</span></div>
+          <div style="font-size:0.72rem;color:var(--muted);">Best for clear documents. Free tier friendly.</div>
+        </div>
+      </label>
+      <label class="preflight-row" style="cursor:pointer;border-radius:8px;padding:10px 12px;background:var(--cream);border:1px solid var(--border);">
+        <input type="radio" name="groq-model" value="meta-llama/llama-4-maverick-17b-128e-instruct" style="accent-color:var(--teal);"/>
+        <div>
+          <div style="font-weight:600;font-size:0.82rem;">🦅 Llama 4 Maverick <span style="color:var(--gold);font-size:0.7rem;">ACCURATE</span></div>
+          <div style="font-size:0.72rem;color:var(--muted);">Better for blurry or low-quality scans.</div>
+        </div>
+      </label>
+      <label class="preflight-row" style="cursor:pointer;border-radius:8px;padding:10px 12px;background:var(--cream);border:1px solid var(--border);">
+        <input type="radio" name="groq-model" value="llama-3.2-11b-vision-preview" style="accent-color:var(--teal);"/>
+        <div>
+          <div style="font-weight:600;font-size:0.82rem;">🔎 Llama 3.2 Vision <span style="color:var(--muted);font-size:0.7rem;">LEGACY</span></div>
+          <div style="font-size:0.72rem;color:var(--muted);">Fallback if newer models unavailable.</div>
+        </div>
+      </label>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="applyModelSelection()">Apply</button>
+  </div>
+</div>
 
 <!-- ADD ROW MODAL -->
 <div class="modal-overlay" id="add-row-modal">
@@ -3317,7 +3433,7 @@ function refreshRIReport(){document.getElementById('ri-report-html').innerHTML=b
 
 function printReport(html,title){
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');@page{margin:8mm 10mm;size:A4 portrait;}*{box-sizing:border-box;}body{font-family:'DM Sans',Arial,sans-serif;font-size:7.8pt;line-height:1.3;color:#000;margin:0;padding:0;}table{border-collapse:collapse;width:100%;font-size:7.8pt;}td,th{padding:2px 4px;}p{margin:0 0 4px 0;}@media print{@page{margin:8mm 10mm;}body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}tr{page-break-inside:avoid;}}</style></head><body>${html}</body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><link rel='preconnect' href='https://fonts.googleapis.com'/><link href='https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap' rel='stylesheet'/><style>@page{margin:8mm 10mm;size:A4 portrait;}*{box-sizing:border-box;}body{font-family:'DM Sans',Arial,sans-serif;font-size:7.8pt;line-height:1.3;color:#000;margin:0;padding:0;}table{border-collapse:collapse;width:100%;font-size:7.8pt;}td,th{padding:2px 4px;}p{margin:0 0 4px 0;}@media print{@page{margin:8mm 10mm;}body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}tr{page-break-inside:avoid;}}</style></head><body>${html}</body></html>`);
   w.document.close();
   setTimeout(()=>{w.focus();w.print();},600);
   showToast('Report opened — use Print → Save as PDF');
@@ -3333,7 +3449,7 @@ function generateFeeBillPDF(){
   const html=`${getSurveyorHeader()}<table style="width:100%;border-collapse:collapse;font-size:0.83rem;margin-bottom:10px;"><tr><td style="padding:4px 0;color:#666;">Report No.</td><td>${gv('f-report-no')}</td><td style="color:#666;text-align:right;">Date :</td><td style="text-align:right;font-weight:700;">${gv('f-report-date')}</td></tr><tr><td style="color:#666;">GST No.</td><td>${gv('sp-gst')}</td><td style="color:#666;text-align:right;">Surveyor Code :</td><td style="text-align:right;">${gv('sp-code')}</td></tr><tr><td colspan="4" style="padding:4px 0;">Insurer Name : <strong>${gv('f-insurer')}</strong></td></tr><tr><td colspan="4" style="padding:4px 0;"><strong>Insured :</strong> ${gv('f-insured-name')}, ${gv('f-insured-addr')}</td></tr><tr><td style="color:#666;">Policy No.</td><td>${gv('f-policy-no')}</td><td style="color:#666;text-align:right;">Claim No.</td><td style="text-align:right;">${gv('f-claim-no')}</td></tr></table><table style="width:100%;border-collapse:collapse;font-size:0.83rem;border:1px solid #000;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="padding:6px 9px;text-align:left;width:40px;">Sr.</th><th style="padding:6px 9px;text-align:left;">Particular</th><th style="padding:6px 9px;text-align:right;">Amount Rs</th></tr></thead><tbody><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">1</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Professional Fees Rs.${fa(p)} + R.I Fees Rs.${fa(r)}</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">${fa(p+r)}</td></tr><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">2</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Travelling/Conveyance (${gv('fee-travel-note')})</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">${fa(t)}</td></tr><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">3</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Haltage</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">0.00</td></tr><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">4</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Digital Photo Charges ${gv('fee-photos-count')} No's @ Rs. ${gv('fee-photo-rate')}</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">${fa(ph)}</td></tr><tr><td style="padding:6px 9px;border-bottom:1px solid #ddd;">5</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;">Postal/Courier Charges</td><td style="padding:6px 9px;border-bottom:1px solid #ddd;text-align:right;">${fa(po)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td colspan="2" style="padding:8px 9px;font-weight:700;text-align:right;">TOTAL :</td><td style="padding:8px 9px;text-align:right;font-weight:700;">${fa(tot)}</td></tr></tbody></table><div style="font-size:0.76rem;margin:7px 0 14px;font-style:italic;">RUPEES ${numberToWords(tot)} ONLY</div>${getSigBlock()}<div style="margin-top:18px;font-size:0.79rem;"><strong>Advance receipt</strong><br/>Bank Name : ${gv('bank-name')}<br/>A/C No. : ${gv('bank-ac')}<br/>IFSC CODE : ${gv('bank-ifsc')}<br/>PAN NO. : ${gv('bank-pan')}</div>`;
   printReport(html,'Surveyor Fee Bill - '+gv('f-report-no'));
 }
-function generateAllReports(){showToast('Opening all 4 reports...');setTimeout(()=>generateSurveyReportPDF(),200);setTimeout(()=>generateBillCheckPDF(),1400);setTimeout(()=>generateRIPDF(),2600);setTimeout(()=>generateFeeBillPDF(),3800);}
+function generateAllReports(){ preflightThenGenerate(); }
 
 // ============================================================
 // REINSPECTION PARTS VERIFICATION
@@ -3645,6 +3761,295 @@ function addVoiceButtonToField(fieldId, fieldLabel) {
 }
 
 // INIT
+// ============================================================
+// FIX: analyzeSavedPhotos uses callGeminiChunked
+// ============================================================
+function analyzeSavedPhotos() {
+  if (savedPhotoFiles.length === 0) { showToast('No photos available for analysis', 'error'); return; }
+  (async () => {
+    showToast('Analyzing damage photos with AI...', 'ai');
+    try {
+      const images = await Promise.all(Array.from(savedPhotoFiles).map(async f => {
+        const base64 = await fileToBase64(f);
+        return { base64, dataUrl: 'data:image/jpeg;base64,' + base64, mimeType: 'image/jpeg' };
+      }));
+      const PHOTO_PROMPT = 'You are a senior motor vehicle damage assessor. Analyze ALL these damage photos. ' +
+        'Return JSON: { "damaged_parts": [{ "part":"", "location":"", "damage_type":"", "severity":"", "recommendation":"REPAIR or REPLACE", "reason":"", "estimated_cost":0 }],' +
+        '"overall_assessment": { "total_parts":0, "severity":"", "total_cost":0, "repair_days":0 }, "safety_concerns":[], "next_steps":[] }' +
+        '\nReturn ONLY the JSON. No markdown, no backticks.';
+      const rawText = await callGeminiChunked(images, PHOTO_PROMPT, 3000);
+      const analysis = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+      showDamageAnalysisModal(analysis);
+    } catch(err) {
+      showToast('Damage analysis failed: ' + err.message, 'error');
+      console.error(err);
+    }
+  })();
+}
+
+// ============================================================
+// GROQ MODEL SELECTOR
+// ============================================================
+let activeGroqModel = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const MODEL_LABELS = {
+  'meta-llama/llama-4-scout-17b-16e-instruct': '\u26A1 Scout',
+  'meta-llama/llama-4-maverick-17b-128e-instruct': '\U0001F985 Maverick',
+  'llama-3.2-11b-vision-preview': '\U0001F50E Vision'
+};
+
+function cycleModel() {
+  document.getElementById('model-modal').classList.add('open');
+  document.querySelectorAll('input[name="groq-model"]').forEach(r => { r.checked = r.value === activeGroqModel; });
+}
+
+function applyModelSelection() {
+  const sel = document.querySelector('input[name="groq-model"]:checked');
+  if (sel) {
+    activeGroqModel = sel.value;
+    document.getElementById('model-badge').textContent = MODEL_LABELS[activeGroqModel] || '\u26A1 AI';
+    showToast('AI model: ' + (MODEL_LABELS[activeGroqModel] || activeGroqModel), 'ai');
+  }
+  document.getElementById('model-modal').classList.remove('open');
+}
+
+// Override callGemini to use activeGroqModel
+const _origCallGeminiBase = callGemini;
+callGemini = async function(parts, maxTokens) {
+  maxTokens = maxTokens || 3000;
+  const userContent = [];
+  for (const part of parts) {
+    if (part.inlineData) userContent.push({ type: 'image_url', image_url: { url: 'data:' + part.inlineData.mimeType + ';base64,' + part.inlineData.data } });
+    else if (part.text) userContent.push({ type: 'text', text: part.text });
+  }
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+    body: JSON.stringify({ model: activeGroqModel, max_tokens: maxTokens, temperature: 0.1, messages: [{ role: 'user', content: userContent }] })
+  });
+  if (!response.ok) { const err = await response.json().catch(() => ({})); throw new Error('Groq API ' + response.status + ': ' + (err.error && err.error.message ? err.error.message : response.statusText)); }
+  const data = await response.json();
+  return (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content || '' : '';
+};
+
+// ============================================================
+// AUTO-SAVE (every 30 seconds)
+// ============================================================
+let autoSaveTimer = null;
+let lastAutoSaveHash = '';
+
+function getFormHash() {
+  return [gv('f-reg-no'), gv('f-claim-no'), gv('f-insured-name'), assessRows.length, spotDamageRows.length].join('|');
+}
+
+function autoSave() {
+  const vehicle = gv('f-reg-no');
+  if (!vehicle) return;
+  const hash = getFormHash();
+  if (hash === lastAutoSaveHash) return;
+  const dot = document.getElementById('autosave-dot');
+  const lbl = document.getElementById('autosave-label');
+  if (dot) dot.className = 'autosave-dot saving';
+  if (lbl) { lbl.textContent = 'Saving\u2026'; lbl.className = 'autosave-label'; }
+  try {
+    const data = gatherCurrentReportData();
+    const existingId = localStorage.getItem('current_report_id');
+    const reportId = existingId || ('survey_' + vehicle.replace(/[^A-Z0-9]/gi, '') + '_' + Date.now());
+    localStorage.setItem(reportId, JSON.stringify(data));
+    let allReports = JSON.parse(localStorage.getItem('all_reports') || '[]');
+    const idx = allReports.findIndex(r => r.id === reportId);
+    const entry = { id: reportId, reportNo: data.reportNo || 'DRAFT-' + vehicle, vehicle: data.vehicle, insured: data.insured, claimNo: data.claimNo, savedAt: data.savedAt, make: data.make, model: data.model };
+    if (idx >= 0) allReports[idx] = entry; else allReports.unshift(entry);
+    if (allReports.length > 50) allReports = allReports.slice(0, 50);
+    localStorage.setItem('all_reports', JSON.stringify(allReports));
+    localStorage.setItem('current_report_id', reportId);
+    lastAutoSaveHash = hash;
+    setTimeout(() => { if (dot) dot.className = 'autosave-dot saved'; }, 300);
+    setTimeout(() => { if (lbl) { lbl.textContent = 'Saved'; lbl.className = 'autosave-label saved'; } }, 300);
+    setTimeout(() => { if (lbl) { lbl.textContent = 'Auto-save on'; lbl.className = 'autosave-label'; } if (dot) dot.className = 'autosave-dot'; }, 3500);
+    updateDashboard();
+  } catch(e) {
+    if (dot) dot.className = 'autosave-dot';
+    if (lbl) lbl.textContent = 'Save failed';
+    console.error('Auto-save error:', e);
+  }
+}
+
+function startAutoSave() {
+  if (autoSaveTimer) clearInterval(autoSaveTimer);
+  autoSaveTimer = setInterval(autoSave, 30000);
+}
+
+// ============================================================
+// PRE-FLIGHT VALIDATION + SEQUENTIAL REPORT GENERATION
+// ============================================================
+function preflightThenGenerate() {
+  const checks = [
+    { label: 'Claim Number',       val: gv('f-claim-no'),      req: true  },
+    { label: 'Registration No.',   val: gv('f-reg-no'),         req: true  },
+    { label: 'Insurer Name',       val: gv('f-insurer'),        req: true  },
+    { label: 'Insured Name',       val: gv('f-insured-name'),   req: true  },
+    { label: 'Policy Number',      val: gv('f-policy-no'),      req: true  },
+    { label: 'Date of Accident',   val: gv('f-doa'),            req: true  },
+    { label: 'Assessment rows',    val: assessRows.length > 0 ? 'yes' : '', req: true, note: assessRows.length + ' items' },
+    { label: 'Driver MDL No.',     val: gv('f-mdl'),            req: false },
+    { label: 'Report No.',         val: gv('f-report-no'),      req: false },
+    { label: 'Signature',          val: sigDataUrl ? 'yes' : '', req: false },
+  ];
+  const hasMissing = checks.some(c => c.req && !c.val);
+  const hasWarnings = checks.some(c => !c.req && !c.val);
+  if (!hasMissing && !hasWarnings) { doGenerateAllReports(); return; }
+  let html = '';
+  checks.forEach(c => {
+    const ok = !!c.val;
+    const icon = ok ? '\u2705' : (c.req ? '\u274C' : '\u26A0\uFE0F');
+    const color = ok ? 'inherit' : (c.req ? 'var(--red)' : '#f59e0b');
+    const note = c.note || (ok ? c.val.slice(0,20) : 'Missing');
+    html += '<div class="preflight-row"><span class="preflight-icon">' + icon + '</span><span style="flex:1;color:' + color + ';">' + c.label + '</span><span style="font-size:0.75rem;color:var(--muted);">' + note + '</span></div>';
+  });
+  document.getElementById('preflight-checks').innerHTML = html;
+  document.getElementById('preflight-modal').classList.add('open');
+}
+
+async function doGenerateAllReports() {
+  showToast('Generating all 4 reports\u2026', 'ai');
+  generateSurveyReportPDF();
+  await new Promise(r => setTimeout(r, 800));
+  generateBillCheckPDF();
+  await new Promise(r => setTimeout(r, 800));
+  generateRIPDF();
+  await new Promise(r => setTimeout(r, 800));
+  generateFeeBillPDF();
+  const fab = document.getElementById('share-fab');
+  if (fab) fab.classList.remove('hidden');
+}
+
+// Show share FAB whenever any report is printed
+const _origPrintReport = printReport;
+printReport = function(html, title) {
+  _origPrintReport(html, title);
+  const fab = document.getElementById('share-fab');
+  if (fab) fab.classList.remove('hidden');
+};
+
+// ============================================================
+// SHARE REPORT
+// ============================================================
+function openShareMenu() { document.getElementById('share-modal').classList.add('open'); }
+
+function buildShareText() {
+  const net = (document.getElementById('sum-net') || {}).textContent || '\u2014';
+  return [
+    '*Motor Survey Report*',
+    'Report No: ' + (gv('f-report-no') || '\u2014'),
+    'Vehicle: ' + (gv('f-reg-no') || '\u2014') + ' (' + gv('f-make') + ' ' + gv('f-model') + ')',
+    'Insured: ' + (gv('f-insured-name') || '\u2014'),
+    'Claim No: ' + (gv('f-claim-no') || '\u2014'),
+    'Insurer: ' + (gv('f-insurer') || '\u2014'),
+    'Net Liability: ' + net,
+    'Surveyor: ' + (gv('sp-name') || '\u2014'),
+  ].join('%0A');
+}
+
+function shareViaWhatsApp() {
+  window.open('https://wa.me/?text=' + buildShareText(), '_blank');
+  document.getElementById('share-modal').classList.remove('open');
+}
+
+function shareViaEmail() {
+  const net = (document.getElementById('sum-net') || {}).textContent || '\u2014';
+  const subj = encodeURIComponent('Survey Report ' + gv('f-report-no') + ' \u2014 ' + gv('f-reg-no'));
+  const body = encodeURIComponent(
+    'Dear Sir/Madam,\n\nPlease find below the survey report summary:\n\n' +
+    'Report No: ' + (gv('f-report-no') || '\u2014') + '\n' +
+    'Vehicle: ' + gv('f-reg-no') + ' | ' + gv('f-make') + ' ' + gv('f-model') + '\n' +
+    'Insured: ' + gv('f-insured-name') + '\n' +
+    'Claim No: ' + gv('f-claim-no') + '\n' +
+    'Net Liability: ' + net + '\n\n' +
+    'Regards,\n' + gv('sp-name') + '\nSurveyor & Loss Assessor\nLic. No.: ' + gv('sp-lic') + '\nMob: ' + gv('sp-mobile')
+  );
+  window.open('mailto:?subject=' + subj + '&body=' + body, '_self');
+  document.getElementById('share-modal').classList.remove('open');
+}
+
+function copyReportSummary() {
+  const net = (document.getElementById('sum-net') || {}).textContent || '\u2014';
+  const txt = [
+    'Motor Survey Report',
+    'Report No: ' + (gv('f-report-no') || '\u2014'),
+    'Vehicle: ' + gv('f-reg-no') + ' \u2014 ' + gv('f-make') + ' ' + gv('f-model'),
+    'Insured: ' + gv('f-insured-name') + ' | Claim: ' + gv('f-claim-no'),
+    'Net Liability: ' + net,
+    'Surveyor: ' + gv('sp-name') + ' | ' + gv('sp-mobile'),
+  ].join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => showToast('Summary copied!', 'success')).catch(() => showToast('Copy failed', 'error'));
+  } else { showToast('Clipboard not available', 'error'); }
+  document.getElementById('share-modal').classList.remove('open');
+}
+
+// ============================================================
+// IRDAI SURVEYOR FEE AUTO-CALCULATION
+// ============================================================
+function calcIRDAIFee(net) {
+  if (net <= 0)       return 1500;
+  if (net <= 50000)   return Math.max(1500,  Math.round(net * 0.07));
+  if (net <= 200000)  return Math.max(3500,  Math.round(net * 0.05));
+  if (net <= 500000)  return Math.max(10000, Math.round(net * 0.03));
+  if (net <= 2000000) return Math.max(15000, Math.round(net * 0.02));
+  return Math.max(40000, Math.round(net * 0.015));
+}
+
+function autoCalcIRDAIFee() {
+  const netEl = document.getElementById('sum-net');
+  const netLoss = netEl ? (parseFloat(netEl.textContent.replace(/[^\d.]/g, '')) || 0) : 0;
+  if (netLoss <= 0) { showToast('Complete the assessment first to get net liability', 'error'); return; }
+  const fee = calcIRDAIFee(netLoss);
+  const el = document.getElementById('fee-prof');
+  if (el) el.value = fee;
+  calcFeeTotal();
+  showToast('IRDAI fee: \u20B9' + fee.toLocaleString('en-IN') + ' on net \u20B9' + netLoss.toLocaleString('en-IN'), 'success');
+}
+
+// ============================================================
+// PWA SERVICE WORKER + INSTALL PROMPT
+// ============================================================
+let pwaInstallEvent = null;
+
+function installPWA() {
+  if (pwaInstallEvent) {
+    pwaInstallEvent.prompt();
+    pwaInstallEvent.userChoice.then(r => {
+      if (r.outcome === 'accepted') showToast('App installed! \uD83C\uDF89', 'success');
+      pwaInstallEvent = null;
+      document.getElementById('pwa-banner').classList.remove('show');
+    });
+  } else {
+    showToast('Browser menu \u2192 "Add to Home Screen" or "Install App"', 'ai');
+  }
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  const sw = [
+    "const CACHE='survey-v1';",
+    "self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll([self.location.href]).catch(()=>{})));self.skipWaiting();});",
+    "self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});",
+    "self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(cached=>{if(cached)return cached;return fetch(e.request).then(r=>{if(!r||r.status!==200)return r;caches.open(CACHE).then(c=>c.put(e.request,r.clone()));return r;}).catch(()=>cached);}));});",
+  ].join('\n');
+  try {
+    const blob = new Blob([sw], { type: 'application/javascript' });
+    navigator.serviceWorker.register(URL.createObjectURL(blob))
+      .then(() => console.log('[SW] Registered'))
+      .catch(e => console.warn('[SW]', e));
+  } catch(e) { console.warn('[SW] Blob SW not supported:', e); }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); pwaInstallEvent = e;
+    if (!localStorage.getItem('pwa-dismissed'))
+      setTimeout(() => document.getElementById('pwa-banner').classList.add('show'), 4000);
+  });
+}
+
 window.addEventListener('load', () => {
   // Pre-fill surveyor profile defaults
   document.getElementById('sp-name').value = 'VIKRAM PATIL';
@@ -3730,6 +4135,8 @@ window.addEventListener('load', () => {
   showPage('dashboard');
   refreshReportsList();
   renderSpotDamageRows();
+  startAutoSave();
+  registerServiceWorker();
 });
 </script>
 </body>
