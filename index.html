@@ -766,12 +766,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         <div class="card-body">
           <div class="form-grid-3">
             <div class="form-group"><label class="form-label">Driver Name</label><input class="form-input" id="f-driver-name"/></div>
+            <div class="form-group"><label class="form-label">Relation</label>
+              <select class="form-select" id="f-dl-relation">
+                <option value="S/o">S/o (Son of)</option>
+                <option value="D/o">D/o (Daughter of)</option>
+                <option value="W/o">W/o (Wife of)</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Father / Husband Name</label><input class="form-input" id="f-dl-parent" placeholder="Parent or spouse name"/></div>
             <div class="form-group"><label class="form-label">MDL No.</label><input class="form-input" id="f-mdl"/></div>
             <div class="form-group"><label class="form-label">Date of Birth</label><input class="form-input" type="date" id="f-dob"/></div>
             <div class="form-group"><label class="form-label">Date of Issue</label><input class="form-input" type="date" id="f-dl-issue"/></div>
-            <div class="form-group"><label class="form-label">Validity</label><input class="form-input" id="f-dl-valid"/></div>
+            <div class="form-group"><label class="form-label">Non-Transport Validity (LMV)</label><input class="form-input" type="date" id="f-dl-valid" placeholder="Non-transport expiry"/></div>
+            <div class="form-group"><label class="form-label">Transport Validity (HMV/TRANS)</label><input class="form-input" type="date" id="f-dl-valid-transport" placeholder="Transport expiry"/></div>
             <div class="form-group"><label class="form-label">Issuing Authority</label><input class="form-input" id="f-dl-auth"/></div>
-            <div class="form-group"><label class="form-label">Type of License</label><input class="form-input" id="f-dl-type"/></div>
+            <div class="form-group"><label class="form-label">Type of License (Classes)</label><input class="form-input" id="f-dl-type"/></div>
           </div>
         </div>
       </div>
@@ -952,11 +961,20 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         <div class="card-body">
           <div class="form-grid">
             <div class="form-group"><label class="form-label">Driver Name</label><input class="form-input" id="spot-driver-name" placeholder="Full name" onchange="checkDLValidity()"/></div>
+            <div class="form-group"><label class="form-label">Relation</label>
+              <select class="form-select" id="spot-dl-relation">
+                <option value="S/o">S/o (Son of)</option>
+                <option value="D/o">D/o (Daughter of)</option>
+                <option value="W/o">W/o (Wife of)</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Father / Husband Name</label><input class="form-input" id="spot-dl-parent" placeholder="Parent or spouse name"/></div>
             <div class="form-group"><label class="form-label">MDL Number</label><input class="form-input" id="spot-mdl-no" placeholder="e.g. RJ0520160011747" onchange="checkDLValidity()"/></div>
             <div class="form-group"><label class="form-label">Issuing Authority</label><input class="form-input" id="spot-dl-authority" placeholder="RTO/Sub Office"/></div>
             <div class="form-group"><label class="form-label">Date of Issue</label><input class="form-input" type="date" id="spot-dl-issue" onchange="checkDLValidity()"/></div>
-            <div class="form-group"><label class="form-label">Valid Upto</label><input class="form-input" type="date" id="spot-dl-valid" onchange="checkDLValidity()"/></div>
-            <div class="form-group"><label class="form-label">Type of Licence</label><input class="form-input" id="spot-dl-type" placeholder="LMV, MCWG, TRANS"/></div>
+            <div class="form-group"><label class="form-label">Non-Transport Valid Upto (LMV)</label><input class="form-input" type="date" id="spot-dl-valid" onchange="checkDLValidity()"/></div>
+            <div class="form-group"><label class="form-label">Transport Valid Upto (HMV/TRANS)</label><input class="form-input" type="date" id="spot-dl-valid-transport" onchange="checkDLValidity()"/></div>
+            <div class="form-group"><label class="form-label">Type of Licence (Classes)</label><input class="form-input" id="spot-dl-type" placeholder="LMV, MCWG, TRANS, HMV"/></div>
             <div class="form-group"><label class="form-label">MDL Verification Status</label>
               <select class="form-select" id="spot-mdl-verified" onchange="checkDLValidity()">
                 <option value="verified">Original MDL Verified</option>
@@ -996,8 +1014,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           <div class="form-grid">
             <div class="form-group"><label class="form-label">CN/Challan Number</label><input class="form-input" id="spot-cn-no" placeholder="e.g. 340867"/></div>
             <div class="form-group"><label class="form-label">CN Date</label><input class="form-input" type="date" id="spot-cn-date"/></div>
-            <div class="form-group"><label class="form-label">Load Carrying Capacity (KG)</label><input class="form-input" type="number" id="spot-load-capacity" placeholder="e.g. 20350"/></div>
-            <div class="form-group"><label class="form-label">Actual Load Weight (KG)</label><input class="form-input" type="number" id="spot-actual-load" placeholder="e.g. 17500"/></div>
+            <div class="form-group"><label class="form-label">Gross Vehicle Weight — GVW (KG)</label>
+          <input class="form-input" type="number" id="spot-gvw" placeholder="From RC/Fitness e.g. 25000" oninput="calcLoadCapacity()"/>
+        </div>
+        <div class="form-group"><label class="form-label">Unladen Weight — ULW (KG)</label>
+          <input class="form-input" type="number" id="spot-ulw" placeholder="Tare weight e.g. 8500" oninput="calcLoadCapacity()"/>
+        </div>
+        <div class="form-group"><label class="form-label">Load Carrying Capacity (KG) <span style="font-size:0.7rem;color:var(--muted);">= GVW − ULW</span></label>
+          <input class="form-input" type="number" id="spot-load-capacity" placeholder="Auto-calculated or enter manually" style="font-weight:600;"/>
+        </div>
+        <div class="form-group"><label class="form-label">Actual Load at Time of Accident (KG)</label>
+          <input class="form-input" type="number" id="spot-actual-load" placeholder="e.g. 17500"/>
+        </div>
             <div class="form-group"><label class="form-label">Origin</label><input class="form-input" id="spot-load-origin" placeholder="Loading point"/></div>
             <div class="form-group"><label class="form-label">Destination</label><input class="form-input" id="spot-load-dest" placeholder="Delivery point"/></div>
             <div class="form-group span-2"><label class="form-label">Load Description (Goods)</label><textarea class="form-textarea" id="spot-load-desc" rows="2" placeholder="Nature of goods, quantity, consignee..."></textarea></div>
@@ -1531,19 +1559,20 @@ const DOC_PROMPTS = {
 }
 Return ONLY the JSON. No explanation, no markdown, no backticks.`,
 
-  dl: `You are an expert at reading Indian Driving Licence (DL/MDL) documents. Extract ALL visible fields. Return ONLY a JSON object:
+  dl: `You are an expert at reading Indian Driving Licence (DL/MDL) documents. Extract ALL visible fields including BOTH validity dates. Return ONLY a JSON object:
 {
   "licence_number": "",
   "holder_name": "",
+  "relation_type": "S/o or D/o or W/o",
   "father_or_husband_name": "",
   "date_of_birth": "",
   "address": "",
   "date_of_issue": "",
-  "validity_non_transport": "",
-  "validity_transport": "",
+  "validity_non_transport": "expiry date of LMV/Non-Transport licence",
+  "validity_transport": "expiry date of Transport/HMV/TRANS licence (if present)",
   "issuing_authority": "",
   "rto": "",
-  "vehicle_classes": "",
+  "vehicle_classes": "all classes listed e.g. LMV, MCWG, TRANS, HMV",
   "badge_no": ""
 }
 Return ONLY the JSON. No explanation, no markdown, no backticks.`,
@@ -1634,7 +1663,7 @@ Return ONLY a JSON object:
 }
 Return ONLY the JSON. No explanation, no markdown, no backticks.`,
 
-  permit: `You are an expert at reading Indian commercial vehicle permit documents (Route Permit, National Permit, State Permit). Extract ALL visible fields. Return ONLY a JSON object:
+  permit: `You are an expert at reading Indian commercial vehicle permit documents (Route Permit, National Permit, State Permit, All India Tourist Permit). Extract ALL visible fields. Weights are in KG. Return ONLY a JSON object:
 {
   "permit_no": "",
   "permit_type": "",
@@ -1643,7 +1672,9 @@ Return ONLY the JSON. No explanation, no markdown, no backticks.`,
   "validity_to": "",
   "route": "",
   "issuing_authority": "",
-  "goods_category": ""
+  "goods_category": "",
+  "gross_vehicle_weight_kg": "GVW or RLW in KG as a plain number if shown",
+  "unladen_weight_kg": "unladen/tare weight in KG as a plain number if shown"
 }
 Return ONLY the JSON. No explanation, no markdown, no backticks.`,
 
@@ -1659,7 +1690,7 @@ Return ONLY the JSON. No explanation, no markdown, no backticks.`,
 }
 Return ONLY the JSON. No explanation, no markdown, no backticks.`,
 
-  fitness: `You are an expert at reading Indian vehicle fitness certificates (roadworthiness certificate issued by RTO). Extract ALL visible fields. Return ONLY a JSON object:
+  fitness: `You are an expert at reading Indian vehicle fitness certificates (roadworthiness certificate issued by RTO/VAHAN). Extract ALL visible fields. Weights are in KG. Return ONLY a JSON object:
 {
   "fitness_cert_no": "",
   "vehicle_number": "",
@@ -1668,8 +1699,10 @@ Return ONLY the JSON. No explanation, no markdown, no backticks.`,
   "validity_from": "",
   "validity_to": "",
   "issuing_authority": "",
-  "gross_weight": "",
-  "unladen_weight": ""
+  "gross_vehicle_weight_kg": "GVW or GCW or RLW in KG as a plain number",
+  "unladen_weight_kg": "Unladen/tare weight in KG as a plain number",
+  "seating_capacity": "",
+  "fuel_type": ""
 }
 Return ONLY the JSON. No explanation, no markdown, no backticks.`,
 
@@ -1746,7 +1779,56 @@ function handleDocFile(input, type) {
   }
 }
 
+// ── Calc load capacity from GVW - ULW ──
+function calcLoadCapacity() {
+  const gvw = parseFloat(document.getElementById('spot-gvw')?.value || 0);
+  const ulw = parseFloat(document.getElementById('spot-ulw')?.value || 0);
+  if (gvw > 0 && ulw > 0 && gvw > ulw) {
+    const cap = Math.round(gvw - ulw);
+    const el = document.getElementById('spot-load-capacity');
+    if (el) { el.value = cap; el.classList.add('ai-filled'); }
+    showToast(`Load capacity: ${gvw.toLocaleString()} − ${ulw.toLocaleString()} = ${cap.toLocaleString()} KG`, 'success');
+  }
+}
+
 // ── Convert ALL pages of a PDF to base64 image array ──
+async function callGeminiChunked(images, prompt, maxTokens = 4000) {
+  const CHUNK_SIZE = 5;
+  if (images.length <= CHUNK_SIZE) {
+    const parts = [
+      ...images.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.base64 } })),
+      { text: images.length > 1 ? `You are reading ${images.length} pages/images. Extract ALL data across ALL pages combined.\n\n${prompt}` : prompt }
+    ];
+    return callGemini(parts, maxTokens);
+  }
+
+  // Split into chunks — collect partial JSON from each, merge
+  const chunks = [];
+  for (let i = 0; i < images.length; i += CHUNK_SIZE) chunks.push(images.slice(i, i + CHUNK_SIZE));
+
+  let merged = {};
+  for (let ci = 0; ci < chunks.length; ci++) {
+    const chunk = chunks[ci];
+    const chunkPrompt = `You are reading images ${ci*CHUNK_SIZE+1}–${ci*CHUNK_SIZE+chunk.length} of ${images.length} total. Extract whatever data is visible on THESE images only. Merge with any previously found data.\n\n${prompt}`;
+    const parts = [
+      ...chunk.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.base64 } })),
+      { text: chunkPrompt }
+    ];
+    const raw = await callGemini(parts, maxTokens);
+    try {
+      const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      // Merge: for arrays (spare_parts, damaged_parts etc.) append; for strings take non-empty
+      for (const key of Object.keys(parsed)) {
+        if (Array.isArray(parsed[key])) {
+          merged[key] = [...(merged[key]||[]), ...parsed[key]];
+        } else if (parsed[key] && !merged[key]) {
+          merged[key] = parsed[key];
+        }
+      }
+    } catch(e) { /* partial chunk failed — continue */ }
+  }
+  return JSON.stringify(merged);
+}
 async function pdfToImages(file, statusEl) {
   const arrayBuffer = await file.arrayBuffer();
   const pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -1813,16 +1895,10 @@ async function processMultipleFiles(files, type) {
       ${allImages.map((img,i) => `<img src="${img.dataUrl}" style="width:100%;height:60px;object-fit:cover;border-radius:4px;" title="Page/Image ${i+1}"/>`).join('')}
     </div><div style="padding:4px 8px;font-size:0.7rem;color:var(--muted);">${allImages.length} image(s) total</div>`;
 
-    appendLog(logEl, `🤖 Sending all ${allImages.length} images to AI in one call...`);
-    statusEl.innerHTML = `<div class="spinner"></div> AI reading all ${allImages.length} pages/images...`;
+    appendLog(logEl, `🤖 Sending ${allImages.length} images to AI${allImages.length > 5 ? ` (in ${Math.ceil(allImages.length/5)} chunks of 5)` : ''}...`);
+    statusEl.innerHTML = `<div class="spinner"></div> AI reading ${allImages.length} images${allImages.length > 5 ? ' (chunked)' : ''}...`;
 
-    // Build parts — all images first, then the prompt
-    const parts = [
-      ...allImages.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.base64 } })),
-      { text: `You are reading ${allImages.length} pages/images of a document. Extract ALL data across ALL pages combined.\n\n` + DOC_PROMPTS[type] }
-    ];
-
-    const rawText = await callGemini(parts, 4000);
+    const rawText = await callGeminiChunked(allImages, DOC_PROMPTS[type], 4000);
     let extracted;
     try {
       extracted = JSON.parse(rawText.replace(/```json|```/g, '').trim());
@@ -1852,7 +1928,8 @@ async function processMultipleFiles(files, type) {
 }
 
 async function processDocFile(file, type) {
-  const card = document.getElementById('card-' + type);
+  const cardId = type === 'fitness' ? 'card-fitness-doc' : type === 'lok-challan' ? 'card-lok-challan' : 'card-' + type;
+  const card = document.getElementById(cardId);
   const previewEl = document.getElementById('preview-' + type);
   const statusEl = document.getElementById('status-' + type);
   const fieldsEl = document.getElementById('fields-' + type);
@@ -1869,17 +1946,17 @@ async function processDocFile(file, type) {
     previewEl.innerHTML = `<div class="pdf-prev">📄 ${file.name}<br/><span style="font-size:0.68rem;color:var(--muted);">${(file.size/1024).toFixed(0)} KB</span></div>`;
   }
 
-  card.className = 'doc-card processing';
+  if (card) { card.className = 'doc-card processing commercial-doc'; }
   statusEl.className = 'doc-status processing';
   statusEl.innerHTML = `<div class="spinner"></div> AI is reading document...`;
   fieldsEl.className = 'doc-extracted-fields';
   fieldsEl.style.display = 'none';
 
-  const typeLabel = { rc:'RC Book', dl:'Driving Licence', policy:'Insurance Policy', claim:'Claim Form', estimate:'Repair Estimate', photos:'Damage Photos' };
-  appendLog(logEl, `📄 Processing ${typeLabel[type]}...`);
+  const typeLabel = { rc:'RC Book', dl:'Driving Licence', policy:'Insurance Policy', claim:'Claim Form', estimate:'Repair Estimate', photos:'Damage Photos', permit:'Permit', auth:'Authorisation', fitness:'Fitness Certificate', 'lok-challan':'Lok Challan' };
+  appendLog(logEl, `📄 Processing ${typeLabel[type]||type}...`);
 
   try {
-    let parts;
+    let extracted;
 
     if (file.type === 'application/pdf') {
       // Convert ALL pages to images
@@ -1891,40 +1968,38 @@ async function processDocFile(file, type) {
         ${images.map((img,i) => `<img src="${img.dataUrl}" style="width:100%;height:60px;object-fit:cover;border-radius:4px;" title="Page ${i+1}"/>`).join('')}
       </div><div style="padding:4px 8px;font-size:0.7rem;color:var(--muted);">${images.length} page(s)</div>`;
 
-      appendLog(logEl, `  📄 ${images.length} page(s) converted — sending to AI...`);
-      statusEl.innerHTML = `<div class="spinner"></div> AI reading all ${images.length} page(s)...`;
+      appendLog(logEl, `  📄 ${images.length} page(s) converted — sending to AI${images.length > 5 ? ` (in ${Math.ceil(images.length/5)} chunks of 5)` : ''}...`);
+      statusEl.innerHTML = `<div class="spinner"></div> AI reading ${images.length} page(s)${images.length > 5 ? ' (chunked)' : ''}...`;
 
-      parts = [
-        ...images.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.base64 } })),
-        { text: images.length > 1 ? `You are reading a ${images.length}-page document. Extract ALL data across ALL pages.\n\n` + DOC_PROMPTS[type] : DOC_PROMPTS[type] }
-      ];
+      const rawText = await callGeminiChunked(images, DOC_PROMPTS[type], 4000);
+      try {
+        extracted = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+      } catch (e) {
+        throw new Error('Could not parse AI response');
+      }
 
     } else {
+      // Single image file
       const base64 = await fileToBase64(file);
       let mediaType = file.type || 'image/jpeg';
       if (!['image/jpeg','image/png','image/webp','image/gif'].includes(mediaType)) mediaType = 'image/jpeg';
-      parts = [
+      const parts = [
         { inlineData: { mimeType: mediaType, data: base64 } },
         { text: DOC_PROMPTS[type] }
       ];
-    }
-
-    const rawText = await callGemini(parts, 4000);
-
-    // Parse JSON from response
-    let extracted;
-    try {
-      const clean = rawText.replace(/```json|```/g, '').trim();
-      extracted = JSON.parse(clean);
-    } catch (e) {
-      throw new Error('Could not parse AI response');
+      const rawText = await callGemini(parts, 4000);
+      try {
+        extracted = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+      } catch (e) {
+        throw new Error('Could not parse AI response');
+      }
     }
 
     // Apply extracted data to form fields
     const fieldCount = applyExtractedData(type, extracted);
 
     // Show success state
-    card.className = 'doc-card done';
+    if (card) card.className = 'doc-card done' + (type==='fitness'||type==='permit'||type==='auth'||type==='lok-challan' ? ' commercial-doc' : '');
     statusEl.className = 'doc-status done';
     statusEl.innerHTML = `✅ Extracted ${fieldCount} fields`;
 
@@ -1935,8 +2010,8 @@ async function processDocFile(file, type) {
     aiStatusMap[type] = true;
     updateAIStatusDots();
 
-    appendLog(logEl, `✅ ${typeLabel[type]} — ${fieldCount} fields extracted`);
-    showToast(`${typeLabel[type]}: ${fieldCount} fields filled!`, 'success');
+    appendLog(logEl, `✅ ${typeLabel[type]||type} — ${fieldCount} fields extracted`);
+    showToast(`${typeLabel[type]||type}: ${fieldCount} fields filled!`, 'success');
 
     const doneCount = Object.values(aiStatusMap).filter(Boolean).length;
     if (doneCount >= 2) {
@@ -1944,10 +2019,10 @@ async function processDocFile(file, type) {
     }
 
   } catch (err) {
-    card.className = 'doc-card error';
+    if (card) card.className = 'doc-card error' + (type==='fitness'||type==='permit'||type==='auth'||type==='lok-challan' ? ' commercial-doc' : '');
     statusEl.className = 'doc-status error';
     statusEl.innerHTML = `⚠️ ${err.message}`;
-    appendLog(logEl, `❌ ${typeLabel[type]} — ${err.message}`);
+    appendLog(logEl, `❌ ${typeLabel[type]||type} — ${err.message}`);
     showToast(`Error: ${err.message}`, 'error');
     console.error('Extraction Error:', err);
   }
@@ -2020,19 +2095,35 @@ function applyExtractedData(type, data) {
   }
 
   if (type === 'dl') {
-    setField('f-driver-name', data.holder_name);
+    const fullName = data.holder_name || '';
+    const relation = data.relation_type || 'S/o';
+    const parent   = data.father_or_husband_name || '';
+    // Build "Driver X S/o Y" display name for main form
+    setField('f-driver-name', fullName);
+    setField('f-dl-parent', parent);
+    if (relation) {
+      const relEl = document.getElementById('f-dl-relation');
+      if (relEl) { relEl.value = relation; count++; }
+    }
     setField('f-mdl', data.licence_number);
-    setField('f-dl-valid', data.validity_non_transport);
+    if (data.validity_non_transport) setField('f-dl-valid', tryDate(data.validity_non_transport));
+    if (data.validity_transport)     setField('f-dl-valid-transport', tryDate(data.validity_transport));
     setField('f-dl-auth', data.issuing_authority || data.rto);
     setField('f-dl-type', data.vehicle_classes);
     if (data.date_of_birth) setField('f-dob', tryDate(data.date_of_birth));
     if (data.date_of_issue) setField('f-dl-issue', tryDate(data.date_of_issue));
     // ── Mirror to Spot Survey ──
-    setField('spot-driver-name', data.holder_name);
+    setField('spot-driver-name', fullName);
+    setField('spot-dl-parent', parent);
+    if (relation) {
+      const relEl2 = document.getElementById('spot-dl-relation');
+      if (relEl2) { relEl2.value = relation; count++; }
+    }
     setField('spot-mdl-no', data.licence_number);
     setField('spot-dl-authority', data.issuing_authority || data.rto);
     setField('spot-dl-type', data.vehicle_classes);
     if (data.validity_non_transport) setField('spot-dl-valid', tryDate(data.validity_non_transport));
+    if (data.validity_transport)     setField('spot-dl-valid-transport', tryDate(data.validity_transport));
     if (data.date_of_issue) setField('spot-dl-issue', tryDate(data.date_of_issue));
   }
 
@@ -2152,6 +2243,15 @@ function applyExtractedData(type, data) {
     setField('f-route', data.route || data.permit_type);
     if (data.validity_from) setField('spot-permit-from', tryDate(data.validity_from));
     if (data.validity_to)   setField('spot-permit-to',   tryDate(data.validity_to));
+    // Compute load capacity if weights available
+    const gvwP = parseFloat(data.gross_vehicle_weight_kg || 0);
+    const ulwP = parseFloat(data.unladen_weight_kg || 0);
+    if (gvwP > 0) setField('f-rlw', String(Math.round(gvwP)));
+    if (gvwP > 0 && ulwP > 0) {
+      const loadKg = Math.round(gvwP - ulwP);
+      setField('spot-load-capacity', String(loadKg));
+      showToast(`Load capacity from Permit: ${gvwP.toLocaleString()} - ${ulwP.toLocaleString()} = ${loadKg.toLocaleString()} KG`, 'success');
+    }
   }
 
   if (type === 'auth') {
@@ -2163,8 +2263,21 @@ function applyExtractedData(type, data) {
     setField('spot-fitness-no', data.fitness_cert_no);
     setField('f-fitness', data.fitness_cert_no);
     if (data.validity_to) setField('spot-fitness-valid', tryDate(data.validity_to));
-    if (data.gross_weight) setField('spot-load-capacity', data.gross_weight);
-    if (data.gross_weight) setField('f-rlw', data.gross_weight);
+    const gvw = parseFloat(data.gross_vehicle_weight_kg || data.gross_weight || 0);
+    const ulw = parseFloat(data.unladen_weight_kg || data.unladen_weight || 0);
+    if (gvw > 0) {
+      setField('f-rlw', String(Math.round(gvw)));
+      setField('spot-gvw', String(Math.round(gvw)));
+    }
+    if (ulw > 0) setField('spot-ulw', String(Math.round(ulw)));
+    // Load carrying capacity = GVW - Unladen weight
+    if (gvw > 0 && ulw > 0) {
+      const loadCapKg = Math.round(gvw - ulw);
+      setField('spot-load-capacity', String(loadCapKg));
+      showToast(`Load capacity (Fitness): ${gvw.toLocaleString()} − ${ulw.toLocaleString()} = ${loadCapKg.toLocaleString()} KG`, 'success');
+    } else if (gvw > 0) {
+      setField('spot-load-capacity', String(Math.round(gvw)));
+    }
   }
 
   if (type === 'lok-challan') {
@@ -2541,9 +2654,90 @@ function addSpotDamageRow(component='',damage=''){const id=Date.now();spotDamage
 
 function deleteSpotDamageRow(id){spotDamageRows=spotDamageRows.filter(r=>r.id!==id);renderSpotDamageRows();}
 
-function renderSpotDamageRows(){const container=document.getElementById('spot-damage-rows');if(spotDamageRows.length===0){container.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.85rem;">No components added yet. Click "+ Add Component" to start.</div>';return;}let html='';const commonComponents=['FRONT END STRUCTURE / DRIVERS CABIN','INSTRUMENTS','COOLING SYSTEM','ENGINE & TRANSMISSION','CHASSIS ASSY','LOAD BODY','STEERING SYSTEM','FRONT SUSPENSION','REAR SUSPENSION','WHEEL DISCS & TYRES','FRONT AXLE ASSY','REAR AXLE ASSY','BRAKING SYSTEM','ELECTRICAL SYSTEM','FUEL SYSTEM','EXHAUST SYSTEM','BODY PANELS','INTERIOR'];spotDamageRows.forEach((row,idx)=>{const bgColor=idx%2===0?'#ffffff':'var(--cream)';html+=`<div style="display:grid;grid-template-columns:200px 1fr 50px;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);background:${bgColor};align-items:start;"><div><select class="form-select" style="font-size:0.8rem;" onchange="spotDamageRows[${idx}].component=this.value" value="${row.component}"><option value="">Select Component</option>`;commonComponents.forEach(comp=>{html+=`<option value="${comp}" ${row.component===comp?'selected':''}>${comp}</option>`;});html+=`<option value="other" ${row.component&&!commonComponents.includes(row.component)?'selected':''}>Other (type below)</option></select>`;if(row.component&&!commonComponents.includes(row.component)){html+=`<input class="form-input" style="margin-top:6px;font-size:0.75rem;" value="${row.component}" onchange="spotDamageRows[${idx}].component=this.value" placeholder="Component name"/>`;}html+=`</div><div><textarea class="form-textarea" rows="2" style="font-size:0.8rem;resize:vertical;" placeholder="Describe damage observed..." onchange="spotDamageRows[${idx}].damage=this.value">${row.damage}</textarea></div><div><button class="btn btn-danger btn-sm" onclick="deleteSpotDamageRow(${row.id})" title="Delete" style="padding:6px 8px;font-size:0.75rem;">🗑</button></div></div>`;});container.innerHTML=html;}
+function renderSpotDamageRows() {
+  const container = document.getElementById('spot-damage-rows');
+  if (spotDamageRows.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.85rem;">No components added yet. Click &quot;+ Add Component&quot; to start.</div>';
+    return;
+  }
+  const commonComponents = [
+    'FRONT END STRUCTURE / DRIVERS CABIN','INSTRUMENTS','COOLING SYSTEM',
+    'ENGINE & TRANSMISSION','CHASSIS ASSY','LOAD BODY','STEERING SYSTEM',
+    'FRONT SUSPENSION','REAR SUSPENSION','WHEEL DISCS & TYRES',
+    'FRONT AXLE ASSY','REAR AXLE ASSY','BRAKING SYSTEM','ELECTRICAL SYSTEM',
+    'FUEL SYSTEM','EXHAUST SYSTEM','BODY PANELS','WINDSHIELD & GLASS','INTERIOR','OTHER'
+  ];
+  let html = '';
+  spotDamageRows.forEach((row, idx) => {
+    const bgColor = idx % 2 === 0 ? '#ffffff' : 'var(--cream)';
+    const rowId = 'sdr-' + row.id;
+    const isCustom = row.component && !commonComponents.includes(row.component);
+    let opts = '<option value="">Select Component</option>';
+    commonComponents.forEach(c => { opts += `<option value="${c}" ${row.component===c?'selected':''}>${c}</option>`; });
+    if (isCustom) opts += `<option value="${row.component}" selected>${row.component}</option>`;
+    html += `
+    <div style="display:grid;grid-template-columns:210px 1fr 44px;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);background:${bgColor};align-items:start;">
+      <div>
+        <select class="form-select" style="font-size:0.8rem;" onchange="spotDamageRows[${idx}].component=this.value;renderSpotDamageRows()">${opts}</select>
+        ${(row.component==='OTHER'||isCustom)?`<input class="form-input" style="margin-top:5px;font-size:0.75rem;" value="${isCustom?row.component:''}" onchange="spotDamageRows[${idx}].component=this.value" placeholder="Specify component..."/>`:''}
+      </div>
+      <div style="position:relative;">
+        <textarea
+          id="${rowId}-dmg"
+          class="form-textarea"
+          rows="2"
+          style="font-size:0.8rem;resize:vertical;padding-right:40px;min-height:56px;"
+          placeholder="Describe damage — e.g. Front bumper cracked, bonnet dented inward, headlamp glass shattered..."
+          oninput="spotDamageRows[${idx}].damage=this.value"
+        >${row.damage}</textarea>
+        <button type="button" title="Voice input" style="position:absolute;top:5px;right:5px;background:var(--navy);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;z-index:3;"
+          onclick="openVoiceInput('${rowId}-dmg','Damage on ${(row.component||'component').replace(/'/g,'')}')">🎤</button>
+      </div>
+      <div>
+        <button class="btn btn-danger btn-sm" onclick="deleteSpotDamageRow(${row.id})" title="Delete" style="padding:6px 8px;font-size:0.75rem;">🗑</button>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
 
-function checkDLValidity(){const validUpto=document.getElementById('spot-dl-valid').value;const badge=document.getElementById('dl-validity-badge');const remarksSection=document.getElementById('dl-invalid-remarks-section');const mdlVerified=document.getElementById('spot-mdl-verified').value;if(!validUpto){badge.textContent='Not Verified';badge.style.background='var(--muted)';remarksSection.style.display='none';return;}const validDate=new Date(validUpto);const today=new Date();today.setHours(0,0,0,0);if(validDate<today){badge.textContent='❌ EXPIRED';badge.style.background='var(--red)';remarksSection.style.display='block';showToast('DL EXPIRED - Add mandatory remarks','error');}else if(mdlVerified==='not-available'){badge.textContent='⚠️ NOT AVAILABLE';badge.style.background='#fbbf24';remarksSection.style.display='block';showToast('DL not available - Add remarks','error');}else{badge.textContent='✓ VALID';badge.style.background='var(--green)';remarksSection.style.display='none';}}
+function checkDLValidity(){
+  const validNT = document.getElementById('spot-dl-valid').value;
+  const validT  = document.getElementById('spot-dl-valid-transport') ? document.getElementById('spot-dl-valid-transport').value : '';
+  const badge   = document.getElementById('dl-validity-badge');
+  const remarksSection = document.getElementById('dl-invalid-remarks-section');
+  const mdlVerified = document.getElementById('spot-mdl-verified').value;
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  if (!validNT && !validT) {
+    badge.textContent = 'Not Verified'; badge.style.background = 'var(--muted)';
+    remarksSection.style.display = 'none'; return;
+  }
+
+  const ntExpired = validNT && new Date(validNT) < today;
+  const tExpired  = validT  && new Date(validT)  < today;
+  const anyExpired = ntExpired || tExpired;
+
+  if (mdlVerified === 'not-available') {
+    badge.textContent = '⚠️ NOT AVAILABLE'; badge.style.background = '#fbbf24';
+    remarksSection.style.display = 'block';
+    showToast('DL not available — Add remarks', 'error');
+  } else if (anyExpired) {
+    const expParts = [];
+    if (ntExpired) expParts.push('Non-Transport');
+    if (tExpired)  expParts.push('Transport');
+    badge.textContent = `❌ ${expParts.join(' & ')} EXPIRED`;
+    badge.style.background = 'var(--red)';
+    remarksSection.style.display = 'block';
+    showToast(`DL EXPIRED (${expParts.join(', ')}) — Add mandatory remarks`, 'error');
+  } else {
+    const validParts = [];
+    if (validNT) validParts.push('Non-Transport ✓');
+    if (validT)  validParts.push('Transport ✓');
+    badge.textContent = validParts.join(' | '); badge.style.background = 'var(--green)';
+    remarksSection.style.display = 'none';
+  }
+}
 
 function refreshSpotSurvey(){showToast('Spot survey PDF opening...','success');}
 function generateSpotSurveyPDF(){ printReport(buildSpotSurveyHTML(), 'Spot Survey — '+(gv('spot-report-no')||gv('f-reg-no'))); }
@@ -2556,17 +2750,24 @@ function buildSpotSurveyHTML() {
   const sec = 'font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin:4px 0 2px;letter-spacing:0.04em;display:block;';
   const lbl = 'color:#555;font-size:6.8pt;';
 
-  const dlValid = gv('spot-dl-valid');
+  const dlValidNT  = gv('spot-dl-valid');
+  const dlValidT   = gv('spot-dl-valid-transport');
   const mdlVerified = gv('spot-mdl-verified');
-  const isDLExpired = dlValid && new Date(dlValid) < new Date();
+  const today2 = new Date(); today2.setHours(0,0,0,0);
+  const ntExpired = dlValidNT && new Date(dlValidNT) < today2;
+  const tExpired  = dlValidT  && new Date(dlValidT)  < today2;
+  const anyDLExpired = ntExpired || tExpired;
   const dlStatus = mdlVerified==='verified' ? 'ORIGINAL MDL VERIFIED'
     : mdlVerified==='photocopy' ? 'PHOTOCOPY VERIFIED' : 'NOT AVAILABLE';
-  const dlValidText = isDLExpired
-    ? '<b style="color:#c00;">EXPIRED (' + dlValid + ')</b>'
-    : (dlValid ? 'Valid till ' + dlValid : '—');
+  const ntLabel = dlValidNT ? (ntExpired ? `<b style="color:#c00;">${dlValidNT} ⚠ EXPIRED</b>` : `${dlValidNT} ✓`) : '—';
+  const tLabel  = dlValidT  ? (tExpired  ? `<b style="color:#c00;">${dlValidT} ⚠ EXPIRED</b>`  : `${dlValidT} ✓`)  : '—';
   const dlRemarks = gv('spot-dl-invalid-remarks');
-  const dlRemarksHTML = (isDLExpired || mdlVerified==='not-available') && dlRemarks
-    ? '<div style="border:1pt solid #ffc107;background:#fff8e1;padding:3px 5px;margin:3px 0;font-size:7pt;"><b>⚠ DL INVALIDITY REMARKS:</b> ' + dlRemarks + '</div>' : '';
+  const dlRemarksHTML = (anyDLExpired || mdlVerified==='not-available') && dlRemarks
+    ? `<div style="border:1pt solid #ffc107;background:#fff8e1;padding:3px 5px;margin:3px 0;font-size:7pt;"><b>⚠ DL INVALIDITY REMARKS:</b> ${dlRemarks}</div>` : '';
+  // Driver name with relation
+  const driverRelation = gv('spot-dl-relation') || 'S/o';
+  const driverParent   = gv('spot-dl-parent');
+  const driverNameFull = gv('spot-driver-name') + (driverParent ? ` ${driverRelation} ${driverParent}` : '');
 
   function expired(dateStr) {
     return dateStr && new Date(dateStr) < new Date();
@@ -2678,14 +2879,17 @@ function buildSpotSurveyHTML() {
 <div style="${sec}">${sn++}. DRIVER'S PARTICULARS — ${dlStatus}</div>
 <table style="${ts}">
   <tr>
-    <td style="${td}${lbl}width:26%;">Driver Name</td><td style="${td}font-weight:600;">${gv('spot-driver-name')||'—'}</td>
-    <td style="${td}${lbl}width:26%;">M.D.L. No.</td><td style="${td}font-family:monospace;">${gv('spot-mdl-no')||'—'}</td>
+    <td style="${td}${lbl}width:26%;">Driver Name</td><td style="${td}font-weight:600;" colspan="3">${driverNameFull||'—'}</td>
   </tr><tr>
-    <td style="${td}${lbl}">Issuing Authority</td><td style="${td}">${gv('spot-dl-authority')||'—'}</td>
-    <td style="${td}${lbl}">Date of Issue</td><td style="${td}">${gv('spot-dl-issue')||'—'}</td>
+    <td style="${td}${lbl}">M.D.L. No.</td><td style="${td}font-family:monospace;">${gv('spot-mdl-no')||'—'}</td>
+    <td style="${td}${lbl}width:26%;">Date of Issue</td><td style="${td}">${gv('spot-dl-issue')||'—'}</td>
   </tr><tr>
-    <td style="${td}${lbl}">Valid Upto</td><td style="${td}">${dlValidText}</td>
-    <td style="${td}${lbl}">Licence Type</td><td style="${td}">${gv('spot-dl-type')||'—'}</td>
+    <td style="${td}${lbl}">Issuing Authority</td><td style="${td}" colspan="3">${gv('spot-dl-authority')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Licence Classes</td><td style="${td}" colspan="3">${gv('spot-dl-type')||'—'}</td>
+  </tr><tr>
+    <td style="${td}${lbl}">Non-Transport Valid Upto (LMV)</td><td style="${td}">${ntLabel}</td>
+    <td style="${td}${lbl}">Transport Valid Upto (HMV/TRANS)</td><td style="${td}">${tLabel}</td>
   </tr>
 </table>
 ${dlRemarksHTML}
@@ -2880,17 +3084,28 @@ function buildSurveyReportHTML(){
   </tr>
 </table>
 
-<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;letter-spacing:0.04em;">5. DRIVER'S PARTICULARS &nbsp;<span style="font-weight:400;font-style:italic;font-size:6.5pt;">ORIGINAL MDL VERIFIED</span></div>
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;letter-spacing:0.04em;">5. DRIVER'S PARTICULARS &nbsp;<span style="font-weight:400;font-style:italic;font-size:6.5pt;">${(()=>{const mv=gv('f-dl-mdl-verified')||'verified';return mv==='verified'?'ORIGINAL MDL VERIFIED':mv==='photocopy'?'PHOTOCOPY VERIFIED':'NOT AVAILABLE';})()}</span></div>
 <table style="${ts}">
   <tr>
-    <td style="${td}color:#444;font-size:6.8pt;width:18%;">Driver Name</td><td style="${td}font-weight:600;width:32%;">${gv('f-driver-name')}</td>
-    <td style="${td}color:#444;font-size:6.8pt;width:18%;">M.D.L. No.</td><td style="${td}font-family:monospace;">${gv('f-mdl')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">Driver Name</td>
+    <td style="${td}font-weight:600;" colspan="3">${gv('f-driver-name')||'—'}${gv('f-dl-parent') ? ' ' + (gv('f-dl-relation')||'S/o') + ' ' + gv('f-dl-parent') : ''}</td>
   </tr><tr>
-    <td style="${td}color:#444;font-size:6.8pt;">Date of Birth</td><td style="${td}">${gv('f-dob')}</td>
-    <td style="${td}color:#444;font-size:6.8pt;">DL Validity</td><td style="${td}">${gv('f-dl-valid')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">M.D.L. No.</td><td style="${td}font-family:monospace;width:32%;">${gv('f-mdl')||'—'}</td>
+    <td style="${td}color:#444;font-size:6.8pt;width:18%;">Date of Birth</td><td style="${td}">${gv('f-dob')||'—'}</td>
   </tr><tr>
-    <td style="${td}color:#444;font-size:6.8pt;">Issuing Authority</td><td style="${td}">${gv('f-dl-auth')}</td>
-    <td style="${td}color:#444;font-size:6.8pt;">Licence Type</td><td style="${td}">${gv('f-dl-type')}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">Issuing Authority</td><td style="${td}">${gv('f-dl-auth')||'—'}</td>
+    <td style="${td}color:#444;font-size:6.8pt;">DL Issue Date</td><td style="${td}">${gv('f-dl-issue')||'—'}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Licence Classes</td><td style="${td}" colspan="3">${gv('f-dl-type')||'—'}</td>
+  </tr><tr>
+    <td style="${td}color:#444;font-size:6.8pt;">Non-Transport Validity (LMV)</td>
+    <td style="${td}${gv('f-dl-valid')&&new Date(gv('f-dl-valid'))<new Date()?'color:#c00;font-weight:700;':''}">
+      ${gv('f-dl-valid')||'—'}${gv('f-dl-valid')&&new Date(gv('f-dl-valid'))<new Date()?' ⚠ EXPIRED':''}
+    </td>
+    <td style="${td}color:#444;font-size:6.8pt;">Transport Validity (HMV/TRANS)</td>
+    <td style="${td}${gv('f-dl-valid-transport')&&new Date(gv('f-dl-valid-transport'))<new Date()?'color:#c00;font-weight:700;':''}">
+      ${gv('f-dl-valid-transport')||'—'}${gv('f-dl-valid-transport')&&new Date(gv('f-dl-valid-transport'))<new Date()?' ⚠ EXPIRED':''}
+    </td>
   </tr>
 </table>
 
@@ -3395,6 +3610,8 @@ function applyVoiceInput() {
   if (field) {
     field.value = finalText;
     field.classList.add('ai-filled');
+    // Dispatch input event so oninput handlers (like spotDamageRows) update correctly
+    field.dispatchEvent(new Event('input', { bubbles: true }));
     showToast(`Applied to ${currentVoiceFieldLabel}`, 'success');
     closeVoiceModal();
   }
