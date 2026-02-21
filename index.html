@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <!-- PDF.js for converting PDF pages to images before sending to Groq -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Google Identity Services for Drive OAuth -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --navy: #0d1b2a; --navy2: #1b2d3e; --teal: #1a7a6e; --teal-light: #22a99a;
@@ -288,6 +290,96 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 /* upload area drag states */
 .doc-card.dragover { border-color: var(--teal) !important; background: rgba(26,122,110,0.07) !important; transform: scale(1.01); }
+
+/* ── GOOGLE DRIVE INTEGRATION ── */
+.drive-badge {
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:20px;font-size:0.72rem;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--border);background:#fff;color:var(--muted);
+  transition:all 0.2s;white-space:nowrap;
+}
+.drive-badge:hover { border-color:#4285f4;color:#4285f4; }
+.drive-badge.connected { border-color:#34a853;color:#1e7e34;background:#f0fdf4; }
+.drive-badge.connected:hover { background:#dcfce7; }
+.drive-badge.syncing { border-color:#fbbc04;color:#92400e;background:#fffbeb;animation:drivePulse 1.2s infinite; }
+@keyframes drivePulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.drive-badge .drive-dot { width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0; }
+
+.drive-folder-card {
+  background:#fff;border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.drive-folder-header {
+  padding:14px 18px;background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 100%);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.drive-folder-header h3 { color:#fff;font-family:'Crimson Pro',serif;font-size:1rem;font-weight:600; }
+.drive-file-row {
+  display:flex;align-items:center;gap:12px;padding:11px 18px;
+  border-bottom:1px solid var(--cream2);transition:background 0.12s;
+  font-size:0.82rem;
+}
+.drive-file-row:last-child { border-bottom:none; }
+.drive-file-row:hover { background:var(--cream); }
+.drive-file-icon { font-size:1.1rem;width:22px;text-align:center;flex-shrink:0; }
+.drive-file-name { flex:1;color:var(--navy);font-weight:500; }
+.drive-file-size { font-size:0.72rem;color:var(--muted);white-space:nowrap; }
+.drive-file-status { font-size:0.72rem;padding:2px 8px;border-radius:12px;white-space:nowrap; }
+.drive-file-status.uploaded { background:#dcfce7;color:#15803d; }
+.drive-file-status.pending { background:#fef3c7;color:#92400e; }
+.drive-file-status.error { background:#fee2e2;color:#dc2626; }
+.drive-file-status.uploading { background:#eff6ff;color:#1d4ed8; }
+
+.drive-upload-progress {
+  background:var(--cream);border-radius:8px;padding:14px 18px;
+  margin-bottom:16px;border:1px solid var(--border);
+}
+.drive-progress-item { display:flex;align-items:center;gap:10px;padding:5px 0;font-size:0.8rem; }
+.drive-progress-item .name { flex:1;color:var(--navy2); }
+.drive-progress-item .status { font-size:0.72rem;padding:2px 8px;border-radius:12px; }
+
+.drive-config-overlay { 
+  display:none;position:fixed;inset:0;background:rgba(13,27,42,0.65);
+  backdrop-filter:blur(4px);z-index:600;align-items:center;justify-content:center;
+}
+.drive-config-overlay.open { display:flex; }
+.drive-config-box {
+  background:#fff;border-radius:16px;width:96%;max-width:500px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.28);overflow:hidden;
+  animation:modalIn 0.22s ease;
+}
+.drive-config-head {
+  background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 100%);
+  padding:20px 24px;display:flex;align-items:center;gap:14px;
+}
+.drive-config-head .gdrive-logo { font-size:1.8rem; }
+.drive-config-head h2 { font-family:'Crimson Pro',serif;color:#fff;font-size:1.2rem;font-weight:600; }
+.drive-config-head p { color:rgba(255,255,255,0.72);font-size:0.76rem;margin-top:2px; }
+.drive-config-body { padding:24px; }
+.drive-step { display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--cream2); }
+.drive-step:last-child { border-bottom:none; }
+.drive-step-num { width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:1px; }
+.drive-step-content { flex:1; }
+.drive-step-title { font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:2px; }
+.drive-step-desc { font-size:0.75rem;color:var(--muted);line-height:1.5; }
+.drive-step-desc a { color:var(--teal);text-decoration:underline;cursor:pointer; }
+.drive-step-desc code { background:var(--cream2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--navy); }
+
+.drive-connect-btn {
+  width:100%;padding:11px;background:linear-gradient(135deg,#1a73e8,#0d47a1);
+  color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;
+  font-size:0.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:8px;transition:opacity 0.2s;
+}
+.drive-connect-btn:hover { opacity:0.9; }
+
+.folder-link-badge {
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  background:#eff6ff;border:1px solid #bfdbfe;border-radius:20px;
+  font-size:0.75rem;color:#1d4ed8;cursor:pointer;text-decoration:none;
+  transition:all 0.2s;
+}
+.folder-link-badge:hover { background:#dbeafe; }
 </style>
 </head>
 <body>
@@ -318,6 +410,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <div class="nav-section-label">Config</div>
     <div class="nav-item" onclick="showPage('surveyor-profile')"><span class="icon">👤</span> Surveyor Profile</div>
     <div class="nav-item" onclick="showPage('dep-schedule')"><span class="icon">📉</span> Depreciation Schedule</div>
+    <div class="nav-item" onclick="showPage('drive')"><span class="icon">☁️</span> Google Drive</div>
   </nav>
   <div class="sidebar-footer">
     <div>IRDAI Compliant · India · v2.0</div>
@@ -336,6 +429,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       <div style="display:flex;align-items:center;gap:5px;" title="Auto-saves every 30 seconds">
         <span class="autosave-dot" id="autosave-dot"></span>
         <span class="autosave-label" id="autosave-label">Auto-save on</span>
+      </div>
+      <div class="drive-badge" id="drive-topbar-badge" onclick="handleDriveBadgeClick()" title="Google Drive Cloud Backup">
+        <span class="drive-dot"></span>
+        <span id="drive-topbar-label">Connect Drive</span>
       </div>
       <span class="model-badge" id="model-badge" onclick="cycleModel()" title="Click to switch AI model">⚡ Scout</span>
       <button class="btn btn-ai btn-sm" onclick="showPage('upload')">🤖 AI Scan</button>
@@ -947,7 +1044,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           <span>📍</span>
           <span><strong>Spot Survey Report</strong> — Independent on-the-spot accident inspection. This report is generated and filed separately from the Final Survey Report.</span>
         </div>
-        <button class="btn btn-gold" onclick="generateSpotSurveyPDF()">📄 Generate &amp; Print PDF</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px;">
+          <button class="btn btn-gold" onclick="generateSpotSurveyPDF()">📄 Generate &amp; Print PDF</button>
+          <label style="font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer;">
+            <input type="checkbox" id="attach-docs-spot" checked style="accent-color:var(--gold);"/>
+            Include photos &amp; documents as enclosures
+          </label>
+        </div>
       </div>
 
       <!-- Report Header -->
@@ -1124,9 +1227,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <div id="page-survey-report" class="tab-panel">
       <div class="flex-between mb-4">
         <div class="alert alert-success" style="margin:0;flex:1;margin-right:14px;"><span>✅</span><span>Final Survey Report preview. Click <strong>Generate PDF</strong> to download.</span></div>
-        <div style="display:flex;gap:7px;">
-          <button class="btn btn-secondary" onclick="refreshReportPreview()">🔄 Refresh</button>
-          <button class="btn btn-gold btn-lg" onclick="generateSurveyReportPDF()">📄 Generate PDF</button>
+        <div style="display:flex;gap:7px;flex-direction:column;align-items:flex-end;">
+          <div style="display:flex;gap:7px;">
+            <button class="btn btn-secondary" onclick="refreshReportPreview()">🔄 Refresh</button>
+            <button class="btn btn-secondary" id="drive-survey-btn" onclick="quickSaveToDrive('survey')" style="border-color:#1a73e8;color:#1a73e8;" title="Save to Google Drive">☁️ Drive</button>
+            <button class="btn btn-gold btn-lg" onclick="generateSurveyReportPDF()">📄 Generate PDF</button>
+          </div>
+          <label style="font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer;">
+            <input type="checkbox" id="attach-docs-survey" checked style="accent-color:var(--gold);"/>
+            Include photos &amp; documents as enclosures
+          </label>
         </div>
       </div>
       <div class="report-preview">
@@ -1139,7 +1249,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <div id="page-bill-check" class="tab-panel">
       <div class="flex-between mb-4">
         <div class="alert alert-info" style="margin:0;flex:1;margin-right:14px;"><span>ℹ️</span><span>Bill Check Report — Post-repair verification of actual workshop bill. Verifies parts replaced and repair costs against original survey assessment.</span></div>
-        <button class="btn btn-gold" onclick="generateBillCheckPDF()">📄 Generate PDF</button>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-secondary" id="drive-bill-btn" onclick="quickSaveToDrive('bill-check')" style="border-color:#1a73e8;color:#1a73e8;" title="Save to Google Drive">☁️ Drive</button>
+          <button class="btn btn-gold" onclick="generateBillCheckPDF()">📄 Generate PDF</button>
+        </div>
       </div>
       <div class="report-preview">
         <div class="report-header-bar"><span>Bill Check Report — Preview</span></div>
@@ -1273,6 +1386,171 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       </div>
     </div>
 
+    <!-- ====== GOOGLE DRIVE ====== -->
+    <div id="page-drive" class="tab-panel">
+
+      <!-- Hero -->
+      <div class="drive-hero">
+        <div class="dh-icon">☁️</div>
+        <div>
+          <h2>Google Drive — Claim Archive</h2>
+          <p>All generated reports and source documents are automatically organised into per-claim folders in your Google Drive. Connect once, save forever.</p>
+        </div>
+        <div style="margin-left:auto;">
+          <button id="drive-auth-btn" class="btn btn-secondary" onclick="handleDriveAuthBtn()" style="background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4);color:#fff;padding:10px 20px;font-size:0.88rem;">
+            🔗 Connect Google Drive
+          </button>
+          <div id="drive-user-info" style="display:none;text-align:right;margin-top:6px;font-size:0.75rem;color:rgba(255,255,255,0.7);">
+            <span id="drive-user-email"></span>
+            <button onclick="disconnectDrive()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:0.7rem;cursor:pointer;margin-left:8px;">Sign out</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Setup instructions (shown when not connected) -->
+      <div id="drive-setup-panel">
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-header"><h3>⚙️ One-Time Setup Required</h3></div>
+          <div class="card-body">
+            <p style="font-size:0.85rem;line-height:1.7;margin-bottom:14px;">To use Google Drive integration, you need a free Google Cloud API key. This takes about 5 minutes and is completely free.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+              <div style="background:var(--cream);padding:14px;border-radius:8px;border:1px solid var(--border);">
+                <div style="font-weight:700;font-size:0.82rem;margin-bottom:8px;color:var(--navy);">Step 1 — Create Google Cloud Project</div>
+                <ol style="font-size:0.78rem;line-height:1.8;padding-left:16px;color:var(--muted);">
+                  <li>Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--teal);">console.cloud.google.com</a></li>
+                  <li>Create a new project (e.g. "Motor Survey")</li>
+                  <li>Enable <strong>Google Drive API</strong></li>
+                  <li>Enable <strong>Google Picker API</strong></li>
+                </ol>
+              </div>
+              <div style="background:var(--cream);padding:14px;border-radius:8px;border:1px solid var(--border);">
+                <div style="font-weight:700;font-size:0.82rem;margin-bottom:8px;color:var(--navy);">Step 2 — Create OAuth Credentials</div>
+                <ol style="font-size:0.78rem;line-height:1.8;padding-left:16px;color:var(--muted);">
+                  <li>Go to <strong>APIs &amp; Services → Credentials</strong></li>
+                  <li>Create <strong>OAuth 2.0 Client ID</strong></li>
+                  <li>Type: <strong>Web application</strong></li>
+                  <li>Add your app URL to Authorized Origins</li>
+                </ol>
+              </div>
+            </div>
+            <div style="background:#f0fdf8;border:1px solid var(--teal);border-radius:8px;padding:14px;margin-bottom:14px;">
+              <div style="font-weight:700;font-size:0.82rem;margin-bottom:8px;color:var(--teal);">Step 3 — Enter Your Credentials Below</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label">OAuth Client ID</label>
+                  <input class="form-input" id="drive-client-id" placeholder="xxxxxxx.apps.googleusercontent.com" oninput="saveDriveConfig()"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">API Key (for Drive listing)</label>
+                  <input class="form-input" id="drive-api-key" placeholder="AIza..." oninput="saveDriveConfig()"/>
+                </div>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-primary" onclick="initDriveWithConfig()">✅ Save &amp; Connect</button>
+                <span id="drive-config-status" style="font-size:0.75rem;color:var(--muted);"></span>
+              </div>
+            </div>
+            <p style="font-size:0.75rem;color:var(--muted);">Your credentials are stored only in your browser's localStorage and never sent anywhere except Google's servers directly.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Claim Upload Panel (shown when connected) -->
+      <div id="drive-connected-panel" style="display:none;">
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px;">
+
+          <!-- Upload current claim -->
+          <div class="card">
+            <div class="card-header">
+              <h3>📁 Current Claim → Drive</h3>
+              <span class="badge" id="drive-folder-badge">No claim loaded</span>
+            </div>
+            <div class="card-body">
+              <div id="drive-claim-folder-path" style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;padding:8px;background:var(--cream);border-radius:6px;font-family:'DM Mono',monospace;">
+                Motor Survey Reports / <span id="drive-folder-name">—</span>
+              </div>
+
+              <!-- File list -->
+              <div id="drive-upload-file-list">
+                <div style="font-size:0.8rem;color:var(--muted);padding:12px;text-align:center;">Load a claim first, then click Upload All</div>
+              </div>
+
+              <!-- Progress bar -->
+              <div class="drive-progress-bar" id="drive-progress-bar" style="display:none;">
+                <div class="drive-progress-fill" id="drive-progress-fill" style="width:0%"></div>
+              </div>
+
+              <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+                <button class="btn btn-drive btn-lg" onclick="uploadCurrentClaimToDrive()" id="drive-upload-btn">
+                  ☁️ Upload All to Drive
+                </button>
+                <button class="btn btn-secondary" onclick="refreshDriveFileList()">🔄 Refresh</button>
+                <button class="btn btn-secondary btn-sm" onclick="openDriveFolder()" id="drive-open-btn" style="display:none;">📂 Open in Drive</button>
+              </div>
+
+              <div id="drive-upload-log" style="font-size:0.75rem;margin-top:10px;max-height:100px;overflow-y:auto;font-family:'DM Mono',monospace;color:var(--navy2);line-height:1.8;"></div>
+            </div>
+          </div>
+
+          <!-- Storage stats -->
+          <div>
+            <div class="card mb-4">
+              <div class="card-header"><h3>📊 Drive Status</h3></div>
+              <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;">
+                    <span style="color:var(--muted);">Connected Account</span>
+                    <span style="font-weight:600;font-size:0.75rem;" id="ds-account">—</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;">
+                    <span style="color:var(--muted);">Root Folder</span>
+                    <span style="color:var(--teal);font-size:0.75rem;">Motor Survey Reports</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;">
+                    <span style="color:var(--muted);">Claims Uploaded</span>
+                    <span style="font-weight:600;" id="ds-claims-count">—</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.82rem;">
+                    <span style="color:var(--muted);">Total Files</span>
+                    <span style="font-weight:600;" id="ds-files-count">—</span>
+                  </div>
+                </div>
+                <div style="margin-top:12px;">
+                  <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="loadDriveStats()">🔄 Refresh Stats</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3>💡 What Gets Saved</h3></div>
+              <div class="card-body">
+                <ul style="font-size:0.78rem;line-height:2;color:var(--muted);list-style:none;padding:0;">
+                  <li>📄 Final Survey Report (.html)</li>
+                  <li>📄 Spot Survey Report (.html)</li>
+                  <li>🧾 Bill Check Report (.html)</li>
+                  <li>🔄 Reinspection Report (.html)</li>
+                  <li>💰 Fee Bill (.html)</li>
+                  <li>📁 Source Documents (original files)</li>
+                  <li>💾 Claim Data (.json backup)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- All claim folders list -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📂 All Claim Folders in Drive</h3>
+            <button class="btn btn-secondary btn-sm" onclick="listAllClaimFolders()">🔄 Refresh</button>
+          </div>
+          <div class="card-body" id="drive-folders-list">
+            <div style="text-align:center;padding:24px;color:var(--muted);font-size:0.85rem;">Click Refresh to load your claim folders from Drive</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
     <!-- ====== FEE BILL ====== -->
     <div id="page-fee-bill" class="tab-panel">
       <div class="flex-between mb-4"><div></div><button class="btn btn-gold" onclick="generateFeeBillPDF()">📄 Generate PDF</button></div>
@@ -1372,14 +1650,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
         </div>
       </div>
     </div>
-
-  </div><!-- end page-body -->
-</main>
-
-<!-- ── Share FAB ── -->
-<button class="share-fab hidden" id="share-fab" onclick="openShareMenu()">
-  📲 Share Report
-</button>
 
 <!-- ── Share Menu Modal ── -->
 <div class="preflight-modal" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
@@ -1604,6 +1874,12 @@ let sigDataUrl = null;
 let stampDataUrl = null;
 const aiStatusMap = { rc: false, dl: false, policy: false, claim: false, estimate: false, photos: false };
 
+// ── Uploaded file tracking for Google Drive ──
+const uploadedDocFiles = {}; // { rc: File, dl: File, policy: File, claim: File, estimate: [File,...], photos: [File,...], permit: File, auth: File, fitness: File, 'lok-challan': File }
+
+// Track uploaded source files so they can be pushed to Drive
+const uploadedDocs = {};  // { rc: File, dl: File, policy: File, claim: File, estimate: File|File[], photos: File[], permit: File, ... }
+
 // Voice input state
 let voiceRecognition = null;
 let isRecording = false;
@@ -1633,11 +1909,20 @@ function showPage(id) {
     'ri-report': ['Reinspection Report', 'Post-repair verification'],
     'fee-bill': ['Surveyor Fee Bill', 'Professional fee invoice'],
     'surveyor-profile': ['Surveyor Profile', 'Auto-fills all reports'],
-    'dep-schedule': ['Depreciation Schedule', 'IRDAI rates reference']
+    'dep-schedule': ['Depreciation Schedule', 'IRDAI rates reference'],
+    drive: ['Google Drive', 'Cloud backup for all reports and documents']
   };
   if (meta[id]) { document.getElementById('page-title').textContent = meta[id][0]; document.getElementById('page-meta').textContent = meta[id][1]; }
   document.querySelectorAll('.nav-item').forEach(n => { if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + id + "'")) n.classList.add('active'); });
   updateDashboard();
+  // Drive panel state
+  if (id === 'drive') {
+    if (typeof driveAccessToken !== 'undefined' && driveAccessToken && Date.now() < driveTokenExpiry) {
+      if (typeof driveShowConnectedPanel === 'function') driveShowConnectedPanel();
+    } else {
+      if (typeof driveShowDisconnectedPanel === 'function') driveShowDisconnectedPanel();
+    }
+  }
 }
 
 // ============================================================
@@ -1873,7 +2158,14 @@ function handleDocDrop(e, type) {
   if (card) card.classList.remove('dragover');
   const files = Array.from(e.dataTransfer.files);
   if (!files.length) return;
-  if (type === 'photos') { savedPhotoFiles = files; document.getElementById('damage-analysis-btn').classList.remove('hidden'); }
+  // ── Track for Google Drive ──
+  if (type === 'photos') {
+    savedPhotoFiles = files;
+    uploadedDocs['photos'] = files;
+    document.getElementById('damage-analysis-btn').classList.remove('hidden');
+  } else {
+    uploadedDocs[type] = files.length === 1 ? files[0] : files;
+  }
   if ((type === 'estimate' || type === 'photos') && files.length > 1) {
     processMultipleFiles(files, type);
   } else {
@@ -1884,9 +2176,13 @@ function handleDocDrop(e, type) {
 function handleDocFile(input, type) {
   const files = Array.from(input.files);
   if (!files.length) return;
+  // Store file references for Drive upload
   if (type === 'photos') {
+    uploadedDocs['photos'] = files;
     savedPhotoFiles = files;
     document.getElementById('damage-analysis-btn').classList.remove('hidden');
+  } else {
+    uploadedDocs[type] = files.length === 1 ? files[0] : files;
   }
   if ((type === 'estimate' || type === 'photos') && files.length > 1) {
     processMultipleFiles(files, type);
@@ -2205,9 +2501,28 @@ function applyExtractedData(type, data) {
       if (fuelEl) { const opt = [...fuelEl.options].find(o => o.text.toLowerCase().includes(data.fuel.toLowerCase())); if (opt) { fuelEl.value = opt.value; count++; } }
     }
     if (data.date_of_registration) setField('f-reg-date', tryDate(data.date_of_registration));
+    // FIX: set vehicle class from RC
+    if (data.class_of_vehicle) setField('f-veh-class', data.class_of_vehicle);
     // ── Mirror to Spot Survey ──
-    setField('f-insured-name', data.owner_name);  // already set above
-    if (data.gross_weight) setField('spot-load-capacity', data.gross_weight);
+    // FIX Bug 2: gross_weight = GVW, not load capacity. Set spot-gvw and spot-ulw correctly.
+    // spot-load-capacity (= GVW − ULW) will be auto-calculated by calcLoadCapacity() when both are set.
+    if (data.gross_weight) {
+      setField('spot-gvw', String(Math.round(parseFloat(data.gross_weight) || 0)));
+      setField('f-rlw', String(Math.round(parseFloat(data.gross_weight) || 0)));  // keep RLW in sync
+    }
+    if (data.unladen_weight) {
+      setField('spot-ulw', String(Math.round(parseFloat(data.unladen_weight) || 0)));
+    }
+    // Trigger auto-calculation of load capacity if both are now set
+    if (data.gross_weight && data.unladen_weight) {
+      const gvwVal = parseFloat(data.gross_weight) || 0;
+      const ulwVal = parseFloat(data.unladen_weight) || 0;
+      if (gvwVal > 0 && ulwVal > 0 && gvwVal > ulwVal) {
+        const cap = Math.round(gvwVal - ulwVal);
+        const capEl = document.getElementById('spot-load-capacity');
+        if (capEl) { capEl.value = cap; capEl.classList.add('ai-filled'); count++; }
+      }
+    }
   }
 
   if (type === 'dl') {
@@ -2289,8 +2604,18 @@ function applyExtractedData(type, data) {
     setField('spot-survey-place', data.workshop_name || data.place_of_repair);
     setField('spot-tp-details', data.third_party_details);
     if (data.third_party_details && data.third_party_details.toLowerCase() !== 'nil' && data.third_party_details.trim() !== '') {
+      // FIX Bug 3: 'yes' is not a valid option. Valid values: no, tppd, tppi, both.
+      // Default to 'tppd' (property damage) as the most common case when TP is mentioned.
       const tpSel = document.getElementById('spot-tp-involved');
-      if (tpSel) { tpSel.value = 'yes'; count++; }
+      if (tpSel) {
+        const tpStr = (data.third_party_details || '').toLowerCase();
+        if (tpStr.includes('injur') || tpStr.includes('death') || tpStr.includes('bodily')) {
+          tpSel.value = tpStr.includes('damage') || tpStr.includes('property') ? 'both' : 'tppi';
+        } else {
+          tpSel.value = 'tppd';
+        }
+        count++;
+      }
     }
     if (data.date_of_accident) {
       const dt = tryDate(data.date_of_accident);
@@ -2298,10 +2623,19 @@ function applyExtractedData(type, data) {
       const timeStr = time.includes(':') ? time.substring(0,5) : '00:00';
       setField('spot-accident-datetime', dt + 'T' + timeStr);
     }
+    // FIX Bug 5: seed spot report date and allotment date (default to today if not already set)
+    const today = new Date().toISOString().split('T')[0];
+    const spotRptDate = document.getElementById('spot-report-date');
+    if (spotRptDate && !spotRptDate.value) { spotRptDate.value = today; spotRptDate.classList.add('ai-filled'); count++; }
+    const spotAllotDate = document.getElementById('spot-allot-date');
+    if (spotAllotDate && !spotAllotDate.value) { spotAllotDate.value = today; spotAllotDate.classList.add('ai-filled'); count++; }
   }
 
   if (type === 'estimate') {
     setField('f-survey-place', data.workshop_name);
+    // FIX Bug 4: also mirror workshop name to spot survey place
+    setField('spot-survey-place', data.workshop_name);
+    if (data.workshop_address) setField('f-insured-addr', data.workshop_address); // don't overwrite if already set
     // Build assessment rows from estimate
     if (data.spare_parts && Array.isArray(data.spare_parts) && data.spare_parts.length > 0) {
       data.spare_parts.forEach(part => {
@@ -2338,17 +2672,56 @@ function applyExtractedData(type, data) {
     if (data.overall_damage_summary) {
       const causeEl = document.getElementById('f-cause');
       if (causeEl && !causeEl.value) { causeEl.value = data.overall_damage_summary; count++; }
-      const spotDamageEl = document.getElementById('spot-damage-details');
-      if (spotDamageEl && !spotDamageEl.value) { spotDamageEl.value = data.overall_damage_summary; count++; }
+      // FIX Bug 1: spot-damage-details element does NOT exist. Route summary to spot-comments instead.
+      const spotCommentsEl = document.getElementById('spot-comments');
+      if (spotCommentsEl && !spotCommentsEl.value) {
+        spotCommentsEl.value = data.overall_damage_summary;
+        spotCommentsEl.classList.add('ai-filled');
+        count++;
+      }
     }
     if (data.damaged_parts && Array.isArray(data.damaged_parts) && data.damaged_parts.length > 0) {
+      // Set overall severity from worst damage found
       const severities = data.damaged_parts.map(p => (p.severity||'').toLowerCase());
       const spotSev = document.getElementById('spot-damage-severity');
       if (spotSev) {
-        if (severities.includes('major')) spotSev.value = 'major';
-        else if (severities.includes('moderate')) spotSev.value = 'moderate';
+        if (severities.some(s => s.includes('major') || s.includes('severe'))) spotSev.value = 'major';
+        else if (severities.some(s => s.includes('moderate') || s.includes('medium'))) spotSev.value = 'moderate';
         else spotSev.value = 'minor';
+        spotSev.classList.add('ai-filled');
         count++;
+      }
+      // FIX Bug 1 (critical): Populate the spotDamageRows table with AI-detected components.
+      // Map AI part names to the common component dropdown values where possible.
+      const componentMap = {
+        'bumper': 'BODY PANELS', 'bonnet': 'BODY PANELS', 'hood': 'BODY PANELS',
+        'fender': 'BODY PANELS', 'door': 'BODY PANELS', 'panel': 'BODY PANELS',
+        'windshield': 'WINDSHIELD & GLASS', 'windscreen': 'WINDSHIELD & GLASS',
+        'glass': 'WINDSHIELD & GLASS', 'window': 'WINDSHIELD & GLASS',
+        'headlight': 'ELECTRICAL SYSTEM', 'taillight': 'ELECTRICAL SYSTEM', 'light': 'ELECTRICAL SYSTEM',
+        'headlamp': 'ELECTRICAL SYSTEM', 'foglamp': 'ELECTRICAL SYSTEM',
+        'tyre': 'WHEEL DISCS & TYRES', 'wheel': 'WHEEL DISCS & TYRES', 'rim': 'WHEEL DISCS & TYRES',
+        'engine': 'ENGINE & TRANSMISSION', 'transmission': 'ENGINE & TRANSMISSION', 'gearbox': 'ENGINE & TRANSMISSION',
+        'radiator': 'COOLING SYSTEM', 'coolant': 'COOLING SYSTEM',
+        'suspension': 'FRONT SUSPENSION', 'shock': 'FRONT SUSPENSION',
+        'chassis': 'CHASSIS ASSY', 'frame': 'CHASSIS ASSY',
+        'axle': 'FRONT AXLE ASSY', 'brake': 'BRAKING SYSTEM',
+        'steering': 'STEERING SYSTEM', 'airbag': 'INTERIOR', 'dashboard': 'INTERIOR', 'interior': 'INTERIOR',
+        'cabin': 'FRONT END STRUCTURE / DRIVERS CABIN', 'roof': 'BODY PANELS',
+      };
+      // Only add rows if spotDamageRows is currently empty (don't duplicate)
+      if (spotDamageRows.length === 0) {
+        data.damaged_parts.forEach(part => {
+          const partName = (part.part || '').toLowerCase();
+          let component = 'BODY PANELS'; // default
+          for (const [key, val] of Object.entries(componentMap)) {
+            if (partName.includes(key)) { component = val; break; }
+          }
+          const side = part.side ? `(${part.side}) ` : '';
+          const damageDesc = `${side}${part.damage_type || 'Damaged'}. Severity: ${part.severity || 'Moderate'}.`;
+          addSpotDamageRow(component, damageDesc);
+          count++;
+        });
       }
     }
   }
@@ -2856,7 +3229,7 @@ function checkDLValidity(){
 }
 
 function refreshSpotSurvey(){showToast('Spot survey PDF opening...','success');}
-function generateSpotSurveyPDF(){ printReport(buildSpotSurveyHTML(), 'Spot Survey — '+(gv('spot-report-no')||gv('f-reg-no'))); }
+function generateSpotSurveyPDF(){ printReportWithAttachments(buildSpotSurveyHTML(), 'Spot Survey — '+(gv('spot-report-no')||gv('f-reg-no')), REPORT_DOC_KEYS['spot-survey'], 'attach-docs-spot'); }
 
 function buildSpotSurveyHTML() {
   const isComm = vehicleType === 'commercial';
@@ -3431,6 +3804,170 @@ function refreshReportPreview(){document.getElementById('survey-report-html').in
 function refreshBillCheck(){document.getElementById('bill-check-html').innerHTML=buildBillCheckHTML();}
 function refreshRIReport(){document.getElementById('ri-report-html').innerHTML=buildRIReportHTML();}
 
+// ============================================================
+// REPORT ATTACHMENTS — Embed uploaded source docs & photos
+// ============================================================
+
+const DOC_LABELS = {
+  rc: 'Registration Certificate (RC)',
+  dl: 'Driving Licence (DL)',
+  policy: 'Insurance Policy',
+  claim: 'Claim / Intimation Form',
+  estimate: 'Repair Estimate',
+  permit: 'Permit',
+  auth: 'Authorisation Certificate',
+  fitness: 'Fitness Certificate',
+  'lok-challan': 'Load / Lok Challan'
+};
+
+// Which uploaded docs get appended to each report type
+const REPORT_DOC_KEYS = {
+  'spot-survey':   ['photos', 'claim', 'dl'],
+  'survey-report': ['rc', 'dl', 'policy', 'claim', 'estimate', 'photos'],
+  'bill-check':    ['estimate', 'photos'],
+  'ri-report':     ['photos'],
+  'fee-bill':      []
+};
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('Could not read file: ' + file.name));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function buildAttachmentsHTML(docKeys) {
+  const sections = [];
+
+  for (const key of docKeys) {
+    const rawFiles = uploadedDocs[key];
+    if (!rawFiles) continue;
+    const files = Array.isArray(rawFiles) ? rawFiles : [rawFiles];
+    if (!files.length) continue;
+
+    if (key === 'photos') {
+      // Photos — 3-column grid, images only
+      const photoItems = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+        try {
+          const dataUrl = await fileToDataUrl(file);
+          photoItems.push(`
+            <div style="break-inside:avoid;page-break-inside:avoid;text-align:center;">
+              <img src="${dataUrl}" style="width:100%;max-height:165px;object-fit:cover;border:0.5pt solid #bbb;display:block;border-radius:2px;"/>
+              <div style="font-size:5.8pt;color:#555;margin-top:2px;font-family:sans-serif;">Photo ${i+1} — ${file.name}</div>
+            </div>`);
+        } catch(e) { console.warn('Photo read error', e); }
+      }
+      if (photoItems.length === 0) continue;
+
+      // Split into pages of 12 photos (4 rows × 3 cols)
+      const PAGE_SIZE = 12;
+      for (let p = 0; p < photoItems.length; p += PAGE_SIZE) {
+        const chunk = photoItems.slice(p, p + PAGE_SIZE);
+        const pageNum = Math.floor(p / PAGE_SIZE) + 1;
+        const totalPages = Math.ceil(photoItems.length / PAGE_SIZE);
+        const pageLabel = totalPages > 1 ? ` — Sheet ${pageNum} of ${totalPages}` : '';
+        sections.push(`
+          <div style="page-break-before:always;padding:2mm;">
+            <div style="background:#0d1b2a;color:#fff;padding:4px 8px;font-size:8pt;font-weight:700;letter-spacing:0.05em;margin-bottom:8px;display:flex;justify-content:space-between;">
+              <span>ENCLOSURE — DAMAGE PHOTOGRAPHS (${photoItems.length} Nos.)${pageLabel}</span>
+              <span style="font-weight:400;font-size:7pt;">Vehicle: ${gv('f-reg-no')||'—'} | Claim: ${gv('f-claim-no')||'—'}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">
+              ${chunk.join('')}
+            </div>
+          </div>`);
+      }
+
+    } else {
+      // Single or multi-file document (RC, DL, Policy, etc.)
+      const label = DOC_LABELS[key] || key.toUpperCase();
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const pageLabel = files.length > 1 ? `${label} (Part ${i+1} of ${files.length})` : label;
+        try {
+          const dataUrl = await fileToDataUrl(file);
+          const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+          let embedHTML;
+          if (isPdf) {
+            // PDF: embed at full A4 height. Chrome prints it; Firefox/Safari may show blank.
+            embedHTML = `
+              <iframe src="${dataUrl}" style="width:100%;height:1090px;border:none;display:block;"
+                title="${pageLabel}"></iframe>
+              <div style="font-size:6pt;color:#888;font-style:italic;text-align:center;margin-top:3px;">
+                ⓘ If blank, your browser may not render embedded PDFs in print — attach the original separately.
+              </div>`;
+          } else {
+            // Image document
+            embedHTML = `<img src="${dataUrl}" style="width:100%;max-height:1090px;object-fit:contain;border:0.5pt solid #ccc;display:block;"/>`;
+          }
+
+          sections.push(`
+            <div style="page-break-before:always;padding:2mm;">
+              <div style="background:#0d1b2a;color:#fff;padding:4px 8px;font-size:8pt;font-weight:700;letter-spacing:0.05em;margin-bottom:6px;display:flex;justify-content:space-between;">
+                <span>ENCLOSURE — ${pageLabel.toUpperCase()}</span>
+                <span style="font-weight:400;font-size:7pt;">Vehicle: ${gv('f-reg-no')||'—'} | Claim: ${gv('f-claim-no')||'—'}</span>
+              </div>
+              ${embedHTML}
+            </div>`);
+        } catch(e) { console.warn('Doc read error for', key, e); }
+      }
+    }
+  }
+
+  if (sections.length === 0) return '';
+
+  // Enclosure index at the start of attachment section
+  const enclosureList = docKeys
+    .filter(k => uploadedDocs[k])
+    .map((k, idx) => {
+      const f = Array.isArray(uploadedDocs[k]) ? uploadedDocs[k] : [uploadedDocs[k]];
+      const count = k === 'photos' ? f.length : f.length;
+      const label = k === 'photos' ? `Damage Photographs (${count} Nos.)` : DOC_LABELS[k] || k;
+      return `<tr><td style="padding:2px 6px;">${idx+1}.</td><td style="padding:2px 6px;">${label}</td></tr>`;
+    }).join('');
+
+  const enclosureIndex = `
+    <div style="page-break-before:always;padding:2mm;">
+      <div style="background:#0d1b2a;color:#fff;padding:4px 8px;font-size:8pt;font-weight:700;letter-spacing:0.05em;margin-bottom:8px;">
+        ENCLOSURES INDEX
+      </div>
+      <table style="width:50%;font-size:7.5pt;border-collapse:collapse;">
+        <thead><tr style="background:#eee;"><th style="padding:3px 6px;text-align:left;">Sr.</th><th style="padding:3px 6px;text-align:left;">Document</th></tr></thead>
+        <tbody>${enclosureList}</tbody>
+      </table>
+      <div style="margin-top:10px;font-size:6.5pt;color:#666;font-style:italic;">Enclosures follow on subsequent pages. Print all pages to include all supporting documents.</div>
+    </div>`;
+
+  return enclosureIndex + sections.join('');
+}
+
+async function printReportWithAttachments(html, title, docKeys, checkboxId) {
+  const attachEnabled = checkboxId ? (document.getElementById(checkboxId)?.checked !== false) : true;
+  const hasAnyDocs = attachEnabled && docKeys && docKeys.some(k => uploadedDocs[k]);
+  let fullHTML = html;
+  if (hasAnyDocs) {
+    showToast('Building report with enclosures…', 'success');
+    try {
+      const attachHTML = await buildAttachmentsHTML(docKeys);
+      fullHTML = html + attachHTML;
+    } catch(e) {
+      console.error('Attachment build error:', e);
+      showToast('Warning: Some attachments could not be embedded.', 'error');
+    }
+  }
+  printReport(fullHTML, title);
+}
+
+// ============================================================
+// END REPORT ATTACHMENTS
+// ============================================================
+
 function printReport(html,title){
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><link rel='preconnect' href='https://fonts.googleapis.com'/><link href='https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap' rel='stylesheet'/><style>@page{margin:8mm 10mm;size:A4 portrait;}*{box-sizing:border-box;}body{font-family:'DM Sans',Arial,sans-serif;font-size:7.8pt;line-height:1.3;color:#000;margin:0;padding:0;}table{border-collapse:collapse;width:100%;font-size:7.8pt;}td,th{padding:2px 4px;}p{margin:0 0 4px 0;}@media print{@page{margin:8mm 10mm;}body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}tr{page-break-inside:avoid;}}</style></head><body>${html}</body></html>`);
@@ -3439,9 +3976,9 @@ function printReport(html,title){
   showToast('Report opened — use Print → Save as PDF');
 }
 
-function generateSurveyReportPDF(){refreshReportPreview();printReport(buildSurveyReportHTML(),'Final Survey Report - '+gv('f-report-no'));}
-function generateBillCheckPDF(){refreshBillCheck();printReport(buildBillCheckHTML(),'Bill Check Report - '+gv('f-report-no'));}
-function generateRIPDF(){refreshRIReport();printReport(buildRIReportHTML(),'Reinspection Report - '+gv('ri-ref'));}
+function generateSurveyReportPDF(){refreshReportPreview();printReportWithAttachments(buildSurveyReportHTML(),'Final Survey Report - '+gv('f-report-no'),REPORT_DOC_KEYS['survey-report'],'attach-docs-survey');}
+function generateBillCheckPDF(){refreshBillCheck();printReportWithAttachments(buildBillCheckHTML(),'Bill Check Report - '+gv('f-report-no'),REPORT_DOC_KEYS['bill-check']);}
+function generateRIPDF(){refreshRIReport();printReportWithAttachments(buildRIReportHTML(),'Reinspection Report - '+gv('ri-ref'),REPORT_DOC_KEYS['ri-report']);}
 function generateFeeBillPDF(){
   calcFeeTotal();
   const p=parseFloat(gv('fee-prof'))||0,r=parseFloat(gv('fee-ri'))||0,t=parseFloat(gv('fee-travel'))||0,ph=(parseFloat(gv('fee-photos-count'))||0)*(parseFloat(gv('fee-photo-rate'))||0),po=parseFloat(gv('fee-postal'))||0,tot=p+r+t+ph+po;
@@ -4050,6 +4587,447 @@ function registerServiceWorker() {
   });
 }
 
+
+// ============================================================
+// GOOGLE DRIVE INTEGRATION
+// ============================================================
+
+// --- Drive State ---
+let driveAccessToken = null;
+let driveTokenClient = null;
+let driveClientId = '';
+let driveApiKey = '';
+let driveRootFolderId = null;
+let driveCurrentClaimFolderId = null;
+const DRIVE_ROOT_FOLDER_NAME = 'Motor Survey Reports';
+
+function saveDriveConfig() {
+  const cid = document.getElementById('drive-client-id').value.trim();
+  const akey = document.getElementById('drive-api-key').value.trim();
+  if (cid) localStorage.setItem('drive_client_id', cid);
+  if (akey) localStorage.setItem('drive_api_key', akey);
+}
+
+function loadDriveConfig() {
+  const cid = localStorage.getItem('drive_client_id') || '';
+  const akey = localStorage.getItem('drive_api_key') || '';
+  const cidEl = document.getElementById('drive-client-id');
+  const akeyEl = document.getElementById('drive-api-key');
+  if (cidEl) cidEl.value = cid;
+  if (akeyEl) akeyEl.value = akey;
+  driveClientId = cid;
+  driveApiKey = akey;
+  if (cid) {
+    const cfgStatus = document.getElementById('drive-config-status');
+    if (cfgStatus) cfgStatus.textContent = '✅ Credentials loaded';
+    initDriveTokenClient();
+  }
+  const saved = localStorage.getItem('drive_access_token');
+  const exp = parseInt(localStorage.getItem('drive_token_expiry') || '0');
+  if (saved && exp > Date.now()) {
+    driveAccessToken = saved;
+    const email = localStorage.getItem('drive_user_email') || 'Connected';
+    onDriveConnected(email);
+  }
+}
+
+function initDriveWithConfig() {
+  const cid = document.getElementById('drive-client-id').value.trim();
+  const akey = document.getElementById('drive-api-key').value.trim();
+  if (!cid) { showToast('Enter your OAuth Client ID first', 'error'); return; }
+  localStorage.setItem('drive_client_id', cid);
+  localStorage.setItem('drive_api_key', akey);
+  driveClientId = cid;
+  driveApiKey = akey;
+  document.getElementById('drive-config-status').textContent = '✅ Saved! Connecting...';
+  initDriveTokenClient();
+  setTimeout(() => requestDriveToken(), 600);
+}
+
+function initDriveTokenClient() {
+  if (!window.google || !window.google.accounts) {
+    setTimeout(initDriveTokenClient, 1200);
+    return;
+  }
+  if (!driveClientId) return;
+  driveTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: driveClientId,
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',
+    callback: (tokenResponse) => {
+      if (tokenResponse.error) { showToast('Google auth error: ' + tokenResponse.error, 'error'); return; }
+      driveAccessToken = tokenResponse.access_token;
+      const expiry = Date.now() + (tokenResponse.expires_in * 1000);
+      localStorage.setItem('drive_access_token', driveAccessToken);
+      localStorage.setItem('drive_token_expiry', String(expiry));
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: 'Bearer ' + driveAccessToken }
+      }).then(r => r.json()).then(info => {
+        localStorage.setItem('drive_user_email', info.email || '');
+        onDriveConnected(info.email || 'Connected');
+      }).catch(() => onDriveConnected('Connected'));
+    }
+  });
+}
+
+function requestDriveToken() {
+  if (!driveTokenClient) { showToast('Add your Google Client ID in the Drive page first.', 'error'); showPage('drive'); return; }
+  driveTokenClient.requestAccessToken({ prompt: '' });
+}
+
+function handleDriveAuthBtn() {
+  if (driveAccessToken) disconnectDrive(); else requestDriveToken();
+}
+
+function onDriveConnected(email) {
+  showToast('Google Drive connected! ✅', 'success');
+  const authBtn = document.getElementById('drive-auth-btn');
+  if (authBtn) { authBtn.textContent = '✅ Connected — Sign Out'; }
+  const emailEl = document.getElementById('drive-user-email');
+  if (emailEl) emailEl.textContent = email;
+  const uInfo = document.getElementById('drive-user-info');
+  if (uInfo) uInfo.style.display = 'block';
+  const setupPanel = document.getElementById('drive-setup-panel');
+  const connPanel = document.getElementById('drive-connected-panel');
+  if (setupPanel) setupPanel.style.display = 'none';
+  if (connPanel) connPanel.style.display = 'block';
+  const bar = document.getElementById('sidebar-drive-bar');
+  if (bar) {
+    bar.classList.add('connected');
+    document.getElementById('sidebar-drive-title').textContent = '✅ Drive Connected';
+    const shortEmail = email.length > 24 ? email.substring(0,22)+'…' : email;
+    document.getElementById('sidebar-drive-sub').textContent = shortEmail;
+  }
+  const dsAccount = document.getElementById('ds-account');
+  if (dsAccount) dsAccount.textContent = email;
+  refreshDriveFileList();
+}
+
+function disconnectDrive() {
+  driveAccessToken = null; driveRootFolderId = null; driveCurrentClaimFolderId = null;
+  localStorage.removeItem('drive_access_token');
+  localStorage.removeItem('drive_token_expiry');
+  localStorage.removeItem('drive_user_email');
+  const authBtn = document.getElementById('drive-auth-btn');
+  if (authBtn) authBtn.textContent = '🔗 Connect Google Drive';
+  const uInfo = document.getElementById('drive-user-info');
+  if (uInfo) uInfo.style.display = 'none';
+  const setupPanel = document.getElementById('drive-setup-panel');
+  const connPanel = document.getElementById('drive-connected-panel');
+  if (setupPanel) setupPanel.style.display = 'block';
+  if (connPanel) connPanel.style.display = 'none';
+  const bar = document.getElementById('sidebar-drive-bar');
+  if (bar) {
+    bar.classList.remove('connected');
+    document.getElementById('sidebar-drive-title').textContent = 'Connect Google Drive';
+    document.getElementById('sidebar-drive-sub').textContent = 'Tap to link your account';
+  }
+  showToast('Disconnected from Google Drive', 'success');
+}
+
+async function driveAPI(method, endpoint, body) {
+  if (!driveAccessToken) throw new Error('Not connected to Google Drive');
+  const url = 'https://www.googleapis.com/drive/v3/' + endpoint;
+  const headers = { Authorization: 'Bearer ' + driveAccessToken };
+  if (body && typeof body === 'object' && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
+  const opts = { method, headers };
+  if (body) opts.body = (typeof body === 'object' && !(body instanceof FormData)) ? JSON.stringify(body) : body;
+  const res = await fetch(url, opts);
+  if (res.status === 401) { driveAccessToken = null; localStorage.removeItem('drive_access_token'); throw new Error('Drive session expired. Please reconnect.'); }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error((e.error&&e.error.message)||res.statusText); }
+  return res.status === 204 ? {} : res.json();
+}
+
+async function findOrCreateFolder(name, parentId) {
+  let q = `name='${name.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  if (parentId) q += ` and '${parentId}' in parents`;
+  const search = await driveAPI('GET', `files?q=${encodeURIComponent(q)}&fields=files(id,name)&spaces=drive`);
+  if (search.files && search.files.length > 0) return search.files[0].id;
+  const meta = { name, mimeType: 'application/vnd.google-apps.folder' };
+  if (parentId) meta.parents = [parentId];
+  const folder = await driveAPI('POST', 'files', meta);
+  return folder.id;
+}
+
+async function uploadFileToDrive(file, folderId, fileName) {
+  const metadata = { name: fileName || file.name, parents: [folderId] };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+  form.append('file', file);
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + driveAccessToken },
+    body: form
+  });
+  if (res.status === 401) { driveAccessToken = null; localStorage.removeItem('drive_access_token'); throw new Error('Drive session expired.'); }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error((e.error&&e.error.message)||res.statusText); }
+  return res.json();
+}
+
+async function uploadHTMLToDrive(htmlContent, fileName, folderId) {
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  return uploadFileToDrive(new File([blob], fileName, { type: 'text/html' }), folderId, fileName);
+}
+
+async function uploadJSONToDrive(data, fileName, folderId) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  return uploadFileToDrive(new File([blob], fileName, { type: 'application/json' }), folderId, fileName);
+}
+
+function getClaimFolderName() {
+  const reg = (gv('f-reg-no') || 'UNKNOWN').replace(/\s+/g,'').toUpperCase();
+  const claim = (gv('f-claim-no') || '').replace(/[\s\/\\:*?"<>|]/g,'');
+  const insured = (gv('f-insured-name') || '').replace(/[^A-Za-z\s]/g,'').trim().split(' ')[0];
+  const year = (gv('f-report-date') || new Date().toISOString().split('T')[0]).split('-')[0];
+  let name = reg;
+  if (claim) name += ' — ' + claim;
+  if (insured) name += ' — ' + insured;
+  name += ' — ' + year;
+  return name.substring(0, 100);
+}
+
+function buildUploadManifest() {
+  const items = [];
+  const reg = (gv('f-reg-no') || 'REPORT').replace(/\s+/g,'').replace(/[^A-Z0-9]/gi,'_');
+  const claimNo = (gv('f-claim-no') || '').replace(/[^A-Z0-9]/gi,'_');
+  const prefix = reg + (claimNo ? '_' + claimNo : '');
+  items.push({ type:'report', label:'📄 Final Survey Report', key:'survey', fileName: prefix + '_Final_Survey_Report.html' });
+  items.push({ type:'report', label:'📍 Spot Survey Report', key:'spot', fileName: prefix + '_Spot_Survey_Report.html' });
+  items.push({ type:'report', label:'🧾 Bill Check Report', key:'bill', fileName: prefix + '_Bill_Check_Report.html' });
+  items.push({ type:'report', label:'🔄 Reinspection Report', key:'ri', fileName: prefix + '_Reinspection_Report.html' });
+  items.push({ type:'report', label:'💰 Surveyor Fee Bill', key:'fee', fileName: prefix + '_Fee_Bill.html' });
+  items.push({ type:'report', label:'💾 Claim Data Backup', key:'json', fileName: prefix + '_ClaimData.json' });
+  const docLabels = { rc:'RC_Book', dl:'Driving_Licence', policy:'Insurance_Policy', claim:'Claim_Form', estimate:'Repair_Estimate', permit:'Permit', auth:'Authorisation', fitness:'Fitness_Certificate', 'lok-challan':'Lok_Challan' };
+  Object.entries(docLabels).forEach(([k, label]) => {
+    if (uploadedDocs[k]) {
+      const f = Array.isArray(uploadedDocs[k]) ? uploadedDocs[k][0] : uploadedDocs[k];
+      const ext = f.name.split('.').pop();
+      items.push({ type:'source', label:'📎 '+label.replace(/_/g,' '), key:k, fileName: prefix + '_' + label + '.' + ext });
+    }
+  });
+  if (uploadedDocs['photos'] && uploadedDocs['photos'].length) {
+    uploadedDocs['photos'].forEach((f, i) => {
+      items.push({ type:'source', label:`🖼 Photo ${i+1}`, key:'photo_'+i, fileName: prefix + `_Photo_${String(i+1).padStart(2,'0')}.${f.name.split('.').pop()}` });
+    });
+  }
+  return items;
+}
+
+function refreshDriveFileList() {
+  if (!driveAccessToken) return;
+  const vehicle = gv('f-reg-no');
+  const manifest = buildUploadManifest();
+  const folderName = vehicle ? getClaimFolderName() : '—';
+  const fnEl = document.getElementById('drive-folder-name');
+  const fbEl = document.getElementById('drive-folder-badge');
+  if (fnEl) fnEl.textContent = folderName;
+  if (fbEl) fbEl.textContent = vehicle || 'No claim loaded';
+  const listEl = document.getElementById('drive-upload-file-list');
+  if (!listEl) return;
+  if (!vehicle) {
+    listEl.innerHTML = '<div style="font-size:0.8rem;color:var(--muted);padding:12px;text-align:center;">Enter claim details first (vehicle no., claim no.)</div>';
+    return;
+  }
+  let html = '<ul class="drive-file-list">';
+  manifest.forEach(item => {
+    html += `<li><span class="dfl-icon">${item.label.split(' ')[0]}</span><span class="dfl-name" title="${item.fileName}">${item.fileName}</span><span class="dfl-status dfl-pending" id="dfl-${CSS.escape(item.key)}">Pending</span></li>`;
+  });
+  html += '</ul>';
+  listEl.innerHTML = html;
+}
+
+async function uploadCurrentClaimToDrive() {
+  if (!driveAccessToken) { showToast('Connect Google Drive first', 'error'); showPage('drive'); return; }
+  if (!gv('f-reg-no')) { showToast('Enter vehicle registration number first', 'error'); return; }
+  const btn = document.getElementById('drive-upload-btn');
+  btn.disabled = true; btn.textContent = '⏳ Uploading...';
+  const logEl = document.getElementById('drive-upload-log');
+  logEl.innerHTML = '';
+  const progressBar = document.getElementById('drive-progress-bar');
+  const progressFill = document.getElementById('drive-progress-fill');
+  progressBar.style.display = 'block'; progressFill.style.width = '0%';
+  const manifest = buildUploadManifest();
+  let done = 0; const total = manifest.length;
+
+  function setStatus(key, status, cls) {
+    const safeKey = CSS.escape ? CSS.escape(key) : key.replace(/[^\w-]/g,'_');
+    const el = document.querySelector(`#dfl-${safeKey}`);
+    if (el) { el.textContent = status; el.className = 'dfl-status ' + cls; }
+  }
+  function log(msg) { logEl.innerHTML += msg + '<br/>'; logEl.scrollTop = logEl.scrollHeight; }
+
+  try {
+    log('📁 Finding root folder...');
+    driveRootFolderId = await findOrCreateFolder(DRIVE_ROOT_FOLDER_NAME, null);
+    log('✅ Root: ' + DRIVE_ROOT_FOLDER_NAME);
+    const claimFolderName = getClaimFolderName();
+    log('📁 Creating: ' + claimFolderName);
+    driveCurrentClaimFolderId = await findOrCreateFolder(claimFolderName, driveRootFolderId);
+    log('✅ Claim folder ready');
+    const sourceItems = manifest.filter(m => m.type === 'source');
+    let sourceFolderId = null;
+    if (sourceItems.length > 0) {
+      sourceFolderId = await findOrCreateFolder('Source Documents', driveCurrentClaimFolderId);
+      log('📁 Source Documents folder ready');
+    }
+    for (const item of manifest) {
+      setStatus(item.key, 'Uploading…', 'dfl-uploading');
+      log('⬆ ' + item.fileName + '…');
+      try {
+        if (item.type === 'report') {
+          if (item.key === 'json') {
+            await uploadJSONToDrive(gatherCurrentReportData(), item.fileName, driveCurrentClaimFolderId);
+          } else {
+            let html = '';
+            if (item.key === 'survey') html = buildFullPageHTML(buildSurveyReportHTML(), 'Final Survey Report');
+            else if (item.key === 'spot') html = buildFullPageHTML(buildSpotSurveyHTML(), 'Spot Survey Report');
+            else if (item.key === 'bill') html = buildFullPageHTML(buildBillCheckHTML(), 'Bill Check Report');
+            else if (item.key === 'ri') html = buildFullPageHTML(buildRIReportHTML(), 'Reinspection Report');
+            else if (item.key === 'fee') html = buildFullPageHTML(buildFeeBillHTMLContent(), 'Surveyor Fee Bill');
+            await uploadHTMLToDrive(html, item.fileName, driveCurrentClaimFolderId);
+          }
+        } else {
+          const targetFolder = sourceFolderId || driveCurrentClaimFolderId;
+          if (item.key.startsWith('photo_')) {
+            const idx = parseInt(item.key.split('_')[1]);
+            await uploadFileToDrive(uploadedDocs['photos'][idx], targetFolder, item.fileName);
+          } else {
+            const f = uploadedDocs[item.key];
+            await uploadFileToDrive(Array.isArray(f) ? f[0] : f, targetFolder, item.fileName);
+          }
+        }
+        setStatus(item.key, '✅ Done', 'dfl-done');
+        done++; progressFill.style.width = Math.round((done/total)*100) + '%';
+        log('✅ ' + item.fileName);
+      } catch(err) {
+        setStatus(item.key, '⚠ Error', 'dfl-error');
+        log('❌ ' + item.fileName + ': ' + err.message);
+        if (err.message.includes('expired')) { onDriveSessionExpired(); break; }
+      }
+    }
+    const openBtn = document.getElementById('drive-open-btn');
+    if (openBtn && driveCurrentClaimFolderId) {
+      openBtn.style.display = 'inline-flex';
+      openBtn.onclick = () => window.open('https://drive.google.com/drive/folders/' + driveCurrentClaimFolderId, '_blank');
+    }
+    log(`<span style="color:var(--teal);font-weight:700;">🎉 Complete! ${done}/${total} files uploaded.</span>`);
+    showToast('☁️ ' + done + ' files saved to Google Drive!', 'success');
+    loadDriveStats();
+    listAllClaimFolders();
+  } catch(err) {
+    log('<span style="color:var(--red);">❌ Error: ' + err.message + '</span>');
+    showToast('Drive upload failed: ' + err.message, 'error');
+    if (err.message.includes('expired')) onDriveSessionExpired();
+  } finally {
+    btn.disabled = false; btn.textContent = '☁️ Upload All to Drive';
+  }
+}
+
+async function quickSaveToDrive(reportType) {
+  if (!driveAccessToken) {
+    if (!driveClientId) { showToast('Set up Google Drive first — click ☁️ Drive in menu', 'error'); showPage('drive'); return; }
+    requestDriveToken(); return;
+  }
+  if (!gv('f-reg-no')) { showToast('Enter vehicle registration number first', 'error'); return; }
+  showToast('Saving to Drive…', 'ai');
+  try {
+    if (!driveRootFolderId) driveRootFolderId = await findOrCreateFolder(DRIVE_ROOT_FOLDER_NAME, null);
+    if (!driveCurrentClaimFolderId) driveCurrentClaimFolderId = await findOrCreateFolder(getClaimFolderName(), driveRootFolderId);
+    const prefix = (gv('f-reg-no')||'REPORT').replace(/\s+/g,'').replace(/[^A-Z0-9]/gi,'_');
+    let html, fileName;
+    if (reportType === 'survey') { html = buildFullPageHTML(buildSurveyReportHTML(), 'Final Survey Report'); fileName = prefix + '_Final_Survey_Report.html'; }
+    else if (reportType === 'bill-check') { html = buildFullPageHTML(buildBillCheckHTML(), 'Bill Check'); fileName = prefix + '_Bill_Check_Report.html'; }
+    else if (reportType === 'ri') { html = buildFullPageHTML(buildRIReportHTML(), 'Reinspection Report'); fileName = prefix + '_Reinspection_Report.html'; }
+    await uploadHTMLToDrive(html, fileName, driveCurrentClaimFolderId);
+    showToast('✅ Saved to Drive: ' + fileName, 'success');
+  } catch(err) {
+    showToast('Drive error: ' + err.message, 'error');
+    if (err.message.includes('expired')) onDriveSessionExpired();
+  }
+}
+
+function onDriveSessionExpired() {
+  driveAccessToken = null; localStorage.removeItem('drive_access_token');
+  showToast('Drive session expired — reconnecting…', 'ai');
+  setTimeout(() => requestDriveToken(), 800);
+}
+
+function openDriveFolder() {
+  const url = driveCurrentClaimFolderId
+    ? 'https://drive.google.com/drive/folders/' + driveCurrentClaimFolderId
+    : 'https://drive.google.com/drive/search?q=' + encodeURIComponent(DRIVE_ROOT_FOLDER_NAME);
+  window.open(url, '_blank');
+}
+
+async function loadDriveStats() {
+  if (!driveAccessToken) return;
+  try {
+    if (!driveRootFolderId) { try { driveRootFolderId = await findOrCreateFolder(DRIVE_ROOT_FOLDER_NAME, null); } catch(e) { return; } }
+    const q = `'${driveRootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    const res = await driveAPI('GET', 'files?q=' + encodeURIComponent(q) + '&fields=files(id)&pageSize=100');
+    const count = (res.files || []).length;
+    const el = document.getElementById('ds-claims-count');
+    if (el) el.textContent = count;
+  } catch(e) { /* non-critical */ }
+}
+
+async function listAllClaimFolders() {
+  if (!driveAccessToken) return;
+  const container = document.getElementById('drive-folders-list');
+  if (!container) return;
+  container.innerHTML = '<div style="padding:14px;text-align:center;"><div class="spinner spinner-green" style="margin:0 auto;width:20px;height:20px;border-width:3px;"></div></div>';
+  try {
+    if (!driveRootFolderId) driveRootFolderId = await findOrCreateFolder(DRIVE_ROOT_FOLDER_NAME, null);
+    const q = `'${driveRootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    const res = await driveAPI('GET', 'files?q=' + encodeURIComponent(q) + '&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&pageSize=50');
+    const folders = res.files || [];
+    const countEl = document.getElementById('ds-claims-count');
+    if (countEl) countEl.textContent = folders.length;
+    if (folders.length === 0) {
+      container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;"><div style="font-size:2rem;margin-bottom:8px;">📂</div>No claim folders yet. Upload your first report above.</div>';
+      return;
+    }
+    let html = '';
+    folders.forEach(f => {
+      const mod = new Date(f.modifiedTime).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+      html += `<div class="drive-folder-card" onclick="window.open('https://drive.google.com/drive/folders/${f.id}','_blank')">
+        <span class="dfc-icon">📁</span>
+        <div style="flex:1;min-width:0;">
+          <div class="dfc-name">${f.name}</div>
+          <div class="dfc-meta">Modified: ${mod}</div>
+        </div>
+        <span class="dfc-arrow">↗</span>
+      </div>`;
+    });
+    container.innerHTML = html;
+  } catch(err) {
+    container.innerHTML = `<div style="padding:14px;color:var(--red);font-size:0.82rem;">Error: ${err.message}</div>`;
+  }
+}
+
+function buildFullPageHTML(bodyHTML, title) {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>${title}</title><link href='https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap' rel='stylesheet'/><style>@page{margin:8mm 10mm;size:A4 portrait;}*{box-sizing:border-box;}body{font-family:'DM Sans',Arial,sans-serif;font-size:7.8pt;line-height:1.3;color:#000;margin:16px;padding:0;}table{border-collapse:collapse;width:100%;font-size:7.8pt;}td,th{padding:2px 4px;}p{margin:0 0 4px 0;}.no-print{display:none;}@media print{.btn-print{display:none!important;}}</style></head><body>${bodyHTML}<button onclick="window.print()" style="position:fixed;bottom:18px;right:18px;background:#1a7a6e;color:#fff;border:none;border-radius:24px;padding:10px 20px;font-size:0.85rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.2);font-family:sans-serif;" class="btn-print">🖨 Print / Save PDF</button></body></html>`;
+}
+
+function buildFeeBillHTMLContent() {
+  calcFeeTotal();
+  const p=parseFloat(gv('fee-prof'))||0, r=parseFloat(gv('fee-ri'))||0, t=parseFloat(gv('fee-travel'))||0,
+    ph=(parseFloat(gv('fee-photos-count'))||0)*(parseFloat(gv('fee-photo-rate'))||0),
+    po=parseFloat(gv('fee-postal'))||0, tot=p+r+t+ph+po;
+  const fa=v=>v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return getSurveyorHeader()+`<div style="text-align:center;font-weight:700;font-size:1rem;margin-bottom:10px;">SURVEYOR FEE BILL</div><table style="width:100%;font-size:0.82rem;border-collapse:collapse;margin-bottom:8px;"><tr><td style="color:#666;">Report No.</td><td>${gv('f-report-no')}</td><td style="text-align:right;color:#666;">Date:</td><td style="text-align:right;font-weight:700;">${gv('f-report-date')}</td></tr><tr><td colspan="4">Insurer: <strong>${gv('f-insurer')}</strong> | Policy: ${gv('f-policy-no')} | Claim: ${gv('f-claim-no')}</td></tr><tr><td colspan="4">Insured: <strong>${gv('f-insured-name')}</strong> — ${gv('f-reg-no')}</td></tr></table><table style="width:100%;border-collapse:collapse;border:1px solid #000;font-size:0.82rem;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="padding:6px 8px;text-align:left;width:30px;">Sr.</th><th style="padding:6px 8px;text-align:left;">Particular</th><th style="padding:6px 8px;text-align:right;width:90px;">Amount ₹</th></tr></thead><tbody><tr><td style="padding:5px 8px;">1</td><td style="padding:5px 8px;">Professional Fees ₹${fa(p)} + RI Fees ₹${fa(r)}</td><td style="padding:5px 8px;text-align:right;">${fa(p+r)}</td></tr><tr><td style="padding:5px 8px;">2</td><td style="padding:5px 8px;">Travelling / Conveyance (${gv('fee-travel-note')})</td><td style="padding:5px 8px;text-align:right;">${fa(t)}</td></tr><tr><td style="padding:5px 8px;">3</td><td style="padding:5px 8px;">Digital Photo Charges ${gv('fee-photos-count')} Nos @ ₹${gv('fee-photo-rate')}</td><td style="padding:5px 8px;text-align:right;">${fa(ph)}</td></tr><tr><td style="padding:5px 8px;">4</td><td style="padding:5px 8px;">Postal / Courier</td><td style="padding:5px 8px;text-align:right;">${fa(po)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td colspan="2" style="padding:7px 8px;text-align:right;font-weight:700;">TOTAL</td><td style="padding:7px 8px;text-align:right;font-weight:700;">${fa(tot)}</td></tr></tbody></table><div style="margin:6px 0;font-style:italic;font-size:0.76rem;">RUPEES ${numberToWords(tot)} ONLY</div>${getSigBlock()}<div style="margin-top:14px;font-size:0.78rem;"><strong>Bank Details:</strong> ${gv('bank-name')} | A/C: ${gv('bank-ac')} | IFSC: ${gv('bank-ifsc')} | PAN: ${gv('bank-pan')}</div>`;
+}
+
+// Extend showPage to refresh drive list when navigating to drive page
+const _showPageOrig = showPage;
+showPage = function(id) {
+  _showPageOrig(id);
+  if (id === 'drive' && driveAccessToken) refreshDriveFileList();
+};
+
+// ============================================================
+// END GOOGLE DRIVE INTEGRATION  
+// ============================================================
+
 window.addEventListener('load', () => {
   // Pre-fill surveyor profile defaults
   document.getElementById('sp-name').value = 'VIKRAM PATIL';
@@ -4128,7 +5106,7 @@ window.addEventListener('load', () => {
     addVoiceButtonToField('spot-police-station', 'Police Station Name');
     addVoiceButtonToField('spot-diary-no', 'Station Diary Number');
     addVoiceButtonToField('spot-tp-details', 'Third Party Details');
-    addVoiceButtonToField('spot-damage-details', 'Damage Details');
+    addVoiceButtonToField('spot-comments', 'Damage Details / Comments');
     addVoiceButtonToField('spot-comments', 'Additional Comments');
   }, 500);
   
@@ -4137,6 +5115,8 @@ window.addEventListener('load', () => {
   renderSpotDamageRows();
   startAutoSave();
   registerServiceWorker();
+  // Initialize Google Drive connection state
+  loadDriveConfig();
 });
 </script>
 </body>
