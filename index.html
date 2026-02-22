@@ -57,6 +57,56 @@ body{font-family:'Barlow',sans-serif;font-size:14px;color:var(--ink);background:
 .progress-dot.done{background:var(--teal)}
 .progress-dot.active{background:var(--amber)}
 .claim-date{font-size:11px;color:var(--muted2)}
+.dash-search-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.dash-search-wrap{position:relative;flex:1;min-width:180px;max-width:340px}
+.dash-search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted2)}
+.dash-search-input{width:100%;padding:7px 10px 7px 34px;border:1px solid var(--border2);border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--ink);background:var(--panel);outline:none;box-sizing:border-box;transition:border-color 0.15s}
+.dash-search-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,159,138,0.1)}
+.dash-search-input::placeholder{color:var(--muted2)}
+.dash-filter-pills{display:flex;gap:6px;flex-wrap:wrap}
+.dash-pill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.04em;cursor:pointer;border:1px solid var(--border2);background:var(--panel);color:var(--muted);transition:all 0.15s;white-space:nowrap}
+.dash-pill:hover{border-color:var(--teal);color:var(--teal)}
+.dash-pill.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.dash-no-results{text-align:center;padding:40px 20px;color:var(--muted)}
+.dash-no-results .empty-icon{font-size:32px;margin-bottom:8px}
+.dash-no-results .empty-title{font-size:16px;font-weight:600;color:var(--ink2);margin-bottom:4px}
+/* ── Fix ② status badges ── */
+.badge-completed{background:var(--green-bg);color:var(--green);border:1px solid #a7f3d0}
+.badge-on-hold{background:var(--amber-bg);color:#92400e;border:1px solid #fcd34d}
+.ws-status-action-btn{padding:4px 10px;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;border:1px solid;transition:all 0.15s;font-family:'Barlow',sans-serif}
+.ws-status-action-btn.complete{background:var(--green-bg);color:var(--green);border-color:#a7f3d0}
+.ws-status-action-btn.complete:hover{background:var(--green);color:#fff}
+.ws-status-action-btn.hold{background:var(--amber-bg);color:#92400e;border-color:#fcd34d}
+.ws-status-action-btn.hold:hover{background:var(--amber);color:#fff}
+.ws-status-action-btn.reactivate{background:var(--blue-bg);color:var(--blue);border-color:#bfdbfe}
+.ws-status-action-btn.reactivate:hover{background:var(--blue);color:#fff}
+/* ── Fix ③ spot cost total ── */
+.spot-cost-total{padding:8px 14px;background:var(--ink);color:#fff;border-radius:0 0 8px 8px;font-size:12px;display:flex;justify-content:flex-end;gap:16px;align-items:center}
+/* ── Fix ④ voice input ── */
+.mic-btn{display:none;align-items:center;gap:5px;padding:4px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid var(--border2);background:var(--panel);color:var(--muted);cursor:pointer;transition:all 0.15s;margin-top:5px;font-family:'Barlow',sans-serif}
+.mic-btn:hover{border-color:var(--teal);color:var(--teal)}
+.mic-btn.recording{border-color:var(--red);color:var(--red);background:var(--red-bg);animation:pulse-mic 1s infinite}
+.voice-enabled .mic-btn{display:inline-flex}
+@keyframes pulse-mic{0%,100%{opacity:1}50%{opacity:0.5}}
+.voice-toggle{display:flex;align-items:center;gap:6px;padding:6px 12px;margin:4px 8px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);background:transparent;transition:all 0.15s;font-family:'Barlow',sans-serif}
+.voice-toggle:hover{border-color:rgba(255,255,255,0.3);color:#fff}
+.voice-toggle.active{border-color:var(--teal);color:var(--teal);background:rgba(14,159,138,0.1)}
+.voice-toggle .vtog-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.3);transition:background 0.15s}
+.voice-toggle.active .vtog-dot{background:var(--teal)}
+/* voice modal */
+.voice-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;align-items:center;justify-content:center}
+.voice-modal-overlay.open{display:flex}
+.voice-modal{background:var(--panel);border-radius:14px;padding:24px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.voice-modal-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.voice-modal-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.voice-recording-indicator{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--red-bg);border:1px solid #fecaca;border-radius:8px;margin-bottom:14px}
+.voice-rec-dot{width:10px;height:10px;border-radius:50%;background:var(--red);animation:pulse-mic 1s infinite;flex-shrink:0}
+.voice-rec-label{font-size:12px;color:var(--red);font-weight:600}
+.voice-rec-time{margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--red)}
+.voice-transcription-area{width:100%;min-height:100px;border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--ink);resize:vertical;box-sizing:border-box;outline:none;transition:border-color 0.15s}
+.voice-transcription-area:focus{border-color:var(--teal)}
+.voice-modal-actions{display:flex;gap:8px;margin-top:14px}
+.voice-processing-msg{font-size:12px;color:var(--muted);text-align:center;padding:8px;display:none}
 .wizard-body{flex:1;overflow-y:auto;padding:32px;max-width:760px;margin:0 auto;width:100%}
 .wizard-step{display:none}
 .wizard-step.active{display:block}
@@ -223,6 +273,7 @@ table.at tr:hover td{background:#f8fbfa}
     <div class="nav-section" style="margin-top:8px">Settings</div>
     <div class="nav-item" onclick="showPage('profile')"><span class="nav-icon">👤</span> Surveyor Profile</div>
     <div style="padding:10px 12px 6px"><div id="drive-nav-badge" class="drive-badge disconnected" onclick="connectDrive()">☁ Drive: Not connected</div></div>
+    <div style="padding:0 4px 6px"><button class="voice-toggle" id="voice-toggle-btn" onclick="toggleVoiceInput()"><span class="vtog-dot"></span> 🎙 Voice Input: OFF</button></div>
     <div class="nav-item" onclick="showPage('dep')"><span class="nav-icon">📉</span> Dep. Schedule</div>
   </nav>
   <div class="sidebar-profile" onclick="showPage('profile')">
@@ -257,6 +308,19 @@ table.at tr:hover td{background:#f8fbfa}
       <div style="display:flex;gap:8px">
         <button class="btn btn-secondary btn-sm" onclick="exportClaims()">↓ Export CSV</button>
         <button class="btn btn-primary btn-sm" onclick="startNewClaim()">＋ New Claim</button>
+      </div>
+    </div>
+    <div class="dash-search-bar">
+      <div class="dash-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="dash-search-input" id="dashboard-search" type="text" placeholder="Search reg no, insured, claim no, insurer…" oninput="filterDashboard()" autocomplete="off">
+      </div>
+      <div class="dash-filter-pills">
+        <span class="dash-pill active" id="pill-all"       onclick="setDashPill('all')">All</span>
+        <span class="dash-pill"        id="pill-spot"      onclick="setDashPill('spot')">📍 Spot</span>
+        <span class="dash-pill"        id="pill-final"     onclick="setDashPill('final')">🔧 Final</span>
+        <span class="dash-pill"        id="pill-active"    onclick="setDashPill('active')">🔄 Active</span>
+        <span class="dash-pill"        id="pill-submitted" onclick="setDashPill('submitted')">✅ Submitted</span>
       </div>
     </div>
     <div id="claims-container"></div>
@@ -307,9 +371,9 @@ table.at tr:hover td{background:#f8fbfa}
         <div class="card-header"><h3>Claim &amp; Policy</h3></div>
         <div class="card-body">
           <div class="form-grid">
-            <div class="form-group"><label class="form-label">Claim Number <span id="wz-claim-optional" style="color:var(--muted);font-weight:400">(optional for Spot)</span></label><input class="form-input" id="wz-claim-no" placeholder="CL/HDF/2025/12345"/></div>
+            <div class="form-group"><label class="form-label">Claim Number <span id="wz-claim-optional" style="color:var(--muted);font-weight:400">(optional — leave blank to auto-fill SPOT-REGNO)</span></label><input class="form-input" id="wz-claim-no" placeholder="CL/HDF/2025/12345 or leave blank for SPOT-REGNO"/></div>
             <div class="form-group"><label class="form-label">Policy Number</label><input class="form-input" id="wz-policy-no" placeholder="2311002813P117584390"/></div>
-            <div class="form-group"><label class="form-label">Vehicle Reg. Number</label><input class="form-input" id="wz-reg-no" placeholder="MH-15-AV-1234" style="text-transform:uppercase"/></div>
+            <div class="form-group"><label class="form-label">Vehicle Reg. Number</label><input class="form-input" id="wz-reg-no" placeholder="MH-15-AV-1234" style="text-transform:uppercase" oninput="onWzRegNoInput(this)"/></div>
             <div class="form-group"><label class="form-label">Insurer</label><input class="form-input" id="wz-insurer" placeholder="HDFC ERGO General Insurance Co. Ltd."/></div>
             <div class="form-group"><label class="form-label">Report Number</label><input class="form-input" id="wz-report-no"/></div>
             <div class="form-group"><label class="form-label">Date of Accident</label><input class="form-input" type="datetime-local" id="wz-doa"/></div>
@@ -331,6 +395,7 @@ table.at tr:hover td{background:#f8fbfa}
       <div style="display:flex;align-items:center;gap:12px">
         <div><div class="ws-vehicle" id="ws-veh-title">—</div><div class="ws-insured" id="ws-insured-title">—</div></div>
         <div id="ws-status-bar" style="margin-left:4px"></div>
+        <div id="ws-status-actions" style="display:flex;gap:5px;margin-left:6px"></div>
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn btn-secondary btn-sm" onclick="saveClaim()">💾 Save</button>
           <button class="btn btn-ghost btn-sm" onclick="deleteClaim()">🗑</button>
@@ -446,7 +511,7 @@ table.at tr:hover td{background:#f8fbfa}
     <div class="form-group span2"><label class="form-label">Date of Survey</label><input class="form-input" type="date" id="f-survey-date"/></div>
     <div class="form-group span2"><label class="form-label">Place of Survey / Workshop</label><input class="form-input" id="f-survey-place"/></div>
     <div class="form-group span4"><label class="form-label">Third Party Details</label><input class="form-input" id="f-tp" placeholder="NIL or describe third party involvement"/></div>
-    <div class="form-group span4"><label class="form-label">Cause & Nature of Accident</label><textarea class="form-textarea" id="f-cause"></textarea></div>
+    <div class="form-group span4"><label class="form-label">Cause & Nature of Accident</label><textarea class="form-textarea" id="f-cause"></textarea><button class="mic-btn" onclick="startVoiceInput('f-cause')">🎙 Dictate</button></div>
   </div>
 </div></div>
 
@@ -592,6 +657,7 @@ table.at tr:hover td{background:#f8fbfa}
 
   <div class="card"><div class="card-header"><h3>Cause & Nature of Accident</h3></div><div class="card-body">
     <textarea class="form-textarea" id="spot-accident-cause" style="min-height:80px"></textarea>
+    <button class="mic-btn" onclick="startVoiceInput('spot-accident-cause')">🎙 Dictate</button>
   </div></div>
 
   <div class="card"><div class="card-header"><h3>Damage Assessment at Spot</h3><button class="btn btn-secondary btn-sm" onclick="addSpotDamageRow('','')">+ Add Component</button></div><div class="card-body">
@@ -605,6 +671,7 @@ table.at tr:hover td{background:#f8fbfa}
 
   <div class="card"><div class="card-header"><h3>Observations & Comments</h3></div><div class="card-body">
     <textarea class="form-textarea" id="spot-comments" placeholder="Observations, towing instructions, workshop details…" style="min-height:80px"></textarea>
+    <button class="mic-btn" onclick="startVoiceInput('spot-comments')">🎙 Dictate</button>
   </div></div>
 </div>
 
@@ -628,6 +695,7 @@ table.at tr:hover td{background:#f8fbfa}
       <div class="form-group"><label class="form-label">Photo Rate (₹)</label><input class="form-input" id="fee-photo-rate" value="10" onchange="calcFeeTotal()"/></div>
       <div class="form-group"><label class="form-label">Postal / Courier (₹)</label><input class="form-input" id="fee-postal" value="50" onchange="calcFeeTotal()"/></div>
       <div class="form-group"><label class="form-label">Haltage (₹)</label><input class="form-input" id="fee-haltage" value="0" onchange="calcFeeTotal()"/></div>
+      <div class="form-group span2"><label class="form-label">Fee Paid By / Reimbursement Note <span style="color:var(--muted);font-weight:400">(optional — if paid by insured for reimbursement)</span></label><input class="form-input" id="fee-paid-by" placeholder="e.g. Fee of ₹2,500 paid by Insured Ramesh Kumar via UPI on 22-Feb-2026. Reimbursement due from HDFC ERGO."/></div>
     </div>
     <div style="margin-top:10px;padding:10px 14px;background:var(--ink);border-radius:8px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
       <span style="color:rgba(255,255,255,0.5);font-size:12px">Prof: <b id="fs-prof" style="color:#fff">₹0</b></span>
@@ -647,7 +715,7 @@ table.at tr:hover td{background:#f8fbfa}
       <div class="form-group"><label class="form-label">Repair Quality</label><select class="form-select" id="ri-repair-quality"><option value="satisfactory">Satisfactory — As per report</option><option value="good">Good — Better than expected</option><option value="partial">Partial — Some items pending</option><option value="unsatisfactory">Unsatisfactory</option></select></div>
       <div class="form-group"><label class="form-label">Vehicle Condition</label><select class="form-select" id="ri-vehicle-condition"><option value="roadworthy">Road Worthy — Fit for operation</option><option value="needs-attention">Needs Minor Attention</option><option value="not-roadworthy">Not Road Worthy</option></select></div>
       <div class="form-group"><label class="form-label">Salvage Status</label><select class="form-select" id="ri-salvage-status"><option value="collected">Collected & Verified</option><option value="not-collected">Not Collected</option><option value="partial">Partial</option><option value="na">N/A</option></select></div>
-      <div class="form-group span2"><label class="form-label">Additional Observations</label><textarea class="form-textarea" id="ri-observations"></textarea></div>
+      <div class="form-group span2"><label class="form-label">Additional Observations</label><textarea class="form-textarea" id="ri-observations"></textarea><button class="mic-btn" onclick="startVoiceInput('ri-observations')">🎙 Dictate</button></div>
     </div>
     <div id="ri-parts-container" style="margin-top:14px"></div>
   </div></div>
@@ -773,6 +841,15 @@ let sigDataUrl     = null;
 let stampDataUrl   = null;
 let uploadedDocs   = {};
 let extractedData  = {};
+// Fix ② — manual claim status override
+let manualStatus   = null; // 'completed' | 'on-hold' | null
+// Fix ④ — voice input state
+let voiceInputEnabled  = false;
+let voiceMediaRecorder = null;
+let voiceChunks        = [];
+let voiceTargetId      = null;
+let voiceTimerInterval = null;
+let voiceSeconds       = 0;
 
 // ═══════════════════════════════════════════════════════════
 // AI PROMPTS (verbatim from original, all 10 document types)
@@ -890,7 +967,7 @@ const ALL_FIELD_IDS = [
   'f-dl-valid-transport','f-dl-auth','f-dl-type','f-dl-mdl-verified',
   'f-doa','f-poa','f-survey-date','f-survey-place','f-tp','f-cause',
   'sum-excess','sum-salvage',
-  'fee-prof','fee-ri','fee-travel','fee-travel-note','fee-photos-count','fee-photo-rate','fee-postal','fee-haltage',
+  'fee-prof','fee-ri','fee-travel','fee-travel-note','fee-photos-count','fee-photo-rate','fee-postal','fee-haltage','fee-paid-by',
   'spot-report-no','spot-report-date','spot-allot-date','spot-survey-datetime',
   'spot-driver-name','spot-dl-parent','spot-dl-relation','spot-mdl-no','spot-dl-authority',
   'spot-dl-issue','spot-dl-valid','spot-dl-valid-transport','spot-dl-type','spot-mdl-verified','spot-dl-invalid-remarks',
@@ -912,7 +989,9 @@ function restoreFields(f) { if(!f)return; ALL_FIELD_IDS.forEach(id=>{const el=do
 function computeStatus() {
   const hasDocs = Object.keys(uploadedDocs).length>0;
   const hasAssess = assessRows.length>0;
-  if (!gv('f-claim-no')) return 'new';
+  // Final surveys require a claim number to progress past "new"
+  // Spot surveys never block on this — claim number is optional and auto-filled as SPOT-REGNO
+  if (!gv('f-claim-no') && surveyType!=='spot') return 'new';
   if (!hasDocs) return 'docs-pending';
   if (!hasAssess) return 'in-progress';
   if (!gv('f-report-no')) return 'assessment-done';
@@ -922,7 +1001,7 @@ function computeStatus() {
 function getCurrentClaimData() {
   return {
     id:currentClaimId, surveyType, vehicleType, depType,
-    status:computeStatus(),
+    status: manualStatus || computeStatus(),
     updatedAt:new Date().toISOString(),
     regNo:gv('f-reg-no')||gv('spot-report-no'),
     insuredName:gv('f-insured-name'),
@@ -955,10 +1034,19 @@ async function saveClaim() {
 function deleteClaim() {
   if (!currentClaimId||!confirm('Delete this claim permanently?')) return;
   saveClaims(loadClaims().filter(c=>c.id!==currentClaimId));
-  currentClaimId=null;
+  currentClaimId=null; manualStatus=null;
   hideSidebarClaim();
   showPage('dashboard');
   showToast('Claim deleted');
+}
+
+// Fix ② — manually set terminal status on a claim
+function setClaimStatus(status) {
+  manualStatus = status; // null = reactivate (go back to auto-computed)
+  const label = status==='completed'?'Completed':status==='on-hold'?'On Hold':'Reactivated';
+  saveClaim();
+  updateWorkspaceHeader();
+  showToast('Claim marked as '+label, 'success');
 }
 
 function loadClaim(id) {
@@ -969,6 +1057,8 @@ function loadClaim(id) {
   vehicleType=c.vehicleType||'private';
   depType=c.depType||'nil';
   gDriveFolderId=c.gDriveFolderId||null;
+  // Fix ②: restore manual status if it was explicitly set
+  manualStatus = (c.status==='completed'||c.status==='on-hold') ? c.status : null;
   assessRows=c.assessRows||[]; spotDamageRows=c.spotDamageRows||[]; riParts=c.riParts||[];
   uploadedDocs={}; extractedData={};
   restoreFields(c.fields||{});
@@ -979,6 +1069,8 @@ function loadClaim(id) {
 // ═══════════════════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════════════════
+let _dashPill = 'all'; // active filter pill
+
 function refreshDashboard() {
   const claims = loadClaims();
   const badge = document.getElementById('badge-active');
@@ -987,13 +1079,60 @@ function refreshDashboard() {
   document.getElementById('st-active').textContent = claims.filter(c=>c.status!=='submitted').length;
   const mo=new Date().getMonth(),yr=new Date().getFullYear();
   document.getElementById('st-month').textContent = claims.filter(c=>{const d=new Date(c.updatedAt||0);return d.getMonth()===mo&&d.getFullYear()===yr;}).length;
+  // reset search + pill when navigating back to dashboard
+  const si = document.getElementById('dashboard-search');
+  if (si) si.value = '';
+  _dashPill = 'all';
+  ['all','spot','final','active','submitted'].forEach(p=>{
+    const el = document.getElementById('pill-'+p);
+    if (el) el.classList.toggle('active', p==='all');
+  });
+  renderClaimsGrid(claims);
+}
+
+function setDashPill(pill) {
+  _dashPill = pill;
+  ['all','spot','final','active','submitted'].forEach(p=>{
+    const el = document.getElementById('pill-'+p);
+    if (el) el.classList.toggle('active', p===pill);
+  });
+  filterDashboard();
+}
+
+function filterDashboard() {
+  const q = (document.getElementById('dashboard-search').value||'').toLowerCase().trim();
+  let claims = loadClaims();
+  // pill filter
+  if (_dashPill === 'spot')      claims = claims.filter(c => c.surveyType === 'spot');
+  else if (_dashPill === 'final') claims = claims.filter(c => c.surveyType !== 'spot');
+  else if (_dashPill === 'active')    claims = claims.filter(c => c.status !== 'submitted' && c.status !== 'completed' && c.status !== 'on-hold');
+  else if (_dashPill === 'submitted') claims = claims.filter(c => c.status === 'submitted' || c.status === 'completed');
+  // text search across key fields
+  if (q) {
+    claims = claims.filter(c => {
+      const haystack = [
+        c.regNo, c.insuredName, c.claimNo, c.insurer,
+        c.fields?.['f-reg-no'], c.fields?.['f-policy-no'],
+        c.fields?.['f-claim-no'], c.fields?.['f-insurer']
+      ].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+  renderClaimsGrid(claims, q || _dashPill !== 'all');
+}
+
+function renderClaimsGrid(claims, isFiltered) {
   const container = document.getElementById('claims-container');
-  if (!claims.length) {
+  if (!loadClaims().length) {
     container.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No claims yet</div><div class="empty-desc">Create your first claim to get started.</div><button class="btn btn-primary" onclick="startNewClaim()">＋ Create First Claim</button></div>`;
     return;
   }
-  const SC = {new:'#94A3B8','docs-pending':'#F59E0B','in-progress':'#3B82F6','assessment-done':'#0E9F8A',submitted:'#10B981'};
-  const SL = {new:'New','docs-pending':'Docs Pending','in-progress':'In Progress','assessment-done':'Ready',submitted:'Submitted'};
+  if (!claims.length) {
+    container.innerHTML = `<div class="dash-no-results"><div class="empty-icon">🔍</div><div class="empty-title">No matching claims</div><div style="font-size:13px;color:var(--muted)">Try a different search term or filter.</div></div>`;
+    return;
+  }
+  const SC = {new:'#94A3B8','docs-pending':'#F59E0B','in-progress':'#3B82F6','assessment-done':'#0E9F8A',submitted:'#10B981',completed:'#059669','on-hold':'#D97706'};
+  const SL = {new:'New','docs-pending':'Docs Pending','in-progress':'In Progress','assessment-done':'Ready',submitted:'Submitted',completed:'✅ Completed','on-hold':'⏸ On Hold'};
   const VL = {private:'🚗 Private','comm-pass':'🚌 Passenger','comm-goods':'🚛 Goods'};
   const prog = ['docs-pending','in-progress','assessment-done','submitted'];
   container.innerHTML = '<div class="claims-grid">' + claims.slice().reverse().map(c => {
@@ -1050,6 +1189,44 @@ function selectSurveyType(type) {
   document.getElementById('stype-msg').style.display='flex';
   document.getElementById('stype-msg-text').textContent = type==='spot' ? 'Spot Survey — accident scene inspection. Spot Report + Fee Bill.' : 'Final Survey — full workshop assessment. All 5 reports available.';
   document.getElementById('wz-next0').disabled=false;
+  // Update claim number field guidance based on survey type
+  const claimOptional = document.getElementById('wz-claim-optional');
+  const claimInput = document.getElementById('wz-claim-no');
+  if (claimOptional) {
+    claimOptional.textContent = type==='spot'
+      ? '(optional — leave blank to auto-fill SPOT-REGNO)'
+      : '(required)';
+  }
+  if (claimInput) {
+    claimInput.placeholder = type==='spot'
+      ? 'CL/HDF/2025/12345 or leave blank for SPOT-REGNO'
+      : 'CL/HDF/2025/12345';
+    // If reg number already typed and this is spot, pre-fill suggestion
+    const reg = (document.getElementById('wz-reg-no')||{}).value||'';
+    if (type==='spot' && reg && !claimInput.value) {
+      claimInput.value = 'SPOT-'+reg.replace(/[-\s]/g,'').toUpperCase();
+      claimInput.classList.add('ai-filled');
+    }
+  }
+}
+
+// Auto-suggest SPOT-REGNO in claim number field as surveyor types the reg number
+function onWzRegNoInput(input) {
+  input.value = input.value.toUpperCase();
+  if (newSType !== 'spot') return;
+  const claimInput = document.getElementById('wz-claim-no');
+  if (!claimInput) return;
+  const reg = input.value.replace(/[-\s]/g,'').toUpperCase();
+  // Only auto-fill if field is empty or was previously auto-filled (ai-filled class)
+  if (!claimInput.value || claimInput.classList.contains('ai-filled')) {
+    if (reg) {
+      claimInput.value = 'SPOT-'+reg;
+      claimInput.classList.add('ai-filled');
+    } else {
+      claimInput.value = '';
+      claimInput.classList.remove('ai-filled');
+    }
+  }
 }
 
 function wizardStep1b() {
@@ -1090,6 +1267,12 @@ async function createClaim() {
   setV('f-claim-no',gv('wz-claim-no')); setV('f-policy-no',gv('wz-policy-no'));
   setV('f-reg-no',gv('wz-reg-no').toUpperCase()); setV('f-insurer',gv('wz-insurer'));
   setV('f-report-no',gv('wz-report-no')); setV('spot-report-no',gv('wz-report-no'));
+  // Spot survey with no claim number — auto-fill SPOT-REGNO so status never gets stuck at "new"
+  if (surveyType==='spot' && !gv('wz-claim-no')) {
+    const reg = gv('wz-reg-no').replace(/[-\s]/g,'').toUpperCase();
+    const spotClaimNo = 'SPOT-'+(reg||'UNKNOWN');
+    setV('f-claim-no', spotClaimNo);
+  }
   if(gv('wz-doa')) setV('f-doa',gv('wz-doa'));
   const today=new Date().toISOString().split('T')[0];
   setV('f-report-date',today); setV('f-survey-date',today);
@@ -1146,15 +1329,24 @@ function updateWorkspaceHeader() {
   document.getElementById('ws-insured-title').textContent=ins+(gv('f-make')?` — ${gv('f-make')} ${gv('f-model')}`:'');
   document.getElementById('sb-veh').textContent=veh;
   document.getElementById('sb-insured').textContent=ins;
-  const SM={new:'badge-grey','docs-pending':'badge-amber','in-progress':'badge-blue','assessment-done':'badge-teal',submitted:'badge-green'};
-  const SL={new:'New','docs-pending':'Docs Pending','in-progress':'In Progress','assessment-done':'Ready',submitted:'Submitted'};
+  const SM={new:'badge-grey','docs-pending':'badge-amber','in-progress':'badge-blue','assessment-done':'badge-teal',submitted:'badge-green',completed:'badge-completed','on-hold':'badge-on-hold'};
+  const SL={new:'New','docs-pending':'Docs Pending','in-progress':'In Progress','assessment-done':'Ready',submitted:'Submitted',completed:'✅ Completed','on-hold':'⏸ On Hold'};
   const VL={private:'🚗 Private','comm-pass':'🚌 Passenger','comm-goods':'🚛 Goods'};
-  const s=computeStatus();
+  const s = manualStatus || computeStatus();
   document.getElementById('ws-status-bar').innerHTML=`<span class="badge ${SM[s]||'badge-grey'}">${SL[s]||'New'}</span><span class="badge badge-grey" style="margin-left:6px">${VL[vehicleType]||''}</span>`;
   const stbadge=document.getElementById('ws-survey-type-badge');
   if(stbadge) stbadge.innerHTML=`<span class="badge ${surveyType==='spot'?'badge-spot':'badge-final'}" style="margin-left:6px">${surveyType==='spot'?'📍 Spot':'🔧 Final'}</span>`;
   const drivebtn=document.getElementById('ws-drive-folder-btn');
   if(drivebtn) drivebtn.style.display=gDriveFolderId?'inline-flex':'none';
+  // Fix ② — status action buttons
+  const actionsEl = document.getElementById('ws-status-actions');
+  if (actionsEl) {
+    if (s === 'completed' || s === 'on-hold') {
+      actionsEl.innerHTML = `<button class="ws-status-action-btn reactivate" onclick="setClaimStatus(null)">↩ Reactivate</button>`;
+    } else {
+      actionsEl.innerHTML = `<button class="ws-status-action-btn complete" onclick="setClaimStatus('completed')" title="Mark this claim as fully completed">✅ Mark Complete</button><button class="ws-status-action-btn hold" onclick="setClaimStatus('on-hold')" title="Put this claim on hold">⏸ On Hold</button>`;
+    }
+  }
 }
 
 function showSidebarClaim() {
@@ -1337,6 +1529,43 @@ async function extractPhotos(photos) {
   }
 }
 
+// Handles estimate uploaded as multiple image files (e.g. 4-page estimate scanned as 4 JPGs)
+// Flattens all files into one image array then routes through existing chunk logic
+async function extractEstimateMulti(files) {
+  const slot=document.getElementById('slot-estimate'), st=document.getElementById('slot-status-estimate');
+  if(slot) slot.className='doc-slot processing';
+  if(st) st.textContent=`Converting ${files.length} files…`;
+  try {
+    const allImages=[];
+    for(let i=0;i<files.length;i++) {
+      if(st) st.textContent=`File ${i+1}/${files.length} — converting…`;
+      const imgs=await fileToImages(files[i],(pg,total)=>{
+        if(st) st.textContent=`File ${i+1}/${files.length} — page ${pg}/${total}…`;
+      });
+      allImages.push(...imgs);
+    }
+    if(st) st.textContent=`Extracting (${allImages.length} page${allImages.length>1?'s':''} across ${files.length} files)…`;
+    const prompt=DOC_PROMPTS.estimate;
+    let data;
+    if(allImages.length<=5) {
+      const parts=allImages.map(b64=>({inlineData:{mimeType:'image/png',data:b64}}));
+      parts.push({text:prompt});
+      const raw=await callGroq(parts,4000);
+      data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    } else {
+      data=await processInChunks(allImages,prompt,4000,'estimate');
+    }
+    extractedData['estimate']=data;
+    if(slot) slot.className='doc-slot done';
+    if(st) st.textContent=`✓ ${files.length} files · ${allImages.length} pages extracted`;
+    return {key:'estimate',data,ok:true};
+  } catch(err) {
+    if(slot) slot.className='doc-slot error';
+    if(st) st.textContent='✗ '+err.message.substring(0,30);
+    return {key:'estimate',err:err.message,ok:false};
+  }
+}
+
 async function processAllDocs() {
   const keys=Object.keys(uploadedDocs);
   if(!keys.length){showToast('Upload at least one document first','error');return;}
@@ -1349,8 +1578,14 @@ async function processAllDocs() {
   const tasks=[];
   for(const k of keys){
     if(k==='photos')continue;
-    const f=uploadedDocs[k]; const file=Array.isArray(f)?f[0]:f;
-    if(file)tasks.push(extractDoc(k,file));
+    const f=uploadedDocs[k];
+    // Estimate uploaded as multiple image files — flatten and process all pages
+    if(k==='estimate' && Array.isArray(f) && f.length>1) {
+      tasks.push(extractEstimateMulti(f));
+    } else {
+      const file=Array.isArray(f)?f[0]:f;
+      if(file) tasks.push(extractDoc(k,file));
+    }
   }
   if(uploadedDocs.photos?.length) tasks.push(extractPhotos(uploadedDocs.photos));
   st.textContent=`Running ${tasks.length} AI extractions in parallel…`;
@@ -1592,7 +1827,7 @@ function recalcSummary() {
 // SPOT DAMAGE ROWS
 // ═══════════════════════════════════════════════════════════
 function addSpotDamageRow(comp,dmg) {
-  spotDamageRows.push({id:Date.now()+Math.random(),component:comp,damage:dmg});
+  spotDamageRows.push({id:Date.now()+Math.random(),component:comp,damage:dmg,estimatedCost:0});
   renderSpotDamageRows();
 }
 function deleteSpotRow(id){spotDamageRows=spotDamageRows.filter(r=>String(r.id)!==String(id));renderSpotDamageRows();}
@@ -1600,7 +1835,7 @@ function renderSpotDamageRows() {
   const container=document.getElementById('spot-damage-rows');
   if(!spotDamageRows.length){container.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted2);font-size:13px">No components added yet.</div>';return;}
   const opts=SPOT_COMPONENTS.map(c=>`<option value="${c}">${c}</option>`).join('');
-  container.innerHTML=spotDamageRows.map((row,idx)=>{
+  const rows = spotDamageRows.map((row,idx)=>{
     const isCustom=row.component&&!SPOT_COMPONENTS.includes(row.component);
     const selOpts=opts.replace(`value="${row.component}"`,`value="${row.component}" selected`);
     const finalOpts=isCustom?selOpts+`<option value="${row.component}" selected>${row.component}</option>`:selOpts;
@@ -1608,11 +1843,15 @@ function renderSpotDamageRows() {
       <div>
         <select class="form-select" style="font-size:11px;padding:4px 7px" onchange="spotDamageRows[${idx}].component=this.value;renderSpotDamageRows()"><option value="">Select Component</option>${finalOpts}</select>
         ${isCustom?`<input class="form-input" style="margin-top:5px;font-size:11px;padding:3px 7px" value="${row.component}" onchange="spotDamageRows[${idx}].component=this.value"/>`:row.component==='OTHER'?`<input class="form-input" style="margin-top:5px;font-size:11px;padding:3px 7px" value="${row.damage||''}" onchange="spotDamageRows[${idx}].component=this.value" placeholder="Specify component…"/>`:''}
+        <div style="margin-top:5px"><label style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted)">Est. Cost (₹)</label><input class="form-input" type="number" min="0" style="margin-top:2px;font-size:11px;padding:3px 7px;width:100px" value="${row.estimatedCost||0}" onchange="spotDamageRows[${idx}].estimatedCost=parseFloat(this.value)||0;renderSpotDamageRows()" placeholder="0"/></div>
       </div>
       <textarea class="form-textarea" style="min-height:50px;font-size:12px" onchange="spotDamageRows[${idx}].damage=this.value" placeholder="Describe damage…">${row.damage||''}</textarea>
       <button class="btn btn-danger btn-sm" style="padding:3px 7px;margin-top:2px" onclick="deleteSpotRow('${row.id}')">✕</button>
     </div>`;
   }).join('');
+  const totalCost = spotDamageRows.reduce((s,r)=>s+(r.estimatedCost||0),0);
+  const fmt = v => '₹ '+v.toLocaleString('en-IN');
+  container.innerHTML = rows + (totalCost>0 ? `<div class="spot-cost-total"><span style="color:rgba(255,255,255,0.5);font-size:11px">INDICATIVE TOTAL (subject to final assessment)</span><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--teal)">${fmt(totalCost)}</span></div>` : '');
 }
 
 function autoCalcLoad() {
@@ -1830,7 +2069,8 @@ function buildSpotSurveyHTML() {
   const ntExpired=dlValid&&new Date(dlValid)<today,tExpired=dlTValid&&new Date(dlTValid)<today;
   const gvwVal=parseFloat(gv('spot-gvw'))||0,ulwVal=parseFloat(gv('spot-ulw'))||0,capVal=parseFloat(gv('spot-load-capacity'))||0,actualLoad=parseFloat(gv('spot-actual-load'))||0;
   const overload=isGoods&&actualLoad>0&&capVal>0&&actualLoad>capVal;
-  const dmgRows=spotDamageRows.filter(r=>r.component||r.damage).map((r,i)=>`<tr><td style="${td}text-align:center;">${i+1}</td><td style="${td}font-weight:600;">${r.component||'—'}</td><td style="${td}">${r.damage||'—'}</td></tr>`).join('');
+  const dmgRows=spotDamageRows.filter(r=>r.component||r.damage).map((r,i)=>`<tr><td style="${td}text-align:center;">${i+1}</td><td style="${td}font-weight:600;">${r.component||'—'}</td><td style="${td}">${r.damage||'—'}</td><td style="${td}text-align:right;">${r.estimatedCost>0?'₹ '+r.estimatedCost.toLocaleString('en-IN'):'—'}</td></tr>`).join('');
+  const dmgTotal=spotDamageRows.reduce((s,r)=>s+(r.estimatedCost||0),0);
   return`${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:3px;text-decoration:underline;">SPOT SURVEY REPORT</div>
 <table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Spot Report No.</td><td style="${td}font-weight:700;width:32%;">${gv('spot-report-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Report</td><td style="${td}font-weight:700;">${gv('spot-report-date')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Allotment</td><td style="${td}">${gv('spot-allot-date')}</td><td style="${td}color:#444;font-size:6.8pt;">Date & Time of Survey</td><td style="${td}">${gv('spot-survey-datetime')}</td></tr></table>
@@ -1846,7 +2086,7 @@ ${isGoods?`<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#f
 <div style="font-size:7.2pt;margin-bottom:4px;padding:2px 4px;border:0.4pt solid #bbb;line-height:1.5;">${gv('spot-accident-cause')||'—'}</div>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">G. DAMAGE PARTICULARS AT SPOT</div>
 <div style="font-size:6.8pt;margin-bottom:3px;padding:2px 4px;">Severity: <b>${gv('spot-damage-severity').toUpperCase()}</b> &nbsp;|&nbsp; Airbags Deployed: <b>${gv('spot-airbags').toUpperCase()}</b> &nbsp;|&nbsp; Drivable: <b>${gv('spot-drivable')}</b></div>
-${dmgRows.length?`<table style="${ts}"><thead><tr><th style="${th};width:20pt;text-align:center;">Sr.</th><th style="${th}">Component</th><th style="${th}">Damage Description</th></tr></thead><tbody>${dmgRows}</tbody></table>`:'<p style="font-size:7pt;padding:2px 4px;border:0.4pt solid #bbb;">Damage observations: '+gv('spot-comments')+'</p>'}
+${dmgRows.length?`<table style="${ts}"><thead><tr><th style="${th};width:20pt;text-align:center;">Sr.</th><th style="${th}">Component</th><th style="${th}">Damage Description</th><th style="${th}text-align:right;width:50pt;">Est. ₹</th></tr></thead><tbody>${dmgRows}${dmgTotal>0?`<tr style="background:#f0fdf8"><td colspan="3" style="${td}text-align:right;font-weight:700;font-size:6.5pt;color:#555;">INDICATIVE TOTAL (subject to final assessment)</td><td style="${td}text-align:right;font-weight:700;">₹ ${dmgTotal.toLocaleString('en-IN')}</td></tr>`:''}</tbody></table>`:'<p style="font-size:7pt;padding:2px 4px;border:0.4pt solid #bbb;">Damage observations: '+gv('spot-comments')+'</p>'}
 ${gv('spot-comments')?`<div style="font-size:7pt;margin-top:4px;padding:2px 4px;border:0.4pt solid #bbb;">Comments: ${gv('spot-comments')}</div>`:''}
 <p style="font-size:6.5pt;line-height:1.5;margin:8px 0;text-align:justify;color:#333;">We hereby certify that we have carried out spot survey of the above vehicle and report as above without prejudice and subject to terms and conditions of the policy.</p>
 ${getSigBlock()}`;
@@ -1886,6 +2126,7 @@ function buildFeeBillHTML() {
 <table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:14px;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="padding:7px 9px;text-align:left;">Particulars</th><th style="padding:7px 9px;text-align:right;">Amount</th></tr></thead><tbody>${rows.map((r,i)=>`<tr style="background:${i%2===0?'#fff':'#f8f5f0'}"><td style="padding:6px 9px;">${r[0]}</td><td style="padding:6px 9px;text-align:right;">${r[1]}</td></tr>`).join('')}<tr style="background:#f0fdf8;"><td style="padding:6px 9px;font-weight:600;">Sub-Total</td><td style="padding:6px 9px;text-align:right;font-weight:600;">${fa(total)}</td></tr><tr><td style="padding:6px 9px;">GST @ 18% (SAC 998549)</td><td style="padding:6px 9px;text-align:right;">${fa(gstAmt)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;">TOTAL PAYABLE</td><td style="padding:9px;text-align:right;font-weight:700;">${fa(grand)}</td></tr></tbody></table>
 <div style="font-style:italic;font-size:0.78rem;margin-bottom:14px;">RUPEES ${numberToWords(grand)} ONLY</div>
 <div style="font-size:0.78rem;margin-top:14px;padding:10px 12px;background:#f5f7fa;border-radius:6px;line-height:1.8;"><strong>Payment Details:</strong><br/>Bank: ${gv('bank-name')} &nbsp;|&nbsp; A/c: ${gv('bank-ac')} &nbsp;|&nbsp; IFSC: ${gv('bank-ifsc')}<br/>GST No.: ${gv('sp-gst')||'N/A'} &nbsp;|&nbsp; PAN: ${gv('bank-pan')}</div>
+${gv('fee-paid-by')?`<div style="font-size:0.75rem;margin-top:10px;padding:9px 12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;line-height:1.7;"><strong>⚠ Fee Payment / Reimbursement Note:</strong><br/>${gv('fee-paid-by')}</div>`:''}
 ${getSigBlock()}`;
 }
 
@@ -1906,7 +2147,135 @@ function genReport(type) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// INIT
+// FIX ④ — VOICE INPUT (Groq Whisper API)
+// ═══════════════════════════════════════════════════════════
+function toggleVoiceInput() {
+  voiceInputEnabled = !voiceInputEnabled;
+  const btn = document.getElementById('voice-toggle-btn');
+  if (btn) {
+    btn.classList.toggle('active', voiceInputEnabled);
+    btn.innerHTML = `<span class="vtog-dot"></span> 🎙 Voice Input: ${voiceInputEnabled?'ON':'OFF'}`;
+  }
+  // Show/hide mic buttons by toggling class on body
+  document.body.classList.toggle('voice-enabled', voiceInputEnabled);
+  showToast('Voice Input ' + (voiceInputEnabled?'ON — mic buttons visible':'OFF'), voiceInputEnabled?'success':'');
+}
+
+function startVoiceInput(targetId) {
+  if (!voiceInputEnabled) { showToast('Enable Voice Input first (sidebar toggle)', 'error'); return; }
+  const apiKey = localStorage.getItem('groq_api_key');
+  if (!apiKey) { showToast('Groq API key required — add it in Surveyor Profile', 'error'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('Microphone not supported in this browser', 'error'); return;
+  }
+  voiceTargetId = targetId;
+  voiceChunks = [];
+  voiceSeconds = 0;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
+    voiceMediaRecorder = new MediaRecorder(stream, {mimeType: MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'audio/ogg'});
+    voiceMediaRecorder.ondataavailable = e => { if (e.data.size > 0) voiceChunks.push(e.data); };
+    voiceMediaRecorder.onstop = () => { stream.getTracks().forEach(t=>t.stop()); transcribeVoice(); };
+    voiceMediaRecorder.start(500);
+    // Show modal
+    const overlay = document.getElementById('voice-modal-overlay');
+    overlay.classList.add('open');
+    document.getElementById('voice-transcription-text').value = '';
+    document.getElementById('voice-transcription-text').placeholder = 'Transcription will appear here after you stop…';
+    document.getElementById('voice-stop-btn').style.display = 'inline-flex';
+    document.getElementById('voice-confirm-btn').style.display = 'none';
+    document.getElementById('voice-append-btn').style.display = 'none';
+    document.getElementById('voice-processing-msg').style.display = 'none';
+    document.getElementById('voice-rec-indicator').style.display = 'flex';
+    document.getElementById('voice-modal-sub').textContent = 'Recording… speak clearly. Press Stop when done.';
+    // Timer
+    clearInterval(voiceTimerInterval);
+    voiceTimerInterval = setInterval(() => {
+      voiceSeconds++;
+      const m=Math.floor(voiceSeconds/60), s=voiceSeconds%60;
+      const el=document.getElementById('voice-rec-time'); if(el) el.textContent=m+':'+(s<10?'0':'')+s;
+    }, 1000);
+  }).catch(e => {
+    showToast('Microphone access denied: ' + e.message, 'error');
+  });
+}
+
+function stopVoiceRecording() {
+  clearInterval(voiceTimerInterval);
+  document.getElementById('voice-stop-btn').style.display = 'none';
+  document.getElementById('voice-rec-indicator').style.display = 'none';
+  document.getElementById('voice-modal-sub').textContent = 'Transcribing with AI — please wait…';
+  document.getElementById('voice-processing-msg').style.display = 'block';
+  if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+    voiceMediaRecorder.stop();
+  } else {
+    transcribeVoice();
+  }
+}
+
+async function transcribeVoice() {
+  const apiKey = localStorage.getItem('groq_api_key');
+  if (!voiceChunks.length) { showToast('No audio recorded', 'error'); discardVoiceTranscription(); return; }
+  try {
+    const mimeType = voiceChunks[0].type || 'audio/webm';
+    const audioBlob = new Blob(voiceChunks, {type: mimeType});
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'recording.webm');
+    formData.append('model', 'whisper-large-v3-turbo');
+    formData.append('language', 'en');
+    formData.append('response_format', 'text');
+    const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey },
+      body: formData
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    document.getElementById('voice-transcription-text').value = text.trim();
+    document.getElementById('voice-transcription-text').placeholder = '';
+    document.getElementById('voice-modal-sub').textContent = 'Transcription complete — edit if needed, then confirm.';
+    document.getElementById('voice-processing-msg').style.display = 'none';
+    // Show existing content note
+    const targetEl = document.getElementById(voiceTargetId);
+    if (targetEl && targetEl.value.trim()) {
+      document.getElementById('voice-append-btn').style.display = 'inline-flex';
+    }
+    document.getElementById('voice-confirm-btn').style.display = 'inline-flex';
+  } catch(e) {
+    showToast('Transcription failed: ' + e.message, 'error');
+    document.getElementById('voice-processing-msg').style.display = 'none';
+    document.getElementById('voice-modal-sub').textContent = 'Transcription failed — type manually or try again.';
+    document.getElementById('voice-transcription-text').placeholder = 'Type here manually…';
+    document.getElementById('voice-confirm-btn').style.display = 'inline-flex';
+  }
+}
+
+function confirmVoiceTranscription(append) {
+  const text = document.getElementById('voice-transcription-text').value.trim();
+  if (!text) { discardVoiceTranscription(); return; }
+  const targetEl = document.getElementById(voiceTargetId);
+  if (targetEl) {
+    if (append && targetEl.value.trim()) {
+      targetEl.value = targetEl.value.trim() + ' ' + text;
+    } else {
+      targetEl.value = text;
+    }
+    // Trigger auto-save debounce
+    targetEl.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+  discardVoiceTranscription();
+  showToast('Voice transcription inserted', 'success');
+}
+
+function discardVoiceTranscription() {
+  clearInterval(voiceTimerInterval);
+  if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+    try { voiceMediaRecorder.stop(); } catch(e){}
+  }
+  voiceMediaRecorder = null; voiceChunks = []; voiceTargetId = null; voiceSeconds = 0;
+  document.getElementById('voice-modal-overlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════
 
 // ─── Google Drive — Full Two-Way Sync (Index File approach) ───
@@ -2149,5 +2518,29 @@ window.addEventListener('load', () => {
   });
 });
 </script>
+
+<!-- ═══ VOICE INPUT MODAL ═══ -->
+<div class="voice-modal-overlay" id="voice-modal-overlay">
+  <div class="voice-modal">
+    <div class="voice-modal-title">🎙 Voice Input</div>
+    <div class="voice-modal-sub" id="voice-modal-sub">Recording… speak clearly. Press Stop when done.</div>
+    <div class="voice-recording-indicator" id="voice-rec-indicator">
+      <div class="voice-rec-dot"></div>
+      <div class="voice-rec-label">RECORDING</div>
+      <div class="voice-rec-time" id="voice-rec-time">0:00</div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);display:block;margin-bottom:5px">Transcription — edit before confirming</label>
+      <textarea class="voice-transcription-area" id="voice-transcription-text" placeholder="Transcription will appear here after you stop recording…"></textarea>
+      <div class="voice-processing-msg" id="voice-processing-msg">⚡ Transcribing with Groq Whisper AI…</div>
+    </div>
+    <div class="voice-modal-actions">
+      <button class="btn btn-danger btn-sm" id="voice-stop-btn" onclick="stopVoiceRecording()">⏹ Stop Recording</button>
+      <button class="btn btn-primary btn-sm" id="voice-confirm-btn" onclick="confirmVoiceTranscription()" style="display:none">✓ Confirm & Insert</button>
+      <button class="btn btn-secondary btn-sm" id="voice-append-btn" onclick="confirmVoiceTranscription(true)" style="display:none" title="Append to existing text">⊕ Append</button>
+      <button class="btn btn-ghost btn-sm" onclick="discardVoiceTranscription()">✕ Discard</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
