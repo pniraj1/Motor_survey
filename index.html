@@ -692,7 +692,7 @@ table.at tr:hover td{background:#f8fbfa}
         <input type="file" accept="image/*" multiple onchange="handlePhotoSheetUpload(this)"/>
         <div style="font-size:28px;margin-bottom:8px">📷</div>
         <div style="font-weight:600;color:var(--ink);font-size:14px">Click or drag photos here</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Select up to <span id="ps-max-label">4</span> photos — extras will be ignored</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Upload any number — extras continue on the next sheet</div>
       </div>
       <div id="ps-thumb-grid" class="photo-sheet-thumb-grid layout-4"></div>
       <div id="ps-count-note" style="font-size:12px;color:var(--muted);margin-top:10px;display:none"></div>
@@ -1963,23 +1963,17 @@ function setPhotoLayout(n) {
 function handlePhotoSheetUpload(input) {
   const files = Array.from(input.files);
   if (!files.length) return;
-  const remaining = psLayout - psPhotos.length;
-  if (remaining <= 0) { showToast(`Layout already full (${psLayout} photos). Clear some first.`, 'error'); return; }
-  const toLoad = files.slice(0, remaining);
   let loaded = 0;
-  toLoad.forEach(file => {
+  files.forEach(file => {
     const reader = new FileReader();
     reader.onload = e => {
       psPhotos.push({ dataUrl: e.target.result, name: file.name });
       loaded++;
-      if (loaded === toLoad.length) {
-        renderPSThumbs();
-        if (files.length > remaining) showToast(`Only ${remaining} photo${remaining>1?'s':''} added — layout full.`, '');
-      }
+      if (loaded === files.length) renderPSThumbs();
     };
     reader.readAsDataURL(file);
   });
-  input.value = ''; // reset so same files can be re-added if cleared
+  input.value = '';
 }
 
 function removePSPhoto(idx) {
@@ -1996,26 +1990,40 @@ function renderPSThumbs() {
   const grid = document.getElementById('ps-thumb-grid');
   const note = document.getElementById('ps-count-note');
   if (!grid) return;
-  // Update grid layout class
   grid.className = `photo-sheet-thumb-grid layout-${psLayout}`;
-  // Render slots up to psLayout
+
+  const totalPhotos = psPhotos.length;
+  const totalSheets = Math.max(1, Math.ceil(totalPhotos / psLayout));
   let html = '';
-  for (let i = 0; i < psLayout; i++) {
-    if (psPhotos[i]) {
-      html += `<div class="ps-thumb">
-        <img src="${psPhotos[i].dataUrl}" alt="Photo ${i+1}"/>
-        <button class="ps-remove" onclick="removePSPhoto(${i})" title="Remove">✕</button>
-      </div>`;
-    } else {
-      html += `<div class="ps-thumb"><div class="ps-thumb-empty"><span style="font-size:20px">📷</span><span>Slot ${i+1}</span></div></div>`;
+
+  for (let sheet = 0; sheet < totalSheets; sheet++) {
+    // Sheet label separator (only when more than one sheet)
+    if (totalSheets > 1) {
+      html += `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--muted);padding:8px 0 4px;border-top:${sheet>0?'1px solid var(--border)':'none'};margin-top:${sheet>0?'10px':'0'}">Sheet ${sheet+1} of ${totalSheets}</div>`;
+    }
+    // Slots for this sheet
+    for (let slot = 0; slot < psLayout; slot++) {
+      const idx = sheet * psLayout + slot;
+      if (psPhotos[idx]) {
+        html += `<div class="ps-thumb">
+          <img src="${psPhotos[idx].dataUrl}" alt="Photo ${idx+1}"/>
+          <button class="ps-remove" onclick="removePSPhoto(${idx})" title="Remove">✕</button>
+        </div>`;
+      } else {
+        // Empty slot — white, no icon, no grey
+        html += `<div class="ps-thumb" style="background:#fff;border:1px dashed var(--border2);"></div>`;
+      }
     }
   }
+
   grid.innerHTML = html;
-  // Count note
+
   if (note) {
-    if (psPhotos.length > 0) {
+    if (totalPhotos > 0) {
       note.style.display = 'block';
-      note.textContent = `${psPhotos.length} of ${psLayout} slots filled. ${psLayout - psPhotos.length > 0 ? (psLayout - psPhotos.length) + ' empty slot(s) will print as blank.' : 'All slots filled — ready to print.'}`;
+      const lastSheetCount = totalPhotos % psLayout || psLayout;
+      const emptyOnLast = psLayout - lastSheetCount;
+      note.textContent = `${totalPhotos} photo${totalPhotos>1?'s':''} across ${totalSheets} sheet${totalSheets>1?'s':''}${emptyOnLast>0?' — last sheet has '+emptyOnLast+' blank slot'+(emptyOnLast>1?'s':''):''}. Ready to print.`;
     } else {
       note.style.display = 'none';
     }
@@ -2023,12 +2031,11 @@ function renderPSThumbs() {
 }
 
 function buildPhotoSheetHTML() {
-  // Grid definitions: [cols, rows, cellWidthMM, cellHeightMM]
   const layouts = {
-    4:  { cols:2, rows:2, cw:92,  ch:65  },
-    6:  { cols:3, rows:2, cw:60,  ch:65  },
-    8:  { cols:4, rows:2, cw:44,  ch:65  },
-    9:  { cols:3, rows:3, cw:60,  ch:42  }
+    4:  { cols:2, cw:92,  ch:65  },
+    6:  { cols:3, cw:60,  ch:65  },
+    8:  { cols:4, cw:44,  ch:65  },
+    9:  { cols:3, cw:60,  ch:42  }
   };
   const L = layouts[psLayout];
   const veh = gv('f-reg-no') || gv('spot-report-no') || '';
@@ -2037,17 +2044,55 @@ function buildPhotoSheetHTML() {
   const today = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
   const surveyor = gv('sp-name') || 'SURVEYOR';
 
-  // Build grid cells
-  let cells = '';
-  for (let i = 0; i < psLayout; i++) {
-    const imgHtml = psPhotos[i]
-      ? `<img src="${psPhotos[i].dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block;"/>`
-      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;color:#aaa;font-size:10pt;">📷</div>`;
-    cells += `<td style="width:${L.cw}mm;height:${L.ch}mm;padding:1.5mm;border:0.3pt solid #ccc;vertical-align:top;">
-      <div style="width:100%;height:calc(100% - 14pt);overflow:hidden;border-radius:1mm;">${imgHtml}</div>
-      <div style="font-size:6pt;color:#666;text-align:center;padding-top:2pt;line-height:1.3;">${psPhotos[i] ? 'Photo '+(i+1) : ''}</div>
-    </td>`;
-    if ((i+1) % L.cols === 0 && i < psLayout-1) cells += '</tr><tr>';
+  // Chunk photos into sheets of psLayout each
+  const totalSheets = Math.max(1, Math.ceil(psPhotos.length / psLayout));
+
+  const headerHTML = (sheetNum) => `
+  <div style="border-bottom:1.5pt solid #0d1b2a;padding-bottom:4pt;margin-bottom:5pt;display:flex;justify-content:space-between;align-items:flex-end;">
+    <div>
+      <div style="font-size:9pt;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${surveyor} — Vehicle Damage Photos</div>
+      <div style="font-size:7pt;color:#555;margin-top:2pt;">
+        ${veh ? 'Vehicle: <b>'+veh+'</b>' : ''} ${insured ? '&nbsp;|&nbsp; Insured: '+insured : ''} ${reportNo ? '&nbsp;|&nbsp; Report: '+reportNo : ''}
+      </div>
+    </div>
+    <div style="font-size:7pt;color:#777;text-align:right;">
+      Date: ${today}<br>
+      Sheet ${sheetNum} of ${totalSheets} &nbsp;|&nbsp; ${psLayout} per page
+    </div>
+  </div>`;
+
+  const footerHTML = `
+  <div style="margin-top:5pt;border-top:0.5pt solid #ccc;padding-top:4pt;display:flex;justify-content:space-between;align-items:flex-end;">
+    <div style="font-size:6.5pt;color:#888;">Photos submitted by surveyor as part of survey documentation. Not to scale.</div>
+    ${sigDataUrl ? `<div style="text-align:center;"><img src="${sigDataUrl}" style="max-height:40pt;max-width:80pt;object-fit:contain;"/><div style="font-size:6pt;font-weight:700;margin-top:2pt;">${surveyor}</div><div style="font-size:5.5pt;color:#555;">Lic. Surveyor &amp; Loss Assessor</div></div>` : ''}
+  </div>`;
+
+  let sheetsHTML = '';
+  for (let s = 0; s < totalSheets; s++) {
+    const pageBreak = s > 0 ? 'page-break-before:always;' : '';
+    let cells = '';
+    for (let i = 0; i < psLayout; i++) {
+      const globalIdx = s * psLayout + i;
+      const photo = psPhotos[globalIdx];
+      // Empty slot = white background, no icon, no text
+      const imgHtml = photo
+        ? `<img src="${photo.dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block;"/>`
+        : `<div style="width:100%;height:100%;background:#fff;"></div>`;
+      const label = photo ? `Photo ${globalIdx + 1}` : '';
+      cells += `<td style="width:${L.cw}mm;height:${L.ch}mm;padding:1.5mm;border:0.3pt solid #ccc;vertical-align:top;">
+        <div style="width:100%;height:calc(100% - 14pt);overflow:hidden;border-radius:1mm;">${imgHtml}</div>
+        <div style="font-size:6pt;color:#666;text-align:center;padding-top:2pt;line-height:1.3;">${label}</div>
+      </td>`;
+      if ((i + 1) % L.cols === 0 && i < psLayout - 1) cells += '</tr><tr>';
+    }
+    sheetsHTML += `
+    <div style="${pageBreak}">
+      ${headerHTML(s + 1)}
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+        <tr>${cells}</tr>
+      </table>
+      ${footerHTML}
+    </div>`;
   }
 
   return `<!DOCTYPE html><html><head><title>Photo Sheet — ${veh}</title>
@@ -2056,24 +2101,7 @@ function buildPhotoSheetHTML() {
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;font-size:8pt;color:#000;background:#fff}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style></head><body>
-<div style="border-bottom:1.5pt solid #0d1b2a;padding-bottom:4pt;margin-bottom:5pt;display:flex;justify-content:space-between;align-items:flex-end;">
-  <div>
-    <div style="font-size:9pt;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${surveyor} — Vehicle Damage Photos</div>
-    <div style="font-size:7pt;color:#555;margin-top:2pt;">
-      ${veh ? 'Vehicle: <b>'+veh+'</b>' : ''} ${insured ? '&nbsp;|&nbsp; Insured: '+insured : ''} ${reportNo ? '&nbsp;|&nbsp; Report: '+reportNo : ''}
-    </div>
-  </div>
-  <div style="font-size:7pt;color:#777;text-align:right;">Date: ${today}<br>Layout: ${psLayout} photos</div>
-</div>
-<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
-  <tr>${cells}</tr>
-</table>
-<div style="margin-top:5pt;border-top:0.5pt solid #ccc;padding-top:4pt;display:flex;justify-content:space-between;align-items:flex-end;">
-  <div style="font-size:6.5pt;color:#888;">Photos submitted by surveyor as part of survey documentation. Not to scale.</div>
-  ${sigDataUrl ? `<div style="text-align:center;"><img src="${sigDataUrl}" style="max-height:40pt;max-width:80pt;object-fit:contain;"/><div style="font-size:6pt;font-weight:700;margin-top:2pt;">${surveyor}</div><div style="font-size:5.5pt;color:#555;">Lic. Surveyor &amp; Loss Assessor</div></div>` : ''}
-</div>
-</body></html>`;
+</style></head><body>${sheetsHTML}</body></html>`;
 }
 
 function genPhotoSheet() {
