@@ -227,6 +227,23 @@ table.at tr:hover td{background:#f8fbfa}
 .review-val-input{border:none;padding:6px 9px;font-size:12px;font-family:'Barlow',sans-serif;width:100%;background:transparent;color:var(--ink)}
 .review-val-input:focus{outline:none;background:var(--teal-light)}
 .review-val-input.ai-filled{background:var(--amber-bg)}
+/* ── Photo Sheet ── */
+.photo-layout-btn{padding:6px 16px;border-radius:8px;border:2px solid var(--border2);background:var(--panel);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em}
+.photo-layout-btn:hover{border-color:var(--teal);color:var(--teal)}
+.photo-layout-btn.active{border-color:var(--teal);background:var(--teal);color:#fff}
+.photo-drop-zone{border:2px dashed var(--border2);border-radius:10px;padding:30px 20px;text-align:center;cursor:pointer;position:relative;transition:border-color 0.15s;background:var(--panel)}
+.photo-drop-zone:hover{border-color:var(--teal)}
+.photo-drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.photo-sheet-thumb-grid{display:grid;gap:8px;margin-top:16px}
+.photo-sheet-thumb-grid.layout-4{grid-template-columns:repeat(2,1fr)}
+.photo-sheet-thumb-grid.layout-6{grid-template-columns:repeat(3,1fr)}
+.photo-sheet-thumb-grid.layout-8{grid-template-columns:repeat(4,1fr)}
+.photo-sheet-thumb-grid.layout-9{grid-template-columns:repeat(3,1fr)}
+.ps-thumb{aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:var(--surface);border:1px solid var(--border);position:relative}
+.ps-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ps-thumb-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:11px;flex-direction:column;gap:4px}
+.ps-remove{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.ps-remove:hover{background:var(--red)}
 </style>
 </head>
 <body>
@@ -656,6 +673,36 @@ table.at tr:hover td{background:#f8fbfa}
     <div class="report-card" id="rcard-fee"><div class="report-card-header"><div class="report-card-icon">💰</div><div class="report-card-name">Surveyor Fee Bill</div><div class="report-card-desc">Professional fee invoice for insurer payment.</div></div><div class="report-card-footer"><button class="btn btn-primary btn-sm" onclick="genReport('fee')">📄 Generate PDF</button></div></div>
   </div>
 
+  <div class="card">
+    <div class="card-header">
+      <h3>📷 Photo Sheet — Print on A4</h3>
+      <button class="btn btn-primary btn-sm" onclick="genPhotoSheet()">🖨 Generate Photo Sheet</button>
+    </div>
+    <div class="card-body">
+      <div style="margin-bottom:14px">
+        <div class="form-label" style="margin-bottom:8px">Layout — photos per A4 sheet</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="photo-layout-btn active" id="psl-4" onclick="setPhotoLayout(4)">4 Photos<br><span style="font-size:10px;font-weight:400;opacity:0.7">2 × 2</span></button>
+          <button class="photo-layout-btn" id="psl-6" onclick="setPhotoLayout(6)">6 Photos<br><span style="font-size:10px;font-weight:400;opacity:0.7">2 × 3</span></button>
+          <button class="photo-layout-btn" id="psl-8" onclick="setPhotoLayout(8)">8 Photos<br><span style="font-size:10px;font-weight:400;opacity:0.7">2 × 4</span></button>
+          <button class="photo-layout-btn" id="psl-9" onclick="setPhotoLayout(9)">9 Photos<br><span style="font-size:10px;font-weight:400;opacity:0.7">3 × 3</span></button>
+        </div>
+      </div>
+      <div class="photo-drop-zone" id="ps-drop-zone">
+        <input type="file" accept="image/*" multiple onchange="handlePhotoSheetUpload(this)"/>
+        <div style="font-size:28px;margin-bottom:8px">📷</div>
+        <div style="font-weight:600;color:var(--ink);font-size:14px">Click or drag photos here</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Select up to <span id="ps-max-label">4</span> photos — extras will be ignored</div>
+      </div>
+      <div id="ps-thumb-grid" class="photo-sheet-thumb-grid layout-4"></div>
+      <div id="ps-count-note" style="font-size:12px;color:var(--muted);margin-top:10px;display:none"></div>
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="clearPhotoSheet()">🗑 Clear All Photos</button>
+        <span style="font-size:11px;color:var(--muted2);margin-left:4px">Photos are not saved between sessions — re-upload each time.</span>
+      </div>
+    </div>
+  </div>
+
   <div class="card"><div class="card-header"><h3>Surveyor Fee Inputs</h3></div><div class="card-body">
     <div class="form-grid four">
       <div class="form-group"><label class="form-label">Professional Fees (₹)</label><input class="form-input" id="fee-prof" value="3500" onchange="calcFeeTotal()"/></div>
@@ -726,12 +773,12 @@ table.at tr:hover td{background:#f8fbfa}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
           <div class="form-label" style="margin-bottom:8px">Signature (transparent PNG)</div>
-          <div class="sig-area" style="height:90px"><input type="file" accept="image/*" onchange="loadSig(this,'sig')" style="position:absolute;inset:0;opacity:0;cursor:pointer"/><img id="sig-preview" style="max-height:80px;max-width:100%;display:none"/><span id="sig-ph" style="font-size:12px;color:var(--muted2)">Click to upload signature</span></div>
+          <div class="sig-area" style="height:180px"><input type="file" accept="image/*" onchange="loadSig(this,'sig')" style="position:absolute;inset:0;opacity:0;cursor:pointer"/><img id="sig-preview" style="max-height:160px;max-width:100%;display:none"/><span id="sig-ph" style="font-size:12px;color:var(--muted2)">Click to upload signature</span></div>
           <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="clearSig('sig')">Clear</button>
         </div>
         <div>
           <div class="form-label" style="margin-bottom:8px">Stamp / Seal</div>
-          <div class="sig-area" style="height:90px"><input type="file" accept="image/*" onchange="loadSig(this,'stamp')" style="position:absolute;inset:0;opacity:0;cursor:pointer"/><img id="stamp-preview" style="max-height:80px;max-width:100%;display:none"/><span id="stamp-ph" style="font-size:12px;color:var(--muted2)">Click to upload stamp</span></div>
+          <div class="sig-area" style="height:180px"><input type="file" accept="image/*" onchange="loadSig(this,'stamp')" style="position:absolute;inset:0;opacity:0;cursor:pointer"/><img id="stamp-preview" style="max-height:160px;max-width:100%;display:none"/><span id="stamp-ph" style="font-size:12px;color:var(--muted2)">Click to upload stamp</span></div>
           <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="clearSig('stamp')">Clear</button>
         </div>
       </div>
@@ -812,6 +859,9 @@ let sigDataUrl     = null;
 let stampDataUrl   = null;
 let uploadedDocs   = {};
 let extractedData  = {};
+// Photo Sheet
+let psPhotos       = [];   // Array of {dataUrl, name} for the current photo sheet session
+let psLayout       = 4;    // active layout: 4 | 6 | 8 | 9
 
 // ═══════════════════════════════════════════════════════════
 // AI PROMPTS (verbatim from original, all 10 document types)
@@ -1896,9 +1946,152 @@ function getSurveyorHeader() {
   const name=gv('sp-name')||'SURVEYOR NAME',qual=gv('sp-qual')||'B.Sc., Dip. in Auto Engg.',addr=gv('sp-addr')||'Address',lic=gv('sp-lic')||'—',exp=gv('sp-lic-exp')||'—',iiisla=gv('sp-iiisla')||'—',email=gv('sp-email')||'—',mob=gv('sp-mobile')||'—',cats=gv('sp-categories')||'MOTOR';
   return`<div style="border-bottom:1.2pt solid #000;padding-bottom:5px;margin-bottom:6px;"><div style="text-align:center;"><div style="font-size:13pt;font-weight:700;">${name}</div><div style="font-size:7pt;">${qual}</div><div style="font-size:7.5pt;font-weight:700;">INSURANCE SURVEYOR, LOSS ASSESSOR &amp; VALUER</div></div><div style="display:flex;justify-content:space-between;margin-top:4px;font-size:6.8pt;"><div>Lic. No.: <b>${lic}</b> &nbsp;|&nbsp; Expiry: <b>${exp}</b> &nbsp;|&nbsp; IIISLA: <b>${iiisla}</b> &nbsp;|&nbsp; E-mail: ${email} &nbsp;|&nbsp; Cell: ${mob}</div><div style="text-align:right;font-weight:700;">${cats}<br/><span style="font-weight:400;">${addr}</span></div></div></div>`;
 }
+// ═══════════════════════════════════════════════════════════
+// PHOTO SHEET — A4 print layout
+// ═══════════════════════════════════════════════════════════
+function setPhotoLayout(n) {
+  psLayout = n;
+  [4,6,8,9].forEach(x => {
+    const btn = document.getElementById('psl-'+x);
+    if (btn) btn.classList.toggle('active', x===n);
+  });
+  const maxLabel = document.getElementById('ps-max-label');
+  if (maxLabel) maxLabel.textContent = n;
+  renderPSThumbs();
+}
+
+function handlePhotoSheetUpload(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const remaining = psLayout - psPhotos.length;
+  if (remaining <= 0) { showToast(`Layout already full (${psLayout} photos). Clear some first.`, 'error'); return; }
+  const toLoad = files.slice(0, remaining);
+  let loaded = 0;
+  toLoad.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      psPhotos.push({ dataUrl: e.target.result, name: file.name });
+      loaded++;
+      if (loaded === toLoad.length) {
+        renderPSThumbs();
+        if (files.length > remaining) showToast(`Only ${remaining} photo${remaining>1?'s':''} added — layout full.`, '');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = ''; // reset so same files can be re-added if cleared
+}
+
+function removePSPhoto(idx) {
+  psPhotos.splice(idx, 1);
+  renderPSThumbs();
+}
+
+function clearPhotoSheet() {
+  psPhotos = [];
+  renderPSThumbs();
+}
+
+function renderPSThumbs() {
+  const grid = document.getElementById('ps-thumb-grid');
+  const note = document.getElementById('ps-count-note');
+  if (!grid) return;
+  // Update grid layout class
+  grid.className = `photo-sheet-thumb-grid layout-${psLayout}`;
+  // Render slots up to psLayout
+  let html = '';
+  for (let i = 0; i < psLayout; i++) {
+    if (psPhotos[i]) {
+      html += `<div class="ps-thumb">
+        <img src="${psPhotos[i].dataUrl}" alt="Photo ${i+1}"/>
+        <button class="ps-remove" onclick="removePSPhoto(${i})" title="Remove">✕</button>
+      </div>`;
+    } else {
+      html += `<div class="ps-thumb"><div class="ps-thumb-empty"><span style="font-size:20px">📷</span><span>Slot ${i+1}</span></div></div>`;
+    }
+  }
+  grid.innerHTML = html;
+  // Count note
+  if (note) {
+    if (psPhotos.length > 0) {
+      note.style.display = 'block';
+      note.textContent = `${psPhotos.length} of ${psLayout} slots filled. ${psLayout - psPhotos.length > 0 ? (psLayout - psPhotos.length) + ' empty slot(s) will print as blank.' : 'All slots filled — ready to print.'}`;
+    } else {
+      note.style.display = 'none';
+    }
+  }
+}
+
+function buildPhotoSheetHTML() {
+  // Grid definitions: [cols, rows, cellWidthMM, cellHeightMM]
+  const layouts = {
+    4:  { cols:2, rows:2, cw:92,  ch:65  },
+    6:  { cols:3, rows:2, cw:60,  ch:65  },
+    8:  { cols:4, rows:2, cw:44,  ch:65  },
+    9:  { cols:3, rows:3, cw:60,  ch:42  }
+  };
+  const L = layouts[psLayout];
+  const veh = gv('f-reg-no') || gv('spot-report-no') || '';
+  const insured = gv('f-insured-name') || '';
+  const reportNo = gv('f-report-no') || gv('spot-report-no') || '';
+  const today = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+  const surveyor = gv('sp-name') || 'SURVEYOR';
+
+  // Build grid cells
+  let cells = '';
+  for (let i = 0; i < psLayout; i++) {
+    const imgHtml = psPhotos[i]
+      ? `<img src="${psPhotos[i].dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block;"/>`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;color:#aaa;font-size:10pt;">📷</div>`;
+    cells += `<td style="width:${L.cw}mm;height:${L.ch}mm;padding:1.5mm;border:0.3pt solid #ccc;vertical-align:top;">
+      <div style="width:100%;height:calc(100% - 14pt);overflow:hidden;border-radius:1mm;">${imgHtml}</div>
+      <div style="font-size:6pt;color:#666;text-align:center;padding-top:2pt;line-height:1.3;">${psPhotos[i] ? 'Photo '+(i+1) : ''}</div>
+    </td>`;
+    if ((i+1) % L.cols === 0 && i < psLayout-1) cells += '</tr><tr>';
+  }
+
+  return `<!DOCTYPE html><html><head><title>Photo Sheet — ${veh}</title>
+<style>
+@page{size:A4 portrait;margin:8mm 8mm 8mm 8mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:8pt;color:#000;background:#fff}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div style="border-bottom:1.5pt solid #0d1b2a;padding-bottom:4pt;margin-bottom:5pt;display:flex;justify-content:space-between;align-items:flex-end;">
+  <div>
+    <div style="font-size:9pt;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${surveyor} — Vehicle Damage Photos</div>
+    <div style="font-size:7pt;color:#555;margin-top:2pt;">
+      ${veh ? 'Vehicle: <b>'+veh+'</b>' : ''} ${insured ? '&nbsp;|&nbsp; Insured: '+insured : ''} ${reportNo ? '&nbsp;|&nbsp; Report: '+reportNo : ''}
+    </div>
+  </div>
+  <div style="font-size:7pt;color:#777;text-align:right;">Date: ${today}<br>Layout: ${psLayout} photos</div>
+</div>
+<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+  <tr>${cells}</tr>
+</table>
+<div style="margin-top:5pt;border-top:0.5pt solid #ccc;padding-top:4pt;display:flex;justify-content:space-between;align-items:flex-end;">
+  <div style="font-size:6.5pt;color:#888;">Photos submitted by surveyor as part of survey documentation. Not to scale.</div>
+  ${sigDataUrl ? `<div style="text-align:center;"><img src="${sigDataUrl}" style="max-height:40pt;max-width:80pt;object-fit:contain;"/><div style="font-size:6pt;font-weight:700;margin-top:2pt;">${surveyor}</div><div style="font-size:5.5pt;color:#555;">Lic. Surveyor &amp; Loss Assessor</div></div>` : ''}
+</div>
+</body></html>`;
+}
+
+function genPhotoSheet() {
+  if (psPhotos.length === 0) {
+    showToast('Upload at least one photo first', 'error');
+    return;
+  }
+  const html = buildPhotoSheetHTML();
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 500);
+  showToast('Photo sheet opened — Print → Save as PDF');
+}
+
 function getSigBlock() {
-  const sig=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:48px;max-width:90px;object-fit:contain;"/>`:''
-  const stamp=stampDataUrl?`<img src="${stampDataUrl}" style="max-height:55px;max-width:70px;object-fit:contain;"/>`:''
+  const sig=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:96px;max-width:180px;object-fit:contain;"/>`:''
+  const stamp=stampDataUrl?`<img src="${stampDataUrl}" style="max-height:110px;max-width:140px;object-fit:contain;"/>`:''
   const name=gv('sp-name')||'SURVEYOR NAME';
   return`<div style="display:flex;justify-content:flex-end;align-items:flex-end;margin-top:14px;gap:8px;">${stamp}<div style="text-align:center;">${sig}<div style="font-weight:700;font-size:7.5pt;margin-top:2px;">${name}</div><div style="font-size:6.5pt;color:#555;">Licenced Surveyor &amp; Loss Assessor</div></div></div>`;
 }
