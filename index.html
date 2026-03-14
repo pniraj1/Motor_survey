@@ -714,6 +714,7 @@ table.at tr:hover td{background:#f8fbfa}
 
   <div class="card"><div class="card-header"><h3>Surveyor Fee Inputs</h3></div><div class="card-body">
     <div class="form-grid four">
+      <div class="form-group"><label class="form-label">Bill Date</label><input class="form-input" type="date" id="fee-bill-date"/></div>
       <div class="form-group"><label class="form-label">Professional Fees (₹)</label><input class="form-input" id="fee-prof" value="3500" onchange="calcFeeTotal()"/></div>
       <div class="form-group"><label class="form-label">RI Fees (₹)</label><input class="form-input" id="fee-ri" value="0" onchange="calcFeeTotal()"/></div>
       <div class="form-group"><label class="form-label">Travel (₹)</label><input class="form-input" id="fee-travel" value="500" onchange="calcFeeTotal()"/></div>
@@ -975,6 +976,11 @@ function switchTab(tab) {
   if (tab === 'spot')    { setTimeout(()=>{ buildCauseSuggestions('spot-accident-cause'); buildCauseSuggestions('spot-comments'); buildSpotSuggestions(); }, 150); }
   document.querySelectorAll('.ws-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
   document.querySelectorAll('.ws-panel').forEach(p => p.classList.toggle('active', p.id==='tab-'+tab));
+  // Spot mode: when opening the merged "Survey Details" tab, also show #tab-details above #tab-spot
+  if (surveyType === 'spot' && tab === 'spot') {
+    const detailsPanel = document.getElementById('tab-details');
+    if (detailsPanel) detailsPanel.classList.add('active');
+  }
   document.querySelectorAll('.nav-item[id^="nav-"]').forEach(n => n.classList.remove('active'));
   const ni = document.getElementById('nav-'+tab); if (ni) ni.classList.add('active');
 }
@@ -999,7 +1005,7 @@ const ALL_FIELD_IDS = [
   'f-dl-valid-transport','f-dl-auth','f-dl-type','f-dl-mdl-verified',
   'f-doa','f-poa','f-survey-date','f-survey-place','f-tp','f-cause',
   'sum-excess','sum-salvage',
-  'fee-prof','fee-ri','fee-travel','fee-travel-note','fee-photos-count','fee-photo-rate','fee-postal','fee-haltage','fee-include-gst','fee-advance-receipt','fee-cash-received',
+  'fee-bill-date','fee-prof','fee-ri','fee-travel','fee-travel-note','fee-photos-count','fee-photo-rate','fee-postal','fee-haltage','fee-include-gst','fee-advance-receipt','fee-cash-received',
   'spot-report-no','spot-report-date','spot-allot-date','spot-survey-datetime',
   'spot-driver-name','spot-dl-parent','spot-dl-relation','spot-mdl-no','spot-dl-authority',
   'spot-dl-issue','spot-dl-valid','spot-dl-valid-transport','spot-dl-type','spot-mdl-verified','spot-dl-invalid-remarks',
@@ -1259,16 +1265,31 @@ function applySurveyTypeUI() {
   const isSpot = surveyType === 'spot';
 
   // Tabs: hide Assessment for spot (no estimates), hide Spot tab for final
-  const assessTab = document.getElementById('tab-btn-assess');
-  const spotTab   = document.getElementById('tab-btn-spot');
-  if (assessTab) assessTab.style.display = isSpot ? 'none' : '';
-  if (spotTab)   spotTab.style.display   = isSpot ? '' : 'none';
+  const assessTab  = document.getElementById('tab-btn-assess');
+  const spotTab    = document.getElementById('tab-btn-spot');
+  const detailsTab = document.querySelector('.ws-tab[data-tab="details"]');
+  if (assessTab)  assessTab.style.display  = isSpot ? 'none' : '';
+  if (spotTab)    spotTab.style.display    = isSpot ? '' : 'none';
 
-  // If currently on assessment tab but switched to spot survey — redirect to docs
+  // Spot mode: hide "Claim Details" tab (merged into Survey Details), rename Spot tab
+  if (detailsTab) detailsTab.style.display = isSpot ? 'none' : '';
+  if (spotTab)    spotTab.textContent      = isSpot ? '📋 Survey Details' : '📍 Spot Survey';
+
+  // Sidebar nav: hide "Claim Details" item in spot mode, rename Spot nav item
+  const navDetails = document.getElementById('nav-details');
+  const navSpot    = document.getElementById('nav-spot');
+  if (navDetails) navDetails.style.display = isSpot ? 'none' : '';
+  if (navSpot) {
+    navSpot.innerHTML = isSpot
+      ? '<span class="nav-icon">📋</span> Survey Details'
+      : '<span class="nav-icon">📍</span> Spot Survey';
+  }
+
+  // If currently on a tab being hidden — redirect to Survey Details (spot) or docs (final)
   if (isSpot) {
     const activeTab = document.querySelector('.ws-tab.active');
-    if (activeTab && activeTab.getAttribute('data-tab') === 'assess') {
-      switchTab('docs');
+    if (activeTab && (activeTab.getAttribute('data-tab') === 'assess' || activeTab.getAttribute('data-tab') === 'details')) {
+      switchTab('spot');
     }
   }
 
@@ -2055,19 +2076,24 @@ function renderPSThumbs() {
 }
 
 function buildPhotoSheetHTML() {
-  // Landscape layouts: wider cells on A4 landscape (277mm × 190mm usable with 8mm margins)
+  // Precise dimensions to fill the A4 page with no wasted space.
+  // A4 portrait usable: 210mm - 16mm margins = 194mm wide, 297mm - 16mm = 281mm tall
+  // Header ~22mm + footer ~13mm + gaps ~3mm = ~38mm overhead → grid height ~243mm
+  // A4 landscape usable: 297mm - 16mm = 281mm wide, 210mm - 16mm = 194mm tall
+  // Header ~22mm + footer ~13mm + gaps ~3mm = ~38mm overhead → grid height ~156mm
+  // Cell gap handled via padding:1.5mm (no visible border)
   const layouts = {
     portrait: {
-      4:  { cols:2, cw:92,  ch:120 },
-      6:  { cols:3, cw:60,  ch:85  },
-      8:  { cols:4, cw:44,  ch:62  },
-      9:  { cols:3, cw:60,  ch:57  }
+      4: { cols:2, rows:2, cw:97,  ch:121 },
+      6: { cols:3, rows:2, cw:64,  ch:121 },
+      8: { cols:4, rows:2, cw:48,  ch:121 },
+      9: { cols:3, rows:3, cw:64,  ch:81  }
     },
     landscape: {
-      4:  { cols:2, cw:132, ch:122 },
-      6:  { cols:3, cw:87,  ch:85  },
-      8:  { cols:4, cw:64,  ch:62  },
-      9:  { cols:3, cw:87,  ch:57  }
+      4: { cols:2, rows:2, cw:140, ch:78  },
+      6: { cols:3, rows:2, cw:93,  ch:78  },
+      8: { cols:4, rows:2, cw:70,  ch:78  },
+      9: { cols:3, rows:3, cw:93,  ch:52  }
     }
   };
   const orient = psLandscape ? 'landscape' : 'portrait';
@@ -2081,7 +2107,7 @@ function buildPhotoSheetHTML() {
   const totalSheets = Math.max(1, Math.ceil(psPhotos.length / psLayout));
 
   const headerHTML = (sheetNum) => `
-  <div style="border-bottom:1.5pt solid #0d1b2a;padding-bottom:4pt;margin-bottom:5pt;display:flex;justify-content:space-between;align-items:flex-end;">
+  <div style="border-bottom:1.5pt solid #0d1b2a;padding-bottom:4pt;margin-bottom:4pt;display:flex;justify-content:space-between;align-items:flex-end;">
     <div>
       <div style="font-size:9pt;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${surveyor} — Vehicle Damage Photos</div>
       <div style="font-size:7pt;color:#555;margin-top:2pt;">
@@ -2095,37 +2121,30 @@ function buildPhotoSheetHTML() {
   </div>`;
 
   const footerHTML = `
-  <div style="margin-top:5pt;border-top:0.5pt solid #ccc;padding-top:4pt;">
-    <div style="font-size:6.5pt;color:#888;">Photos submitted by surveyor as part of survey documentation. Not to scale.</div>
+  <div style="margin-top:4pt;border-top:0.5pt solid #ccc;padding-top:3pt;">
+    <div style="font-size:6pt;color:#999;">Photos submitted by surveyor as part of survey documentation.</div>
   </div>`;
 
   let sheetsHTML = '';
   for (let s = 0; s < totalSheets; s++) {
     const pageBreak = s > 0 ? 'page-break-before:always;' : '';
-    // Build rows properly
     let rows = '';
     let cells = '';
     for (let i = 0; i < psLayout; i++) {
       const globalIdx = s * psLayout + i;
       const photo = psPhotos[globalIdx];
-      // object-fit:contain so photo is NEVER cropped; neutral background fills letterbox
       const imgHtml = photo
-        ? `<img src="${photo.dataUrl}" style="width:100%;height:100%;object-fit:contain;display:block;background:#e8e8e8;"/>`
+        ? `<img src="${photo.dataUrl}" style="width:100%;height:100%;object-fit:contain;display:block;background:#e8e8e8;border-radius:1mm;"/>`
         : `<div style="width:100%;height:100%;background:#fff;"></div>`;
-      const label = photo ? `Photo ${globalIdx + 1}` : '';
-      cells += `<td style="width:${L.cw}mm;height:${L.ch}mm;padding:1.5mm;border:0.3pt solid #ccc;vertical-align:top;">
-        <div style="width:100%;height:calc(100% - 14pt);overflow:hidden;border-radius:1mm;background:#e8e8e8;">${imgHtml}</div>
-        <div style="font-size:6pt;color:#666;text-align:center;padding-top:2pt;line-height:1.3;">${label}</div>
-      </td>`;
+      // No label, no border — padding only creates the gap between photos
+      cells += `<td style="width:${L.cw}mm;height:${L.ch}mm;padding:1.5mm;vertical-align:top;">${imgHtml}</td>`;
       if ((i + 1) % L.cols === 0 && i < psLayout - 1) { rows += `<tr>${cells}</tr>`; cells = ''; }
     }
     if (cells) rows += `<tr>${cells}</tr>`;
     sheetsHTML += `
     <div style="${pageBreak}">
       ${headerHTML(s + 1)}
-      <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
-        ${rows}
-      </table>
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed;">${rows}</table>
       ${footerHTML}
     </div>`;
   }
@@ -2293,7 +2312,7 @@ function buildFeeBillHTML() {
   const gstRow = includeGST ? `<tr><td style="padding:6px 9px;">GST @ 18% (SAC 998549)</td><td style="padding:6px 9px;text-align:right;">${fa(gstAmt)}</td></tr>` : '';
   return`${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:1.1rem;margin-bottom:12px;">SURVEYOR FEE BILL / INVOICE</div>
-<table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:12px;"><tr><td style="padding:4px 0;color:#666;width:35%;">To</td><td style="font-weight:600;">${gv('f-insurer')}</td></tr><tr><td style="padding:4px 0;color:#666;">Report No.</td><td>${gv('f-report-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Policy No.</td><td style="font-family:monospace;">${gv('f-policy-no')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insured</td><td>${gv('f-insured-name')}</td></tr><tr><td style="padding:4px 0;color:#666;">Vehicle</td><td><b>${gv('f-reg-no')}</b> — ${gv('f-make')} ${gv('f-model')}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Accident</td><td>${gv('f-doa')||gv('spot-accident-datetime')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Survey</td><td>${gv('f-survey-date')||gv('spot-survey-datetime')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Place of Survey</td><td>${gv('f-survey-place')||gv('spot-survey-place')||'—'}</td></tr></table>
+<table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:12px;"><tr><td style="padding:4px 0;color:#666;width:35%;">To</td><td style="font-weight:600;">${gv('f-insurer')}</td><td style="color:#666;width:20%;text-align:right;">Bill Date</td><td style="font-weight:600;text-align:right;">${gv('fee-bill-date')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Report No.</td><td colspan="3">${gv('f-report-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Policy No.</td><td style="font-family:monospace;">${gv('f-policy-no')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insured</td><td>${gv('f-insured-name')}</td></tr><tr><td style="padding:4px 0;color:#666;">Vehicle</td><td><b>${gv('f-reg-no')}</b> — ${gv('f-make')} ${gv('f-model')}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Accident</td><td>${gv('f-doa')||gv('spot-accident-datetime')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Survey</td><td>${gv('f-survey-date')||gv('spot-survey-datetime')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Place of Survey</td><td>${gv('f-survey-place')||gv('spot-survey-place')||'—'}</td></tr></table>
 <table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:14px;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="padding:7px 9px;text-align:left;">Particulars</th><th style="padding:7px 9px;text-align:right;">Amount</th></tr></thead><tbody>${rows.map((r,i)=>`<tr style="background:${i%2===0?'#fff':'#f8f5f0'}"><td style="padding:6px 9px;">${r[0]}</td><td style="padding:6px 9px;text-align:right;">${r[1]}</td></tr>`).join('')}<tr style="background:#f0fdf8;"><td style="padding:6px 9px;font-weight:600;">Sub-Total</td><td style="padding:6px 9px;text-align:right;font-weight:600;">${fa(total)}</td></tr>${gstRow}<tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;">TOTAL PAYABLE</td><td style="padding:9px;text-align:right;font-weight:700;">${fa(grand)}</td></tr></tbody></table>
 <div style="font-style:italic;font-size:0.78rem;margin-bottom:14px;">RUPEES ${numberToWords(grand)} ONLY</div>
 ${gv('fee-advance-receipt')?`<div style="font-size:0.78rem;margin-top:10px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;"><strong>Advance Receipt:</strong> ${gv('fee-advance-receipt')}</div>`:''}
