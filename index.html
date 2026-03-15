@@ -2257,6 +2257,7 @@ function buildSpotSurveyHTML() {
   const overload=isGoods&&actualLoad>0&&capVal>0&&actualLoad>capVal;
   const dmgRows=spotDamageRows.filter(r=>r.component||r.damage).map((r,i)=>`<tr><td style="${td}text-align:center;">${i+1}</td><td style="${td}font-weight:600;">${r.component||'—'}</td><td style="${td}">${r.damage||'—'}</td></tr>`).join('');
   return`${getSurveyorHeader()}
+<div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:1px;text-decoration:underline;">PRIVATE AND CONFIDENTIAL</div>
 <div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:3px;text-decoration:underline;">SPOT SURVEY REPORT</div>
 <table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Spot Report No.</td><td style="${td}font-weight:700;width:32%;">${gv('spot-report-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Report</td><td style="${td}font-weight:700;">${gv('spot-report-date')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Allotment</td><td style="${td}">${gv('spot-allot-date')}</td><td style="${td}color:#444;font-size:6.8pt;">Date & Time of Survey</td><td style="${td}">${gv('spot-survey-datetime')}</td></tr></table>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">A. VEHICLE PARTICULARS</div>
