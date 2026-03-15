@@ -633,13 +633,13 @@ table.at tr:hover td{background:#f8fbfa}
             <div class="form-group"><label class="form-label">Destination</label><input class="form-input" id="spot-load-dest"/></div>
             <div class="form-group span2"><label class="form-label">Goods Description</label><input class="form-input" id="spot-load-desc"/></div>
           </div>
-          <div id="load-overage-alert" style="display:none;flex-direction:column;gap:8px" class="alert alert-warn">
+          <div id="load-overage-alert" style="display:none;flex-direction:column;gap:4px" class="alert alert-warn">
             <div>⚠ <span id="load-overage-text"></span></div>
-            <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer">
-              <input type="checkbox" id="overload-in-report" style="width:15px;height:15px;cursor:pointer"/>
-              Include overload remark in report
-            </label>
           </div>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink)">
+            <input type="checkbox" id="overload-in-report" style="width:15px;height:15px;cursor:pointer;accent-color:var(--teal)"/>
+            Include overload remark in Spot Report
+          </label>
         </div></div>
       </div>
     </div>
