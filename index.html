@@ -228,10 +228,10 @@ table.at tr:hover td{background:#f8fbfa}
 .review-val-input:focus{outline:none;background:var(--teal-light)}
 .review-val-input.ai-filled{background:var(--amber-bg)}
 /* ── Photo Sheet ── */
-.photo-layout-btn{padding:6px 16px;border-radius:8px;border:2px solid var(--border2);background:var(--panel);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em}
+.photo-layout-btn{padding:6px 16px;border-radius:8px;border:2px solid var(--border2);background:var(--panel);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;text-align:center;line-height:1.3}
 .photo-layout-btn:hover{border-color:var(--teal);color:var(--teal)}
 .photo-layout-btn.active{border-color:var(--teal);background:var(--teal);color:#fff}
-.photo-drop-zone{border:2px dashed var(--border2);border-radius:10px;padding:30px 20px;text-align:center;cursor:pointer;position:relative;transition:border-color 0.15s;background:var(--panel)}
+.photo-drop-zone{border:2px dashed var(--border2);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;position:relative;transition:border-color 0.15s;background:var(--panel)}
 .photo-drop-zone:hover{border-color:var(--teal)}
 .photo-drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .photo-sheet-thumb-grid{display:grid;gap:8px;margin-top:16px}
@@ -239,9 +239,8 @@ table.at tr:hover td{background:#f8fbfa}
 .photo-sheet-thumb-grid.layout-6{grid-template-columns:repeat(3,1fr)}
 .photo-sheet-thumb-grid.layout-8{grid-template-columns:repeat(4,1fr)}
 .photo-sheet-thumb-grid.layout-9{grid-template-columns:repeat(3,1fr)}
-.ps-thumb{aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:var(--surface);border:1px solid var(--border);position:relative}
-.ps-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.ps-thumb-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:11px;flex-direction:column;gap:4px}
+.ps-thumb{aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:var(--surface);border:1px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center}
+.ps-thumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
 .ps-remove{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
 .ps-remove:hover{background:var(--red)}
 </style>
@@ -633,13 +632,13 @@ table.at tr:hover td{background:#f8fbfa}
             <div class="form-group"><label class="form-label">Destination</label><input class="form-input" id="spot-load-dest"/></div>
             <div class="form-group span2"><label class="form-label">Goods Description</label><input class="form-input" id="spot-load-desc"/></div>
           </div>
-          <div id="load-overage-alert" style="display:none;flex-direction:column;gap:4px" class="alert alert-warn">
+          <div id="load-overage-alert" style="display:none;flex-direction:column;gap:8px" class="alert alert-warn">
             <div>⚠ <span id="load-overage-text"></span></div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer">
+              <input type="checkbox" id="overload-in-report" style="width:15px;height:15px;cursor:pointer"/>
+              Include overload remark in report
+            </label>
           </div>
-          <label style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink)">
-            <input type="checkbox" id="overload-in-report" style="width:15px;height:15px;cursor:pointer;accent-color:var(--teal)"/>
-            Include overload remark in Spot Report
-          </label>
         </div></div>
       </div>
     </div>
@@ -663,11 +662,11 @@ table.at tr:hover td{background:#f8fbfa}
   </div></div>
 
   <div class="card"><div class="card-header"><h3>Repairs</h3></div><div class="card-body">
-    <div class="form-group"><label class="form-label">Repairs: (Workshop / Garage where vehicle will go for repair)</label><input class="form-input" id="spot-repair-workshop" placeholder="Name and address of workshop / garage"/></div>
+    <div class="form-group"><label class="form-label">Repairs: Vehicle to be sent to</label><input class="form-input" id="spot-repairs" placeholder="Name and address of authorised workshop / repairer"/></div>
   </div></div>
 
-  <div class="card"><div class="card-header"><h3>Enclosed Documents (ENCL)</h3></div><div class="card-body">
-    <div class="form-group"><label class="form-label">ENCL: (List documents enclosed with this report)</label><input class="form-input" id="spot-encl" placeholder="e.g. RC Copy, DL Copy, Spot Photos, Panchanama Copy"/></div>
+  <div class="card"><div class="card-header"><h3>Enclosures</h3></div><div class="card-body">
+    <div class="form-group"><label class="form-label">ENCL: Documents enclosed with this report</label><textarea class="form-textarea" id="spot-encl" placeholder="e.g. Copy of RC, DL, Insurance Policy, Photos of damaged vehicle, Spot map…" style="min-height:60px"></textarea></div>
   </div></div>
 </div>
 
@@ -684,37 +683,47 @@ table.at tr:hover td{background:#f8fbfa}
   <div class="card">
     <div class="card-header">
       <h3>📷 Photo Sheet — Print on A4</h3>
-      <button class="btn btn-primary btn-sm" onclick="genPhotoSheet()">🖨 Generate Photo Sheet</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="ps-orientation" onchange="renderPSThumbs()" style="font-size:11px;border:1px solid var(--border2);border-radius:6px;padding:3px 8px;background:var(--panel);color:var(--ink);cursor:pointer">
+          <option value="landscape">Landscape A4</option>
+          <option value="portrait">Portrait A4</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="genPhotoSheet()">🖨 Generate &amp; Print</button>
+      </div>
     </div>
     <div class="card-body">
       <div style="margin-bottom:14px">
-        <div class="form-label" style="margin-bottom:8px">Layout — photos per A4 sheet</div>
+        <div class="form-label" style="margin-bottom:8px">Photos per sheet</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="photo-layout-btn active" id="psl-4" onclick="setPhotoLayout(4)">4 Photos<br><span style="font-size:10px;font-weight:400;opacity:0.7">2 × 2</span></button>
-          <button class="photo-layout-btn" id="psl-6" onclick="setPhotoLayout(6)">6 Photos<br><span style="font-size:10px;font-weight:400;opacity:0.7">2 × 3</span></button>
-          <button class="photo-layout-btn" id="psl-8" onclick="setPhotoLayout(8)">8 Photos<br><span style="font-size:10px;font-weight:400;opacity:0.7">2 × 4</span></button>
-          <button class="photo-layout-btn" id="psl-9" onclick="setPhotoLayout(9)">9 Photos<br><span style="font-size:10px;font-weight:400;opacity:0.7">3 × 3</span></button>
-          <button class="photo-layout-btn" id="psl-landscape" onclick="togglePhotoLandscape()" title="Use A4 landscape — wider cells, good for wide photos" style="border-left:2px solid var(--border2);margin-left:6px">🔄 Landscape<br><span style="font-size:10px;font-weight:400;opacity:0.7">A4 rotated</span></button>
+          <button class="photo-layout-btn active" id="psl-4"  onclick="setPhotoLayout(4)">4<br/><span style="font-size:10px;font-weight:400;opacity:0.7">2×2</span></button>
+          <button class="photo-layout-btn"        id="psl-6"  onclick="setPhotoLayout(6)">6<br/><span style="font-size:10px;font-weight:400;opacity:0.7">2×3</span></button>
+          <button class="photo-layout-btn"        id="psl-8"  onclick="setPhotoLayout(8)">8<br/><span style="font-size:10px;font-weight:400;opacity:0.7">2×4</span></button>
+          <button class="photo-layout-btn"        id="psl-9"  onclick="setPhotoLayout(9)">9<br/><span style="font-size:10px;font-weight:400;opacity:0.7">3×3</span></button>
         </div>
       </div>
       <div class="photo-drop-zone" id="ps-drop-zone">
         <input type="file" accept="image/*" multiple onchange="handlePhotoSheetUpload(this)"/>
         <div style="font-size:28px;margin-bottom:8px">📷</div>
         <div style="font-weight:600;color:var(--ink);font-size:14px">Click or drag photos here</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Upload any number — extras continue on the next sheet</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Upload any number — extras continue on the next sheet automatically</div>
       </div>
       <div id="ps-thumb-grid" class="photo-sheet-thumb-grid layout-4"></div>
       <div id="ps-count-note" style="font-size:12px;color:var(--muted);margin-top:10px;display:none"></div>
-      <div style="margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" onclick="clearPhotoSheet()">🗑 Clear All Photos</button>
-        <span style="font-size:11px;color:var(--muted2);margin-left:4px">Photos are not saved between sessions — re-upload each time.</span>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="clearPhotoSheet()">🗑 Clear All</button>
+        <span style="font-size:11px;color:var(--muted2)">Photos are not saved between sessions — re-upload each time.</span>
       </div>
     </div>
   </div>
 
   <div class="card"><div class="card-header"><h3>Surveyor Fee Inputs</h3></div><div class="card-body">
+    <div class="form-grid four" style="margin-bottom:14px">
+      <div class="form-group"><label class="form-label">Policy Number</label><input class="form-input mono" id="fee-policy-no" placeholder="Auto-filled from claim"/></div>
+      <div class="form-group"><label class="form-label">Date of Accident</label><input class="form-input" type="date" id="fee-doa"/></div>
+      <div class="form-group"><label class="form-label">Date of Survey</label><input class="form-input" type="date" id="fee-survey-date"/></div>
+      <div class="form-group"><label class="form-label">Place of Survey</label><input class="form-input" id="fee-place-of-survey" placeholder="Auto-filled from claim"/></div>
+    </div>
     <div class="form-grid four">
-      <div class="form-group"><label class="form-label">Bill Date</label><input class="form-input" type="date" id="fee-bill-date"/></div>
       <div class="form-group"><label class="form-label">Professional Fees (₹)</label><input class="form-input" id="fee-prof" value="3500" onchange="calcFeeTotal()"/></div>
       <div class="form-group"><label class="form-label">RI Fees (₹)</label><input class="form-input" id="fee-ri" value="0" onchange="calcFeeTotal()"/></div>
       <div class="form-group"><label class="form-label">Travel (₹)</label><input class="form-input" id="fee-travel" value="500" onchange="calcFeeTotal()"/></div>
@@ -723,17 +732,14 @@ table.at tr:hover td{background:#f8fbfa}
       <div class="form-group"><label class="form-label">Photo Rate (₹)</label><input class="form-input" id="fee-photo-rate" value="10" onchange="calcFeeTotal()"/></div>
       <div class="form-group"><label class="form-label">Postal / Courier (₹)</label><input class="form-input" id="fee-postal" value="50" onchange="calcFeeTotal()"/></div>
       <div class="form-group"><label class="form-label">Haltage (₹)</label><input class="form-input" id="fee-haltage" value="0" onchange="calcFeeTotal()"/></div>
-      <div class="form-group" style="justify-content:flex-end;padding-top:18px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink)"><input type="checkbox" id="fee-include-gst" onchange="calcFeeTotal()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--teal)"/> Include GST @ 18% on Bill</label></div>
-    </div>
-    <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div class="form-group"><label class="form-label">Advance Receipt — Where Insurer Will Pay</label><input class="form-input" id="fee-advance-receipt" placeholder="e.g. HDFC ERGO Regional Office, Mumbai"/></div>
-      <div class="form-group"><label class="form-label">Cash Received from Insured</label><input class="form-input" id="fee-cash-received" placeholder="e.g. ₹ 3500 received on 12-Mar-2026"/></div>
+      <div class="form-group span2"><label class="form-label">GST</label><select class="form-select" id="fee-gst-enabled" onchange="calcFeeTotal()"><option value="no">No GST — Not registered / Not applicable</option><option value="yes">Include GST @ 18% (SAC 998549)</option></select></div>
     </div>
     <div style="margin-top:10px;padding:10px 14px;background:var(--ink);border-radius:8px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
       <span style="color:rgba(255,255,255,0.5);font-size:12px">Prof: <b id="fs-prof" style="color:#fff">₹0</b></span>
       <span style="color:rgba(255,255,255,0.5);font-size:12px">RI: <b id="fs-ri" style="color:#fff">₹0</b></span>
       <span style="color:rgba(255,255,255,0.5);font-size:12px">Travel: <b id="fs-travel" style="color:#fff">₹0</b></span>
       <span style="color:rgba(255,255,255,0.5);font-size:12px">Photos: <b id="fs-photos" style="color:#fff">₹0</b></span>
+      <span id="fs-gst-display" style="color:rgba(255,255,255,0.5);font-size:12px;display:none">GST: <b id="fs-gst" style="color:var(--amber)">₹0</b></span>
       <div style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--teal)">TOTAL: <span id="fs-total">₹0</span></div>
     </div>
   </div></div>
@@ -788,12 +794,12 @@ table.at tr:hover td{background:#f8fbfa}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
           <div class="form-label" style="margin-bottom:8px">Signature (transparent PNG)</div>
-          <div class="sig-area" style="height:180px"><input type="file" accept="image/*" onchange="loadSig(this,'sig')" style="position:absolute;inset:0;opacity:0;cursor:pointer"/><img id="sig-preview" style="max-height:160px;max-width:100%;display:none"/><span id="sig-ph" style="font-size:12px;color:var(--muted2)">Click to upload signature</span></div>
+          <div class="sig-area" style="height:90px"><input type="file" accept="image/*" onchange="loadSig(this,'sig')" style="position:absolute;inset:0;opacity:0;cursor:pointer"/><img id="sig-preview" style="max-height:80px;max-width:100%;display:none"/><span id="sig-ph" style="font-size:12px;color:var(--muted2)">Click to upload signature</span></div>
           <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="clearSig('sig')">Clear</button>
         </div>
         <div>
           <div class="form-label" style="margin-bottom:8px">Stamp / Seal</div>
-          <div class="sig-area" style="height:180px"><input type="file" accept="image/*" onchange="loadSig(this,'stamp')" style="position:absolute;inset:0;opacity:0;cursor:pointer"/><img id="stamp-preview" style="max-height:160px;max-width:100%;display:none"/><span id="stamp-ph" style="font-size:12px;color:var(--muted2)">Click to upload stamp</span></div>
+          <div class="sig-area" style="height:90px"><input type="file" accept="image/*" onchange="loadSig(this,'stamp')" style="position:absolute;inset:0;opacity:0;cursor:pointer"/><img id="stamp-preview" style="max-height:80px;max-width:100%;display:none"/><span id="stamp-ph" style="font-size:12px;color:var(--muted2)">Click to upload stamp</span></div>
           <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="clearSig('stamp')">Clear</button>
         </div>
       </div>
@@ -873,11 +879,9 @@ let riParts        = [];
 let sigDataUrl     = null;
 let stampDataUrl   = null;
 let uploadedDocs   = {};
+let psPhotos       = [];   // {dataUrl, name} — session only, never persisted
+let psLayout       = 4;    // photos per A4 sheet: 4 | 6 | 8 | 9
 let extractedData  = {};
-// Photo Sheet
-let psPhotos       = [];   // Array of {dataUrl, name} for the current photo sheet session
-let psLayout       = 4;    // active layout: 4 | 6 | 8 | 9
-let psLandscape    = false; // true = A4 landscape orientation
 
 // ═══════════════════════════════════════════════════════════
 // AI PROMPTS (verbatim from original, all 10 document types)
@@ -951,7 +955,6 @@ const DOC_SLOTS_SPOT = {
     {key:'policy',label:'Insurance Policy',icon:'📜',hint:'Policy schedule',optional:true},
     {key:'permit',label:'Permit',icon:'📋',hint:'Goods Permit'},
     {key:'fitness',label:'Fitness Certificate',icon:'✅',hint:'RTO Fitness Certificate'},
-    {key:'auth',label:'Authorisation Cert.',icon:'🏅',hint:'For hazmat / special cargo'},
     {key:'lok-challan',label:'Lok Challan / CN',icon:'📦',hint:'Consignment note for the load'},
     {key:'photos',label:'Damage Photos',icon:'📷',hint:'Vehicle damage photographs',multiple:true}
   ]
@@ -976,11 +979,6 @@ function switchTab(tab) {
   if (tab === 'spot')    { setTimeout(()=>{ buildCauseSuggestions('spot-accident-cause'); buildCauseSuggestions('spot-comments'); buildSpotSuggestions(); }, 150); }
   document.querySelectorAll('.ws-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
   document.querySelectorAll('.ws-panel').forEach(p => p.classList.toggle('active', p.id==='tab-'+tab));
-  // Spot mode: when opening the merged "Survey Details" tab, also show #tab-details above #tab-spot
-  if (surveyType === 'spot' && tab === 'spot') {
-    const detailsPanel = document.getElementById('tab-details');
-    if (detailsPanel) detailsPanel.classList.add('active');
-  }
   document.querySelectorAll('.nav-item[id^="nav-"]').forEach(n => n.classList.remove('active'));
   const ni = document.getElementById('nav-'+tab); if (ni) ni.classList.add('active');
 }
@@ -1005,7 +1003,7 @@ const ALL_FIELD_IDS = [
   'f-dl-valid-transport','f-dl-auth','f-dl-type','f-dl-mdl-verified',
   'f-doa','f-poa','f-survey-date','f-survey-place','f-tp','f-cause',
   'sum-excess','sum-salvage',
-  'fee-bill-date','fee-prof','fee-ri','fee-travel','fee-travel-note','fee-photos-count','fee-photo-rate','fee-postal','fee-haltage','fee-include-gst','fee-advance-receipt','fee-cash-received',
+  'fee-prof','fee-ri','fee-travel','fee-travel-note','fee-photos-count','fee-photo-rate','fee-postal','fee-haltage',
   'spot-report-no','spot-report-date','spot-allot-date','spot-survey-datetime',
   'spot-driver-name','spot-dl-parent','spot-dl-relation','spot-mdl-no','spot-dl-authority',
   'spot-dl-issue','spot-dl-valid','spot-dl-valid-transport','spot-dl-type','spot-mdl-verified','spot-dl-invalid-remarks',
@@ -1016,14 +1014,15 @@ const ALL_FIELD_IDS = [
   'spot-gvw','spot-ulw','spot-load-capacity','spot-actual-load','spot-cn-no','spot-cn-date',
   'spot-load-origin','spot-load-dest','spot-load-desc',
   'spot-accident-cause','spot-damage-severity','overload-in-report','spot-airbags','spot-drivable','spot-comments',
-  'spot-repair-workshop','spot-encl',
+  'spot-repairs','spot-encl',
+  'fee-gst-enabled','fee-policy-no','fee-doa','fee-survey-date','fee-place-of-survey',
   'ri-ref','ri-date','ri-survey-ref','ri-survey-date','ri-repair-quality','ri-vehicle-condition','ri-salvage-status','ri-observations',
   'sp-name','sp-qual','sp-lic','sp-lic-exp','sp-iiisla','sp-code','sp-categories','sp-mobile','sp-email','sp-addr','sp-gst',
   'bank-name','bank-ac','bank-ifsc','bank-pan','sp-groq-key','sp-groq-model'
 ];
 
-function captureFields() { const f={}; ALL_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el)f[id]=el.type==='checkbox'?el.checked:el.value;}); return f; }
-function restoreFields(f) { if(!f)return; ALL_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el&&f[id]!==undefined){if(el.type==='checkbox')el.checked=f[id];else el.value=f[id];}}); }
+function captureFields() { const f={}; ALL_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el)f[id]=el.value;}); return f; }
+function restoreFields(f) { if(!f)return; ALL_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el&&f[id]!==undefined)el.value=f[id];}); }
 
 function computeStatus() {
   const hasDocs = Object.keys(uploadedDocs).length>0;
@@ -1099,6 +1098,12 @@ function loadClaim(id) {
   // Restore photo analysis so AI Review and learning still work without re-uploading photos
   if (c.photoDamageData) extractedData.photos = c.photoDamageData;
   restoreFields(c.fields||{});
+  // If fee reference fields blank (old claim), back-fill from claim detail fields
+  if(!gv('fee-policy-no')) setV('fee-policy-no', gv('f-policy-no'));
+  if(!gv('fee-doa') && gv('f-doa')) setV('fee-doa', gv('f-doa').split('T')[0]);
+  if(!gv('fee-survey-date')) setV('fee-survey-date', gv('f-survey-date'));
+  if(!gv('fee-place-of-survey')) setV('fee-place-of-survey', gv('f-survey-place'));
+  calcFeeTotal();
   applyVehicleTypeUI(); applySurveyTypeUI(); buildDocSlots(); renderAssessTable(); renderSpotDamageRows();
   updateWorkspaceHeader(); showSidebarClaim(); openWorkspace('docs');
 }
@@ -1227,6 +1232,11 @@ async function createClaim() {
   setV('fee-ri','0'); setV('fee-travel', isFinal?'500':'250');
   setV('fee-photos-count', isFinal?'20':'10'); setV('fee-photo-rate','10');
   setV('fee-postal','50'); setV('fee-haltage','0');
+  // Auto-fill fee reference fields from wizard values
+  setV('fee-policy-no', gv('wz-policy-no'));
+  if(gv('wz-doa')) setV('fee-doa', gv('wz-doa').split('T')[0]);
+  setV('fee-survey-date', today);
+  setV('fee-place-of-survey', gv('wz-survey-place')||'');
   currentClaimId='claim_'+Date.now();
   applyVehicleTypeUI(); applySurveyTypeUI(); buildDocSlots(); updateWorkspaceHeader(); showSidebarClaim();
   const claimData = getCurrentClaimData();
@@ -1265,31 +1275,16 @@ function applySurveyTypeUI() {
   const isSpot = surveyType === 'spot';
 
   // Tabs: hide Assessment for spot (no estimates), hide Spot tab for final
-  const assessTab  = document.getElementById('tab-btn-assess');
-  const spotTab    = document.getElementById('tab-btn-spot');
-  const detailsTab = document.querySelector('.ws-tab[data-tab="details"]');
-  if (assessTab)  assessTab.style.display  = isSpot ? 'none' : '';
-  if (spotTab)    spotTab.style.display    = isSpot ? '' : 'none';
+  const assessTab = document.getElementById('tab-btn-assess');
+  const spotTab   = document.getElementById('tab-btn-spot');
+  if (assessTab) assessTab.style.display = isSpot ? 'none' : '';
+  if (spotTab)   spotTab.style.display   = isSpot ? '' : 'none';
 
-  // Spot mode: hide "Claim Details" tab (merged into Survey Details), rename Spot tab
-  if (detailsTab) detailsTab.style.display = isSpot ? 'none' : '';
-  if (spotTab)    spotTab.textContent      = isSpot ? '📋 Survey Details' : '📍 Spot Survey';
-
-  // Sidebar nav: hide "Claim Details" item in spot mode, rename Spot nav item
-  const navDetails = document.getElementById('nav-details');
-  const navSpot    = document.getElementById('nav-spot');
-  if (navDetails) navDetails.style.display = isSpot ? 'none' : '';
-  if (navSpot) {
-    navSpot.innerHTML = isSpot
-      ? '<span class="nav-icon">📋</span> Survey Details'
-      : '<span class="nav-icon">📍</span> Spot Survey';
-  }
-
-  // If currently on a tab being hidden — redirect to Survey Details (spot) or docs (final)
+  // If currently on assessment tab but switched to spot survey — redirect to docs
   if (isSpot) {
     const activeTab = document.querySelector('.ws-tab.active');
-    if (activeTab && (activeTab.getAttribute('data-tab') === 'assess' || activeTab.getAttribute('data-tab') === 'details')) {
-      switchTab('spot');
+    if (activeTab && activeTab.getAttribute('data-tab') === 'assess') {
+      switchTab('docs');
     }
   }
 
@@ -1953,10 +1948,16 @@ function calcFeeTotal() {
   const prof=parseFloat(gv('fee-prof'))||0,ri=parseFloat(gv('fee-ri'))||0,travel=parseFloat(gv('fee-travel'))||0,
     photos=(parseFloat(gv('fee-photos-count'))||0)*(parseFloat(gv('fee-photo-rate'))||0),
     postal=parseFloat(gv('fee-postal'))||0,halt=parseFloat(gv('fee-haltage'))||0;
-  const total=prof+ri+travel+photos+postal+halt;
+  const subtotal=prof+ri+travel+photos+postal+halt;
+  const gstOn = gv('fee-gst-enabled')==='yes';
+  const gstAmt = gstOn ? subtotal*0.18 : 0;
+  const total = subtotal + gstAmt;
   const fmt=v=>'₹'+v.toLocaleString('en-IN');
   const st=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  st('fs-prof',fmt(prof));st('fs-ri',fmt(ri));st('fs-travel',fmt(travel));st('fs-photos',fmt(photos));st('fs-total',fmt(total));
+  st('fs-prof',fmt(prof));st('fs-ri',fmt(ri));st('fs-travel',fmt(travel));st('fs-photos',fmt(photos));
+  st('fs-gst',fmt(gstAmt));st('fs-total',fmt(total));
+  const gstDisp=document.getElementById('fs-gst-display');
+  if(gstDisp) gstDisp.style.display=gstOn?'':'none';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1978,30 +1979,14 @@ function numberToWords(num) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// REPORT BUILDERS (preserved from original)
-// ═══════════════════════════════════════════════════════════
-function getSurveyorHeader() {
-  const name=gv('sp-name')||'SURVEYOR NAME',qual=gv('sp-qual')||'B.Sc., Dip. in Auto Engg.',addr=gv('sp-addr')||'Address',lic=gv('sp-lic')||'—',exp=gv('sp-lic-exp')||'—',iiisla=gv('sp-iiisla')||'—',email=gv('sp-email')||'—',mob=gv('sp-mobile')||'—',cats=gv('sp-categories')||'MOTOR';
-  return`<div style="border-bottom:1.2pt solid #000;padding-bottom:5px;margin-bottom:6px;"><div style="text-align:center;"><div style="font-size:13pt;font-weight:700;">${name}</div><div style="font-size:7pt;">${qual}</div><div style="font-size:7.5pt;font-weight:700;">INSURANCE SURVEYOR, LOSS ASSESSOR &amp; VALUER</div></div><div style="display:flex;justify-content:space-between;margin-top:4px;font-size:6.8pt;"><div>Lic. No.: <b>${lic}</b> &nbsp;|&nbsp; Expiry: <b>${exp}</b> &nbsp;|&nbsp; IIISLA: <b>${iiisla}</b> &nbsp;|&nbsp; E-mail: ${email} &nbsp;|&nbsp; Cell: ${mob}</div><div style="text-align:right;font-weight:700;">${cats}<br/><span style="font-weight:400;">${addr}</span></div></div></div>`;
-}
-// ═══════════════════════════════════════════════════════════
-// PHOTO SHEET — A4 print layout
+// PHOTO SHEET
 // ═══════════════════════════════════════════════════════════
 function setPhotoLayout(n) {
   psLayout = n;
   [4,6,8,9].forEach(x => {
-    const btn = document.getElementById('psl-'+x);
-    if (btn) btn.classList.toggle('active', x===n);
+    const b = document.getElementById('psl-'+x);
+    if (b) b.classList.toggle('active', x===n);
   });
-  const maxLabel = document.getElementById('ps-max-label');
-  if (maxLabel) maxLabel.textContent = n;
-  renderPSThumbs();
-}
-
-function togglePhotoLandscape() {
-  psLandscape = !psLandscape;
-  const btn = document.getElementById('psl-landscape');
-  if (btn) btn.classList.toggle('active', psLandscape);
   renderPSThumbs();
 }
 
@@ -2036,39 +2021,28 @@ function renderPSThumbs() {
   const note = document.getElementById('ps-count-note');
   if (!grid) return;
   grid.className = `photo-sheet-thumb-grid layout-${psLayout}`;
-
-  const totalPhotos = psPhotos.length;
-  const totalSheets = Math.max(1, Math.ceil(totalPhotos / psLayout));
+  const totalSheets = Math.max(1, Math.ceil(psPhotos.length / psLayout));
   let html = '';
-
-  for (let sheet = 0; sheet < totalSheets; sheet++) {
-    // Sheet label separator (only when more than one sheet)
+  for (let s = 0; s < totalSheets; s++) {
     if (totalSheets > 1) {
-      html += `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--muted);padding:8px 0 4px;border-top:${sheet>0?'1px solid var(--border)':'none'};margin-top:${sheet>0?'10px':'0'}">Sheet ${sheet+1} of ${totalSheets}</div>`;
+      html += `<div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--muted);padding:${s>0?'12px':'4px'} 0 4px;${s>0?'border-top:1px solid var(--border);margin-top:4px;':''}">Sheet ${s+1} of ${totalSheets}</div>`;
     }
-    // Slots for this sheet
-    for (let slot = 0; slot < psLayout; slot++) {
-      const idx = sheet * psLayout + slot;
+    for (let i = 0; i < psLayout; i++) {
+      const idx = s * psLayout + i;
       if (psPhotos[idx]) {
-        html += `<div class="ps-thumb">
-          <img src="${psPhotos[idx].dataUrl}" alt="Photo ${idx+1}"/>
-          <button class="ps-remove" onclick="removePSPhoto(${idx})" title="Remove">✕</button>
-        </div>`;
+        html += `<div class="ps-thumb"><img src="${psPhotos[idx].dataUrl}" alt="Photo ${idx+1}"/><button class="ps-remove" onclick="removePSPhoto(${idx})" title="Remove">✕</button></div>`;
       } else {
-        // Empty slot — white, no icon, no grey
         html += `<div class="ps-thumb" style="background:#fff;border:1px dashed var(--border2);"></div>`;
       }
     }
   }
-
   grid.innerHTML = html;
-
   if (note) {
-    if (totalPhotos > 0) {
+    if (psPhotos.length > 0) {
+      const lastCount = psPhotos.length % psLayout || psLayout;
+      const emptyLast = psLayout - lastCount;
       note.style.display = 'block';
-      const lastSheetCount = totalPhotos % psLayout || psLayout;
-      const emptyOnLast = psLayout - lastSheetCount;
-      note.textContent = `${totalPhotos} photo${totalPhotos>1?'s':''} across ${totalSheets} sheet${totalSheets>1?'s':''}${emptyOnLast>0?' — last sheet has '+emptyOnLast+' blank slot'+(emptyOnLast>1?'s':''):''}. Ready to print.`;
+      note.textContent = `${psPhotos.length} photo${psPhotos.length>1?'s':''} · ${totalSheets} sheet${totalSheets>1?'s':''}${emptyLast>0?' · last sheet has '+emptyLast+' blank slot'+(emptyLast>1?'s':''):''}`;
     } else {
       note.style.display = 'none';
     }
@@ -2076,83 +2050,64 @@ function renderPSThumbs() {
 }
 
 function buildPhotoSheetHTML() {
-  // Precise dimensions to fill the A4 page with no wasted space.
-  // A4 portrait usable: 210mm - 16mm margins = 194mm wide, 297mm - 16mm = 281mm tall
-  // Header ~22mm + footer ~13mm + gaps ~3mm = ~38mm overhead → grid height ~243mm
-  // A4 landscape usable: 297mm - 16mm = 281mm wide, 210mm - 16mm = 194mm tall
-  // Header ~22mm + footer ~13mm + gaps ~3mm = ~38mm overhead → grid height ~156mm
-  // Cell gap handled via padding:1.5mm (no visible border)
-  const layouts = {
+  const orient = (document.getElementById('ps-orientation')||{}).value || 'landscape';
+  const isLand = orient === 'landscape';
+  // Cell dimensions in mm — A4 margins 8mm all sides
+  // Portrait usable: 194mm × 261mm  Landscape usable: 261mm × 194mm  (minus small header ~12mm)
+  const dims = {
     portrait: {
-      4: { cols:2, rows:2, cw:97,  ch:121 },
-      6: { cols:3, rows:2, cw:64,  ch:121 },
-      8: { cols:4, rows:2, cw:48,  ch:121 },
-      9: { cols:3, rows:3, cw:64,  ch:81  }
+      4:  { cols:2, cw:94,  ch:118 },
+      6:  { cols:3, cw:61,  ch:118 },
+      8:  { cols:4, cw:45,  ch:118 },
+      9:  { cols:3, cw:61,  ch:78  }
     },
     landscape: {
-      4: { cols:2, rows:2, cw:140, ch:78  },
-      6: { cols:3, rows:2, cw:93,  ch:78  },
-      8: { cols:4, rows:2, cw:70,  ch:78  },
-      9: { cols:3, rows:3, cw:93,  ch:52  }
+      4:  { cols:2, cw:127, ch:82  },
+      6:  { cols:3, cw:83,  ch:82  },
+      8:  { cols:4, cw:61,  ch:82  },
+      9:  { cols:3, cw:83,  ch:54  }
     }
   };
-  const orient = psLandscape ? 'landscape' : 'portrait';
-  const L = layouts[orient][psLayout];
+  const L = dims[orient][psLayout];
+  const pageSize = isLand ? 'A4 landscape' : 'A4 portrait';
   const veh = gv('f-reg-no') || gv('spot-report-no') || '';
-  const insured = gv('f-insured-name') || '';
-  const reportNo = gv('f-report-no') || gv('spot-report-no') || '';
-  const today = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
-  const surveyor = gv('sp-name') || 'SURVEYOR';
-
+  const claimNo = gv('f-claim-no') || '';
+  const surveyor = gv('sp-name') || '';
+  const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
   const totalSheets = Math.max(1, Math.ceil(psPhotos.length / psLayout));
 
-  const headerHTML = (sheetNum) => `
-  <div style="border-bottom:1.5pt solid #0d1b2a;padding-bottom:4pt;margin-bottom:4pt;display:flex;justify-content:space-between;align-items:flex-end;">
-    <div>
-      <div style="font-size:9pt;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${surveyor} — Vehicle Damage Photos</div>
-      <div style="font-size:7pt;color:#555;margin-top:2pt;">
-        ${veh ? 'Vehicle: <b>'+veh+'</b>' : ''} ${insured ? '&nbsp;|&nbsp; Insured: '+insured : ''} ${reportNo ? '&nbsp;|&nbsp; Report: '+reportNo : ''}
-      </div>
-    </div>
-    <div style="font-size:7pt;color:#777;text-align:right;">
-      Date: ${today}<br>
-      Sheet ${sheetNum} of ${totalSheets} &nbsp;|&nbsp; ${psLayout} per page
-    </div>
-  </div>`;
-
-  const footerHTML = `
-  <div style="margin-top:4pt;border-top:0.5pt solid #ccc;padding-top:3pt;">
-    <div style="font-size:6pt;color:#999;">Photos submitted by surveyor as part of survey documentation.</div>
-  </div>`;
+  const makeHeader = (sheetNum) =>
+    `<div style="border-bottom:1pt solid #0d1b2a;padding-bottom:3pt;margin-bottom:4pt;display:flex;justify-content:space-between;align-items:flex-end;">
+      <div style="font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">${surveyor?surveyor+' — ':''}Vehicle Damage Photos${veh?' — '+veh:''}</div>
+      <div style="font-size:7pt;color:#666;text-align:right;">${claimNo?'Claim: '+claimNo+'&nbsp;|&nbsp;':''}Date: ${today}&nbsp;|&nbsp;Sheet ${sheetNum} of ${totalSheets}</div>
+    </div>`;
 
   let sheetsHTML = '';
   for (let s = 0; s < totalSheets; s++) {
-    const pageBreak = s > 0 ? 'page-break-before:always;' : '';
-    let rows = '';
+    const pb = s > 0 ? 'page-break-before:always;' : '';
     let cells = '';
     for (let i = 0; i < psLayout; i++) {
-      const globalIdx = s * psLayout + i;
-      const photo = psPhotos[globalIdx];
+      const idx = s * psLayout + i;
+      const photo = psPhotos[idx];
+      // object-fit:contain — never crop, white space fills remainder
       const imgHtml = photo
-        ? `<img src="${photo.dataUrl}" style="width:100%;height:100%;object-fit:contain;display:block;background:#e8e8e8;border-radius:1mm;"/>`
+        ? `<img src="${photo.dataUrl}" style="max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;"/>`
         : `<div style="width:100%;height:100%;background:#fff;"></div>`;
-      // No label, no border — padding only creates the gap between photos
-      cells += `<td style="width:${L.cw}mm;height:${L.ch}mm;padding:1.5mm;vertical-align:top;">${imgHtml}</td>`;
-      if ((i + 1) % L.cols === 0 && i < psLayout - 1) { rows += `<tr>${cells}</tr>`; cells = ''; }
+      const label = photo ? `<div style="font-size:5.5pt;color:#888;text-align:center;padding-top:1.5pt;">Photo ${idx+1}</div>` : '';
+      cells += `<td style="width:${L.cw}mm;height:${L.ch}mm;border:0.3pt solid #ccc;padding:1mm;vertical-align:middle;text-align:center;">
+        <div style="width:100%;height:calc(100% - 10pt);display:flex;align-items:center;justify-content:center;overflow:hidden;">${imgHtml}</div>${label}
+      </td>`;
+      if ((i+1) % L.cols === 0 && i < psLayout-1) cells += '</tr><tr>';
     }
-    if (cells) rows += `<tr>${cells}</tr>`;
-    sheetsHTML += `
-    <div style="${pageBreak}">
-      ${headerHTML(s + 1)}
-      <table style="width:100%;border-collapse:collapse;table-layout:fixed;">${rows}</table>
-      ${footerHTML}
+    sheetsHTML += `<div style="${pb}">
+      ${makeHeader(s+1)}
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tr>${cells}</tr></table>
     </div>`;
   }
 
-  const pageSize = psLandscape ? 'A4 landscape' : 'A4 portrait';
-  return `<!DOCTYPE html><html><head><title>Photo Sheet — ${veh}</title>
+  return `<!DOCTYPE html><html><head><title>Photo Sheet${veh?' — '+veh:''}</title>
 <style>
-@page{size:${pageSize};margin:8mm 8mm 8mm 8mm}
+@page{size:${pageSize};margin:8mm}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;font-size:8pt;color:#000;background:#fff}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
@@ -2160,21 +2115,24 @@ body{font-family:Arial,sans-serif;font-size:8pt;color:#000;background:#fff}
 }
 
 function genPhotoSheet() {
-  if (psPhotos.length === 0) {
-    showToast('Upload at least one photo first', 'error');
-    return;
-  }
-  const html = buildPhotoSheetHTML();
-  const w = window.open('', '_blank');
-  w.document.write(html);
+  if (psPhotos.length === 0) { showToast('Upload at least one photo first','error'); return; }
+  const w = window.open('','_blank');
+  w.document.write(buildPhotoSheetHTML());
   w.document.close();
-  setTimeout(() => { w.focus(); w.print(); }, 500);
-  showToast('Photo sheet opened — Print → Save as PDF');
+  setTimeout(()=>{ w.focus(); w.print(); }, 500);
+  showToast('Photo sheet ready — Print → Save as PDF');
 }
 
+// ═══════════════════════════════════════════════════════════
+// REPORT BUILDERS (preserved from original)
+// ═══════════════════════════════════════════════════════════
+function getSurveyorHeader() {
+  const name=gv('sp-name')||'SURVEYOR NAME',qual=gv('sp-qual')||'B.Sc., Dip. in Auto Engg.',addr=gv('sp-addr')||'Address',lic=gv('sp-lic')||'—',exp=gv('sp-lic-exp')||'—',iiisla=gv('sp-iiisla')||'—',email=gv('sp-email')||'—',mob=gv('sp-mobile')||'—',cats=gv('sp-categories')||'MOTOR';
+  return`<div style="border-bottom:1.2pt solid #000;padding-bottom:5px;margin-bottom:6px;"><div style="text-align:center;"><div style="font-size:13pt;font-weight:700;">${name}</div><div style="font-size:7pt;">${qual}</div><div style="font-size:7.5pt;font-weight:700;">INSURANCE SURVEYOR, LOSS ASSESSOR &amp; VALUER</div></div><div style="display:flex;justify-content:space-between;margin-top:4px;font-size:6.8pt;"><div>Lic. No.: <b>${lic}</b> &nbsp;|&nbsp; Expiry: <b>${exp}</b> &nbsp;|&nbsp; IIISLA: <b>${iiisla}</b> &nbsp;|&nbsp; E-mail: ${email} &nbsp;|&nbsp; Cell: ${mob}</div><div style="text-align:right;font-weight:700;">${cats}<br/><span style="font-weight:400;">${addr}</span></div></div></div>`;
+}
 function getSigBlock() {
-  const sig=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:96px;max-width:180px;object-fit:contain;"/>`:''
-  const stamp=stampDataUrl?`<img src="${stampDataUrl}" style="max-height:110px;max-width:140px;object-fit:contain;"/>`:''
+  const sig=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:48px;max-width:90px;object-fit:contain;"/>`:''
+  const stamp=stampDataUrl?`<img src="${stampDataUrl}" style="max-height:55px;max-width:70px;object-fit:contain;"/>`:''
   const name=gv('sp-name')||'SURVEYOR NAME';
   return`<div style="display:flex;justify-content:flex-end;align-items:flex-end;margin-top:14px;gap:8px;">${stamp}<div style="text-align:center;">${sig}<div style="font-weight:700;font-size:7.5pt;margin-top:2px;">${name}</div><div style="font-size:6.5pt;color:#555;">Licenced Surveyor &amp; Loss Assessor</div></div></div>`;
 }
@@ -2257,27 +2215,26 @@ function buildSpotSurveyHTML() {
   const overload=isGoods&&actualLoad>0&&capVal>0&&actualLoad>capVal;
   const dmgRows=spotDamageRows.filter(r=>r.component||r.damage).map((r,i)=>`<tr><td style="${td}text-align:center;">${i+1}</td><td style="${td}font-weight:600;">${r.component||'—'}</td><td style="${td}">${r.damage||'—'}</td></tr>`).join('');
   return`${getSurveyorHeader()}
-<div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:1px;text-decoration:underline;">PRIVATE AND CONFIDENTIAL</div>
 <div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:3px;text-decoration:underline;">SPOT SURVEY REPORT</div>
 <table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Spot Report No.</td><td style="${td}font-weight:700;width:32%;">${gv('spot-report-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Report</td><td style="${td}font-weight:700;">${gv('spot-report-date')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Allotment</td><td style="${td}">${gv('spot-allot-date')}</td><td style="${td}color:#444;font-size:6.8pt;">Date & Time of Survey</td><td style="${td}">${gv('spot-survey-datetime')}</td></tr></table>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">A. VEHICLE PARTICULARS</div>
-<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Policy No.</td><td style="${td}font-family:monospace;width:32%;">${gv('f-policy-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Claim No.</td><td style="${td}font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Type</td><td style="${td}">${gv('f-policy-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">IDV (₹)</td><td style="${td}">${gv('f-idv')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Period</td><td style="${td}">${gv('f-policy-from')||'—'} to ${gv('f-policy-to')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Policy Issuing Office</td><td style="${td}">${gv('f-policy-office')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Appointing Office</td><td style="${td}">${gv('f-appt-office')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;"></td><td style="${td}"></td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Reg. No.</td><td style="${td}font-weight:700;">${gv('f-reg-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Make / Model / Year</td><td style="${td}"><b>${gv('f-make')}</b> / ${gv('f-model')} / ${gv('f-year')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Chassis No.</td><td style="${td}font-family:monospace;">${gv('f-chassis')}</td><td style="${td}color:#444;font-size:6.8pt;">Engine No.</td><td style="${td}font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Reg.</td><td style="${td}">${gv('f-reg-date')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Class of Vehicle</td><td style="${td}">${gv('f-veh-class')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Body Type</td><td style="${td}">${gv('f-body-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Colour</td><td style="${td}">${gv('f-colour')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Fuel</td><td style="${td}">${gv('f-fuel')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">CC</td><td style="${td}">${gv('f-cc')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">RLW / GVW / Seating</td><td style="${td}">${gv('f-rlw')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Odometer (KM)</td><td style="${td}">${gv('f-odo')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Pre-Accident Condition</td><td style="${td}">${gv('f-condition')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">${isComm?'Fitness Cert. No.':''}</td><td style="${td}font-family:monospace;">${isComm?gv('f-fitness')||'—':''}</td></tr>${isComm?`<tr><td style="${td}color:#444;font-size:6.8pt;">Route / Area</td><td style="${td}" colspan="3">${gv('f-route')||'—'}</td></tr>`:''}<tr><td style="${td}color:#444;font-size:6.8pt;">Insured</td><td style="${td}font-weight:600;">${gv('f-insured-name')}</td><td style="${td}color:#444;font-size:6.8pt;">Insurer</td><td style="${td}">${gv('f-insurer')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Insured Mobile</td><td style="${td}">${gv('f-insured-mobile')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">HPA / Finance With</td><td style="${td}">${gv('f-hpa')||'NIL'}</td></tr>${gv('f-insured-addr')?`<tr><td style="${td}color:#444;font-size:6.8pt;">Insured Address</td><td style="${td}" colspan="3">${gv('f-insured-addr')}</td></tr>`:''}</table>
+<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Policy No.</td><td style="${td}font-family:monospace;width:32%;">${gv('f-policy-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Claim No.</td><td style="${td}font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Reg. No.</td><td style="${td}font-weight:700;">${gv('f-reg-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Make / Model / Year</td><td style="${td}"><b>${gv('f-make')}</b> / ${gv('f-model')} / ${gv('f-year')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Chassis No.</td><td style="${td}font-family:monospace;">${gv('f-chassis')}</td><td style="${td}color:#444;font-size:6.8pt;">Engine No.</td><td style="${td}font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Insured</td><td style="${td}font-weight:600;">${gv('f-insured-name')}</td><td style="${td}color:#444;font-size:6.8pt;">Insurer</td><td style="${td}">${gv('f-insurer')}</td></tr></table>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">B. DRIVER'S PARTICULARS &amp; DL VERIFICATION</div>
-<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Driver Name</td><td style="${td}font-weight:600;width:32%;">${gv('spot-driver-name')||'—'}${gv('spot-dl-parent')?' '+(gv('spot-dl-relation')||'S/o')+' '+gv('spot-dl-parent'):''}</td><td style="${td}color:#444;font-size:6.8pt;">MDL No.</td><td style="${td}font-family:monospace;">${gv('spot-mdl-no')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Birth</td><td style="${td}">${gv('f-dob')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Issuing Authority</td><td style="${td}">${gv('spot-dl-authority')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Licence Classes</td><td style="${td}">${gv('spot-dl-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Issue Date</td><td style="${td}">${gv('spot-dl-issue')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Non-Transport Valid</td><td style="${td}${ntExpired?'color:#c00;font-weight:700;':''}">${dlValid||'—'}${ntExpired?' ⚠ EXPIRED':''}</td><td style="${td}color:#444;font-size:6.8pt;">Transport Valid</td><td style="${td}${tExpired?'color:#c00;font-weight:700;':''}">${dlTValid||'—'}${tExpired?' ⚠ EXPIRED':''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">MDL Status</td><td style="${td}" colspan="3"><b>${gv('spot-mdl-verified')==='verified'?'ORIGINAL MDL VERIFIED':gv('spot-mdl-verified')==='photocopy'?'PHOTOCOPY VERIFIED':'NOT AVAILABLE'}</b>${gv('spot-dl-invalid-remarks')?' — '+gv('spot-dl-invalid-remarks'):''}</td></tr></table>
+<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Driver Name</td><td style="${td}font-weight:600;width:32%;">${gv('spot-driver-name')||'—'}${gv('spot-dl-parent')?' '+(gv('spot-dl-relation')||'S/o')+' '+gv('spot-dl-parent'):''}</td><td style="${td}color:#444;font-size:6.8pt;">MDL No.</td><td style="${td}font-family:monospace;">${gv('spot-mdl-no')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Licence Classes</td><td style="${td}">${gv('spot-dl-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Issue Date</td><td style="${td}">${gv('spot-dl-issue')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Non-Transport Valid</td><td style="${td}${ntExpired?'color:#c00;font-weight:700;':''}">${dlValid||'—'}${ntExpired?' ⚠ EXPIRED':''}</td><td style="${td}color:#444;font-size:6.8pt;">Transport Valid</td><td style="${td}${tExpired?'color:#c00;font-weight:700;':''}">${dlTValid||'—'}${tExpired?' ⚠ EXPIRED':''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">MDL Status</td><td style="${td}" colspan="3"><b>${gv('spot-mdl-verified')==='verified'?'ORIGINAL MDL VERIFIED':gv('spot-mdl-verified')==='photocopy'?'PHOTOCOPY VERIFIED':'NOT AVAILABLE'}</b>${gv('spot-dl-invalid-remarks')?' — '+gv('spot-dl-invalid-remarks'):''}</td></tr></table>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">C. ACCIDENT DETAILS</div>
-<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Date &amp; Time</td><td style="${td}width:32%;">${gv('spot-accident-datetime')}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Accident</td><td style="${td}">${gv('spot-accident-place')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Survey</td><td style="${td}">${gv('f-survey-date')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Survey</td><td style="${td}">${gv('spot-survey-place')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Third Party</td><td style="${td}">${gv('spot-tp-involved')==='no'?'NIL':gv('spot-tp-involved').toUpperCase()}</td><td style="${td}color:#444;font-size:6.8pt;">TP Details</td><td style="${td}">${gv('spot-tp-details')||'NIL'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Police Reported</td><td style="${td}">${gv('spot-police-reported')==='yes'?'Yes — '+gv('spot-police-station')+' | Diary: '+gv('spot-diary-no'):'No'}</td><td style="${td}color:#444;font-size:6.8pt;">Panchanama</td><td style="${td}">${gv('spot-panchanama')==='yes'?'Yes':'No'}</td></tr></table>
-${isComm?`<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">D. COMMERCIAL VEHICLE DOCUMENTS</div><table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Permit No.</td><td style="${td}font-family:monospace;width:32%;">${gv('spot-permit-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Permit Type</td><td style="${td}">${gv('spot-permit-type')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Permit Valid From</td><td style="${td}">${gv('spot-permit-from')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Permit Valid To</td><td style="${td}">${gv('spot-permit-to')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Fitness No.</td><td style="${td}font-family:monospace;">${gv('spot-fitness-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Fitness Valid To</td><td style="${td}${gv('spot-fitness-valid')&&new Date(gv('spot-fitness-valid'))<today?'color:#c00;font-weight:700;':''}">${gv('spot-fitness-valid')||'—'}${gv('spot-fitness-valid')&&new Date(gv('spot-fitness-valid'))<today?' ⚠ EXPIRED':''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Auth. No.</td><td style="${td}font-family:monospace;">${gv('spot-auth-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Auth Valid To</td><td style="${td}">${gv('spot-auth-valid')||'—'}</td></tr></table>`:''}
-${isGoods?`<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">E. LOAD DETAILS</div><table style="${ts}"><tr><td style="${td}color:#444;width:25%;font-size:6.8pt;">GVW (kg)</td><td style="${td}width:25%;">${gvwVal||'—'}</td><td style="${td}color:#444;width:25%;font-size:6.8pt;">ULW / Tare (kg)</td><td style="${td}">${ulwVal||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Legal Load Capacity</td><td style="${td}font-weight:600;">${capVal?capVal+' kg':'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Actual Load Carried</td><td style="${td}${overload&&document.getElementById('overload-in-report')?.checked?'color:#c00;font-weight:700;':''}">${actualLoad?actualLoad+' kg':'—'}${overload&&document.getElementById('overload-in-report')?.checked?` ⚠ Overloaded by ${Math.round(actualLoad-capVal)} kg`:''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">CN / Challan No.</td><td style="${td}font-family:monospace;">${gv('spot-cn-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Challan Date</td><td style="${td}">${gv('spot-cn-date')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Goods</td><td style="${td}">${gv('spot-load-desc')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;"></td><td style="${td}"></td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Origin</td><td style="${td}">${gv('spot-load-origin')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Destination</td><td style="${td}">${gv('spot-load-dest')||'—'}</td></tr></table>`:''}
+<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Date &amp; Time</td><td style="${td}width:32%;">${gv('spot-accident-datetime')}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Accident</td><td style="${td}">${gv('spot-accident-place')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Place of Survey</td><td style="${td}">${gv('spot-survey-place')}</td><td style="${td}color:#444;font-size:6.8pt;">Third Party</td><td style="${td}">${gv('spot-tp-involved')==='no'?'NIL':gv('spot-tp-involved').toUpperCase()}</td></tr>${gv('spot-tp-details')&&gv('spot-tp-details')!=='NIL'?`<tr><td style="${td}color:#444;font-size:6.8pt;">TP Details</td><td style="${td}" colspan="3">${gv('spot-tp-details')}</td></tr>`:''}<tr><td style="${td}color:#444;font-size:6.8pt;">Police Reported</td><td style="${td}">${gv('spot-police-reported')==='yes'?'Yes — '+gv('spot-police-station')+' | Diary: '+gv('spot-diary-no'):'No'}</td><td style="${td}color:#444;font-size:6.8pt;">Panchanama</td><td style="${td}">${gv('spot-panchanama')==='yes'?'Yes':'No'}</td></tr></table>
+${isComm?`<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">D. COMMERCIAL VEHICLE DOCUMENTS</div><table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Permit No.</td><td style="${td}font-family:monospace;width:32%;">${gv('spot-permit-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Permit Type / Valid To</td><td style="${td}">${gv('spot-permit-type')||'—'} / ${gv('spot-permit-to')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Fitness No.</td><td style="${td}font-family:monospace;">${gv('spot-fitness-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Fitness Valid To</td><td style="${td}${gv('spot-fitness-valid')&&new Date(gv('spot-fitness-valid'))<today?'color:#c00;font-weight:700;':''}">${gv('spot-fitness-valid')||'—'}${gv('spot-fitness-valid')&&new Date(gv('spot-fitness-valid'))<today?' ⚠ EXPIRED':''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Auth. No.</td><td style="${td}font-family:monospace;">${gv('spot-auth-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Auth Valid To</td><td style="${td}">${gv('spot-auth-valid')||'—'}</td></tr></table>`:''}
+${isGoods?`<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">E. LOAD DETAILS</div><table style="${ts}"><tr><td style="${td}color:#444;width:25%;font-size:6.8pt;">GVW (kg)</td><td style="${td}width:25%;">${gvwVal||'—'}</td><td style="${td}color:#444;width:25%;font-size:6.8pt;">ULW / Tare (kg)</td><td style="${td}">${ulwVal||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Legal Load Capacity</td><td style="${td}font-weight:600;">${capVal?capVal+' kg':'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Actual Load Carried</td><td style="${td}${overload&&document.getElementById('overload-in-report')?.checked?'color:#c00;font-weight:700;':''}">${actualLoad?actualLoad+' kg':'—'}${overload&&document.getElementById('overload-in-report')?.checked?` ⚠ Overloaded by ${Math.round(actualLoad-capVal)} kg`:''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">CN / Challan No.</td><td style="${td}font-family:monospace;">${gv('spot-cn-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Goods</td><td style="${td}">${gv('spot-load-desc')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Origin</td><td style="${td}">${gv('spot-load-origin')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Destination</td><td style="${td}">${gv('spot-load-dest')||'—'}</td></tr></table>`:''}
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">F. CAUSE OF ACCIDENT</div>
 <div style="font-size:7.2pt;margin-bottom:4px;padding:2px 4px;border:0.4pt solid #bbb;line-height:1.5;">${gv('spot-accident-cause')||'—'}</div>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">G. DAMAGE PARTICULARS AT SPOT</div>
 <div style="font-size:6.8pt;margin-bottom:3px;padding:2px 4px;">Severity: <b>${gv('spot-damage-severity').toUpperCase()}</b> &nbsp;|&nbsp; Airbags Deployed: <b>${gv('spot-airbags').toUpperCase()}</b> &nbsp;|&nbsp; Drivable: <b>${gv('spot-drivable')}</b></div>
 ${dmgRows.length?`<table style="${ts}"><thead><tr><th style="${th};width:20pt;text-align:center;">Sr.</th><th style="${th}">Component</th><th style="${th}">Damage Description</th></tr></thead><tbody>${dmgRows}</tbody></table>`:'<p style="font-size:7pt;padding:2px 4px;border:0.4pt solid #bbb;">Damage observations: '+gv('spot-comments')+'</p>'}
 ${gv('spot-comments')?`<div style="font-size:7pt;margin-top:4px;padding:2px 4px;border:0.4pt solid #bbb;">Comments: ${gv('spot-comments')}</div>`:''}
-${gv('spot-repair-workshop')?`<div style="font-size:7.2pt;margin-top:6px;padding:3px 4px;border:0.4pt solid #bbb;background:#f9f9f6;"><b>Repairs:</b> ${gv('spot-repair-workshop')}</div>`:'<div style="font-size:7.2pt;margin-top:6px;padding:3px 4px;border:0.4pt solid #bbb;background:#f9f9f6;"><b>Repairs:</b> &nbsp;</div>'}
+${gv('spot-repairs')?`<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-top:4px;margin-bottom:2px;">REPAIRS</div><div style="font-size:7.2pt;padding:2px 4px;border:0.4pt solid #bbb;">Vehicle to be sent to: <b>${gv('spot-repairs')}</b></div>`:''}
 <p style="font-size:6.5pt;line-height:1.5;margin:8px 0;text-align:justify;color:#333;">We hereby certify that we have carried out spot survey of the above vehicle and report as above without prejudice and subject to terms and conditions of the policy.</p>
 ${getSigBlock()}
-<div style="font-size:6.8pt;margin-top:6px;padding-top:4px;border-top:0.4pt solid #ccc;"><b>ENCL:</b> ${gv('spot-encl')||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div>`;
+${gv('spot-encl')?`<div style="font-size:7pt;margin-top:10px;padding:4px;border-top:0.4pt solid #bbb;"><b>ENCL:</b> ${gv('spot-encl')}</div>`:'<div style="font-size:7pt;margin-top:10px;padding:4px;border-top:0.4pt solid #bbb;"><b>ENCL:</b></div>'}`;
 }
 
 function buildRIHTML() {
@@ -2304,21 +2261,34 @@ ${getSigBlock()}
 function buildFeeBillHTML() {
   const prof=parseFloat(gv('fee-prof'))||0,ri=parseFloat(gv('fee-ri'))||0,travel=parseFloat(gv('fee-travel'))||0,
     photos=(parseFloat(gv('fee-photos-count'))||0)*(parseFloat(gv('fee-photo-rate'))||0),
-    postal=parseFloat(gv('fee-postal'))||0,halt=parseFloat(gv('fee-haltage'))||0,total=prof+ri+travel+photos+postal+halt;
-  const includeGST = document.getElementById('fee-include-gst')?.checked || false;
-  const gstAmt = includeGST ? total*0.18 : 0;
-  const grand = total + gstAmt;
+    postal=parseFloat(gv('fee-postal'))||0,halt=parseFloat(gv('fee-haltage'))||0,subtotal=prof+ri+travel+photos+postal+halt;
+  const gstOn = gv('fee-gst-enabled')==='yes';
+  const gstAmt = gstOn ? subtotal*0.18 : 0;
+  const grand = subtotal + gstAmt;
   const fa=v=>'₹ '+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
   const rows=[[`Professional Survey Fee — ${gv('f-reg-no')||'Vehicle'}`,fa(prof)],[`RI Inspection Fee`,fa(ri)],[`Travel Expenses — ${gv('fee-travel-note')||''}`,fa(travel)],[`Photography Charges (${gv('fee-photos-count')} photos × ₹${gv('fee-photo-rate')})`,fa(photos)],[`Postal / Courier Charges`,fa(postal)],[`Haltage Charges`,fa(halt)]].filter(r=>parseFloat(r[1].replace(/[₹,\s]/g,''))||false);
-  const gstRow = includeGST ? `<tr><td style="padding:6px 9px;">GST @ 18% (SAC 998549)</td><td style="padding:6px 9px;text-align:right;">${fa(gstAmt)}</td></tr>` : '';
+  const gstRow = gstOn ? `<tr><td style="padding:6px 9px;">GST @ 18% (SAC 998549)</td><td style="padding:6px 9px;text-align:right;">${fa(gstAmt)}</td></tr>` : '';
+  const policyNo = gv('fee-policy-no')||gv('f-policy-no')||'';
+  const doaVal = gv('fee-doa')||'';
+  const survDateVal = gv('fee-survey-date')||gv('f-survey-date')||'';
+  const placeVal = gv('fee-place-of-survey')||gv('f-survey-place')||'';
+  const td='padding:4px 0;color:#666;width:35%;';
   return`${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:1.1rem;margin-bottom:12px;">SURVEYOR FEE BILL / INVOICE</div>
-<table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:12px;"><tr><td style="padding:4px 0;color:#666;width:35%;">To</td><td style="font-weight:600;">${gv('f-insurer')}</td><td style="color:#666;width:20%;text-align:right;">Bill Date</td><td style="font-weight:600;text-align:right;">${gv('fee-bill-date')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Report No.</td><td colspan="3">${gv('f-report-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Policy No.</td><td style="font-family:monospace;">${gv('f-policy-no')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insured</td><td>${gv('f-insured-name')}</td></tr><tr><td style="padding:4px 0;color:#666;">Vehicle</td><td><b>${gv('f-reg-no')}</b> — ${gv('f-make')} ${gv('f-model')}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Accident</td><td>${gv('f-doa')||gv('spot-accident-datetime')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Survey</td><td>${gv('f-survey-date')||gv('spot-survey-datetime')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Place of Survey</td><td>${gv('f-survey-place')||gv('spot-survey-place')||'—'}</td></tr></table>
-<table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:14px;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="padding:7px 9px;text-align:left;">Particulars</th><th style="padding:7px 9px;text-align:right;">Amount</th></tr></thead><tbody>${rows.map((r,i)=>`<tr style="background:${i%2===0?'#fff':'#f8f5f0'}"><td style="padding:6px 9px;">${r[0]}</td><td style="padding:6px 9px;text-align:right;">${r[1]}</td></tr>`).join('')}<tr style="background:#f0fdf8;"><td style="padding:6px 9px;font-weight:600;">Sub-Total</td><td style="padding:6px 9px;text-align:right;font-weight:600;">${fa(total)}</td></tr>${gstRow}<tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;">TOTAL PAYABLE</td><td style="padding:9px;text-align:right;font-weight:700;">${fa(grand)}</td></tr></tbody></table>
+<table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:12px;">
+  <tr><td style="${td}">To</td><td style="font-weight:600;">${gv('f-insurer')}</td></tr>
+  <tr><td style="${td}">Report No.</td><td>${gv('f-report-no')}</td></tr>
+  <tr><td style="${td}">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr>
+  ${policyNo?`<tr><td style="${td}">Policy No.</td><td style="font-family:monospace;">${policyNo}</td></tr>`:''}
+  <tr><td style="${td}">Insured</td><td>${gv('f-insured-name')}</td></tr>
+  <tr><td style="${td}">Vehicle</td><td><b>${gv('f-reg-no')}</b> — ${gv('f-make')} ${gv('f-model')}</td></tr>
+  ${doaVal?`<tr><td style="${td}">Date of Accident</td><td>${doaVal}</td></tr>`:''}
+  ${survDateVal?`<tr><td style="${td}">Date of Survey</td><td>${survDateVal}</td></tr>`:''}
+  ${placeVal?`<tr><td style="${td}">Place of Survey</td><td>${placeVal}</td></tr>`:''}
+</table>
+<table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:14px;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="padding:7px 9px;text-align:left;">Particulars</th><th style="padding:7px 9px;text-align:right;">Amount</th></tr></thead><tbody>${rows.map((r,i)=>`<tr style="background:${i%2===0?'#fff':'#f8f5f0'}"><td style="padding:6px 9px;">${r[0]}</td><td style="padding:6px 9px;text-align:right;">${r[1]}</td></tr>`).join('')}<tr style="background:#f0fdf8;"><td style="padding:6px 9px;font-weight:600;">${gstOn?'Sub-Total':'Total'}</td><td style="padding:6px 9px;text-align:right;font-weight:600;">${fa(subtotal)}</td></tr>${gstRow}<tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;">TOTAL PAYABLE</td><td style="padding:9px;text-align:right;font-weight:700;">${fa(grand)}</td></tr></tbody></table>
 <div style="font-style:italic;font-size:0.78rem;margin-bottom:14px;">RUPEES ${numberToWords(grand)} ONLY</div>
-${gv('fee-advance-receipt')?`<div style="font-size:0.78rem;margin-top:10px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;"><strong>Advance Receipt:</strong> ${gv('fee-advance-receipt')}</div>`:''}
-${gv('fee-cash-received')?`<div style="font-size:0.78rem;margin-top:8px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;"><strong>Cash Received from Insured:</strong> ${gv('fee-cash-received')}</div>`:''}
-<div style="font-size:0.78rem;margin-top:14px;padding:10px 12px;background:#f5f7fa;border-radius:6px;line-height:1.8;"><strong>Payment Details:</strong><br/>Bank: ${gv('bank-name')} &nbsp;|&nbsp; A/c: ${gv('bank-ac')} &nbsp;|&nbsp; IFSC: ${gv('bank-ifsc')}<br/>${gv('sp-gst')?'GST No.: '+gv('sp-gst')+' &nbsp;|&nbsp; ':''} PAN: ${gv('bank-pan')}</div>
+<div style="font-size:0.78rem;margin-top:14px;padding:10px 12px;background:#f5f7fa;border-radius:6px;line-height:1.8;"><strong>Payment Details:</strong><br/>Bank: ${gv('bank-name')} &nbsp;|&nbsp; A/c: ${gv('bank-ac')} &nbsp;|&nbsp; IFSC: ${gv('bank-ifsc')}<br/>${gstOn?`GST No.: ${gv('sp-gst')||'N/A'} &nbsp;|&nbsp; `:''}PAN: ${gv('bank-pan')}</div>
 ${getSigBlock()}`;
 }
 
