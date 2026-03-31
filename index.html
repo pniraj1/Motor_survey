@@ -7,6 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- Firebase Storage -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{--ink:#0D1521;--ink2:#1C2B3A;--surface:#F5F7FA;--panel:#FFFFFF;--border:#E2E8F0;--border2:#CBD5E1;--teal:#0E9F8A;--teal-dark:#0B7D6E;--teal-light:#E6F7F5;--amber:#F59E0B;--amber-bg:#FFFBEB;--red:#EF4444;--red-bg:#FEF2F2;--green:#10B981;--green-bg:#ECFDF5;--blue:#3B82F6;--blue-bg:#EFF6FF;--gold:#B45309;--muted:#64748B;--muted2:#94A3B8;--cream:#F8F5F0;--sidebar-w:220px;--header-h:54px}
@@ -384,6 +388,7 @@ table.at tr:hover td{background:#f8fbfa}
           <button class="btn btn-secondary btn-sm" onclick="saveClaim()">💾 Save</button>
           <button class="btn btn-ghost btn-sm" onclick="deleteClaim()">🗑</button>
           <button class="btn btn-secondary btn-sm" id="ws-drive-folder-btn" onclick="openDriveFolder()" title="Open Drive folder" style="display:none">☁ Folder</button>
+          <button class="btn btn-ghost btn-sm" id="ws-clear-cloud-btn" onclick="clearCloudFiles()" title="Delete files from DocStream (Firebase) Storage" style="color:var(--red);border-color:var(--red-bg)">☁ Clear Cloud</button>
           <span id="ws-survey-type-badge" class="badge" style="font-size:11px"></span>
         </div>
       </div>
@@ -591,10 +596,8 @@ table.at tr:hover td{background:#f8fbfa}
       </div>
     </div></div>
 
-    <div class="card"><div class="card-header"><h3>Accident Details</h3></div><div class="card-body">
+    <div class="card"><div class="card-header"><h3>Spot-Specific Survey Details</h3></div><div class="card-body">
       <div class="form-grid one">
-        <div class="form-group"><label class="form-label">Date & Time of Accident</label><input class="form-input" type="datetime-local" id="spot-accident-datetime"/></div>
-        <div class="form-group"><label class="form-label">Place of Accident</label><input class="form-input" id="spot-accident-place"/></div>
         <div class="form-group"><label class="form-label">Place of Survey / Workshop</label><input class="form-input" id="spot-survey-place"/></div>
         <div class="form-group"><label class="form-label">Third Party Involvement</label><select class="form-select" id="spot-tp-involved"><option value="no">NIL — No Third Party</option><option value="tppd">TPPD — Property Damage Only</option><option value="tppi">TPPI — Personal Injury / Death</option><option value="both">Both — Property Damage & Injury</option></select></div>
         <div class="form-group"><label class="form-label">Third Party Details</label><input class="form-input" id="spot-tp-details" placeholder="NIL"/></div>
@@ -645,9 +648,6 @@ table.at tr:hover td{background:#f8fbfa}
     </div>
   </div>
 
-  <div class="card"><div class="card-header"><h3>Cause & Nature of Accident</h3></div><div class="card-body">
-    <textarea class="form-textarea" id="spot-accident-cause" style="min-height:80px"></textarea><div id="cause-suggestions-spot-accident-cause"></div>
-  </div></div>
 
   <div class="card"><div class="card-header"><h3>Damage Assessment at Spot</h3><button class="btn btn-secondary btn-sm" onclick="addSpotDamageRow('','')">+ Add Component</button></div><div class="card-body">
     <div class="form-grid four" style="margin-bottom:14px">
@@ -856,6 +856,55 @@ table.at tr:hover td{background:#f8fbfa}
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyD3RJ4hqj60mWwh09_dJ5QS-g9LKYRi_Hg",
+  authDomain: "surveyos-ddb99.firebaseapp.com",
+  projectId: "surveyos-ddb99",
+  storageBucket: "surveyos-ddb99.firebasestorage.app",
+  messagingSenderId: "43051509949",
+  appId: "1:43051509949:web:b10fee1b4ccbc0dc462fd4",
+  measurementId: "G-RX23WJ9KJR"
+};
+firebase.initializeApp(firebaseConfig);
+const storage = firebase.storage();
+
+async function clearCloudFiles() {
+  if (!currentClaimId) { showToast('Open a claim first', 'error'); return; }
+  const regNo = gv('f-reg-no') || currentClaimId;
+  const listRef = storage.ref(`claims/${regNo}`);
+  
+  // Check if folder exists by listing (Firebase Storage folders aren't "real", only prefixes are)
+  const firstLevel = await listRef.listAll();
+  if (firstLevel.items.length === 0 && firstLevel.prefixes.length === 0) {
+    showToast('No files found on DocStream for this claim', '');
+    return;
+  }
+
+  if (!confirm(`Permanently delete all uploaded documents from DocStream (Firebase) for claim ${regNo}?\n\nThis will NOT affect files saved to your local PC or Google Drive.`)) return;
+  
+  const btn = document.getElementById('ws-clear-cloud-btn');
+  const oldText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '🕒 Cleaning…';
+
+  try {
+    const deleteFolderRecursive = async (folderRef) => {
+      const folderRes = await folderRef.listAll();
+      const deleteFiles = folderRes.items.map(item => item.delete());
+      const deleteSubs = folderRes.prefixes.map(subFolder => deleteFolderRecursive(subFolder));
+      await Promise.all([...deleteFiles, ...deleteSubs]);
+    };
+
+    await deleteFolderRecursive(listRef);
+    showToast('Cloud storage cleared successfully', 'success');
+  } catch (e) {
+    console.error('Cloud cleanup error:', e);
+    showToast('Failed to clear cloud files', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = oldText;
+  }
+}
 let currentClaimId = null;
 let surveyType     = 'final'; // 'spot' or 'final'
 let newSType       = null;
@@ -1201,9 +1250,29 @@ function selectVehicleType(type) {
 function wizardStep2() {
   document.getElementById('wizard-step-1b').classList.remove('active');
   document.getElementById('wizard-step-2').classList.add('active');
-  const yr=new Date().getFullYear();
-  const prefix = newSType==='spot' ? 'SPO' : 'SUR';
-  document.getElementById('wz-report-no').value=`${prefix}/${Math.floor(Math.random()*900+100)}/${yr}-${String(yr+1).slice(-2)}`;
+  const yr = new Date().getFullYear();
+  let nextNo = '';
+  
+  if (newSType === 'spot') {
+    // Sequential Spot numbering: SPO/YYYY/001
+    const lastYear = parseInt(localStorage.getItem('last_spot_year') || yr);
+    let lastSeq = parseInt(localStorage.getItem('last_spot_seq') || 0);
+    
+    if (lastYear !== yr) {
+      lastSeq = 0; // Reset for new year
+    }
+    
+    const nextSeq = lastSeq + 1;
+    const seqStr = String(nextSeq).padStart(3, '0');
+    nextNo = `SPO/${yr}/${seqStr}`;
+    
+    // Note: We only save to localStorage in createClaim, not here
+  } else {
+    // Final Survey - random or keep existing SUR logic
+    nextNo = `SUR/${Math.floor(Math.random()*900+100)}/${yr}-${String(yr+1).slice(-2)}`;
+  }
+  
+  document.getElementById('wz-report-no').value = nextNo;
 }
 // wizardBack replaced by wizardBackTo
 async function createClaim() {
@@ -1234,6 +1303,20 @@ async function createClaim() {
   claims.push(claimData);
   saveClaims(claims);
   openWorkspace('docs');
+  // Save Spot sequence to local storage if it's a spot survey
+  if (surveyType === 'spot') {
+    const reportNo = gv('spot-report-no');
+    const parts = reportNo.split('/');
+    if (parts.length === 3 && parts[0] === 'SPO') {
+      const yr = parseInt(parts[1]);
+      const seq = parseInt(parts[2]);
+      if (!isNaN(yr) && !isNaN(seq)) {
+        localStorage.setItem('last_spot_year', yr);
+        localStorage.setItem('last_spot_seq', seq);
+      }
+    }
+  }
+
   showToast('Claim created ('+(surveyType==='spot'?'Spot Survey':'Final Survey')+') — upload documents','success');
   // Wire up Google Drive folder for this claim (non-blocking)
   if (gDriveToken) {
@@ -1653,10 +1736,11 @@ function applyExtractedData(type, data) {
     sf('f-survey-place',data.workshop_name||data.place_of_repair);
     if(data.vehicle_number) sf('f-reg-no',data.vehicle_number);
     if(data.date_of_accident){const dt=td(data.date_of_accident),ti=(data.time_of_accident||'00:00').substring(0,5);sf('f-doa',dt+'T'+ti);}
-    sf('spot-accident-place',data.place_of_accident); sf('spot-accident-cause',data.cause_of_accident);
-    sf('spot-driver-name',data.driver_name); sf('spot-mdl-no',data.driver_licence_no);
+    
+    // For Spot Surveys, we also fill these specific survey data points
     sf('spot-survey-place',data.workshop_name||data.place_of_repair); sf('spot-tp-details',data.third_party_details);
-    if(data.date_of_accident){const dt=td(data.date_of_accident),ti=(data.time_of_accident||'00:00').substring(0,5);sf('spot-accident-datetime',dt+'T'+ti);}
+    sf('spot-driver-name',data.driver_name); sf('spot-mdl-no',data.driver_licence_no);
+
     if(data.third_party_details&&data.third_party_details.toLowerCase()!=='nil'&&data.third_party_details.trim()){
       const ts=document.getElementById('spot-tp-involved');
       if(ts){const s=(data.third_party_details||'').toLowerCase();ts.value=(s.includes('injur')||s.includes('death'))&&(s.includes('damage')||s.includes('property'))?'both':s.includes('injur')||s.includes('death')?'tppi':'tppd';}
@@ -1977,6 +2061,31 @@ function numberToWords(num) {
   return c(Math.floor(num));
 }
 
+// ─── Format Date to DD.MM.YYYY ───
+function formatDateDMY(v) {
+  if (!v) return '—';
+  const dStr = String(v).split('T')[0];
+  const parts = dStr.split('-');
+  if (parts.length === 3) {
+    if (parts[0].length === 4) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+    if (parts[2].length === 4) return `${parts[0]}.${parts[1]}.${parts[2]}`;
+  }
+  const d = new Date(v);
+  if (!isNaN(d.getTime())) {
+    return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+  }
+  return v;
+}
+
+// ─── Format DateTime to DD.MM.YYYY HH:MM ───
+function formatDateTimeDMY(v) {
+  if (!v) return '—';
+  const s = String(v);
+  const datePart = formatDateDMY(s.split('T')[0]);
+  const timePart = s.includes('T') ? s.split('T')[1].substring(0,5) : '';
+  return timePart && timePart !== '00:00' ? `${datePart} at ${timePart} hrs` : datePart;
+}
+
 // ═══════════════════════════════════════════════════════════
 // REPORT BUILDERS (preserved from original)
 // ═══════════════════════════════════════════════════════════
@@ -2076,24 +2185,18 @@ function renderPSThumbs() {
 }
 
 function buildPhotoSheetHTML() {
-  // Precise dimensions to fill the A4 page with no wasted space.
-  // A4 portrait usable: 210mm - 16mm margins = 194mm wide, 297mm - 16mm = 281mm tall
-  // Header ~22mm + footer ~13mm + gaps ~3mm = ~38mm overhead → grid height ~243mm
-  // A4 landscape usable: 297mm - 16mm = 281mm wide, 210mm - 16mm = 194mm tall
-  // Header ~22mm + footer ~13mm + gaps ~3mm = ~38mm overhead → grid height ~156mm
-  // Cell gap handled via padding:1.5mm (no visible border)
   const layouts = {
     portrait: {
-      4: { cols:2, rows:2, cw:97,  ch:121 },
-      6: { cols:3, rows:2, cw:64,  ch:121 },
-      8: { cols:4, rows:2, cw:48,  ch:121 },
-      9: { cols:3, rows:3, cw:64,  ch:81  }
+      4: { cols:2, rows:2 },
+      6: { cols:2, rows:3 },
+      8: { cols:2, rows:4 },
+      9: { cols:3, rows:3 }
     },
     landscape: {
-      4: { cols:2, rows:2, cw:140, ch:78  },
-      6: { cols:3, rows:2, cw:93,  ch:78  },
-      8: { cols:4, rows:2, cw:70,  ch:78  },
-      9: { cols:3, rows:3, cw:93,  ch:52  }
+      4: { cols:2, rows:2 },
+      6: { cols:3, rows:2 },
+      8: { cols:4, rows:2 },
+      9: { cols:3, rows:3 }
     }
   };
   const orient = psLandscape ? 'landscape' : 'portrait';
@@ -2101,62 +2204,50 @@ function buildPhotoSheetHTML() {
   const veh = gv('f-reg-no') || gv('spot-report-no') || '';
   const insured = gv('f-insured-name') || '';
   const reportNo = gv('f-report-no') || gv('spot-report-no') || '';
-  const today = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+  const today = formatDateDMY(new Date());
   const surveyor = gv('sp-name') || 'SURVEYOR';
 
   const totalSheets = Math.max(1, Math.ceil(psPhotos.length / psLayout));
 
+  const pWidth = psLandscape ? '297mm' : '210mm';
+  const pHeight = psLandscape ? '210mm' : '297mm';
+  const gHeight = psLandscape ? '172mm' : '265mm';
+
   const headerHTML = (sheetNum) => `
-  <div style="border-bottom:1.5pt solid #0d1b2a;padding-bottom:4pt;margin-bottom:4pt;display:flex;justify-content:space-between;align-items:flex-end;">
-    <div>
-      <div style="font-size:9pt;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${surveyor} — Vehicle Damage Photos</div>
-      <div style="font-size:7pt;color:#555;margin-top:2pt;">
-        ${veh ? 'Vehicle: <b>'+veh+'</b>' : ''} ${insured ? '&nbsp;|&nbsp; Insured: '+insured : ''} ${reportNo ? '&nbsp;|&nbsp; Report: '+reportNo : ''}
+  <div style="border-bottom:1.5pt solid #0d1b2a;padding-bottom:3pt;margin-bottom:3pt;display:flex;justify-content:space-between;align-items:flex-end;height:12mm;box-sizing:border-box;">
+    <div style="flex-grow:1">
+      <div style="font-size:10pt;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Photograph Sheet — SHEET ${sheetNum} / ${totalSheets}</div>
+      <div style="font-size:7.5pt;color:#333;margin-top:1pt;font-weight:600;">
+        ${veh} | ${insured} | Ref: ${reportNo}
       </div>
     </div>
-    <div style="font-size:7pt;color:#777;text-align:right;">
-      Date: ${today}<br>
-      Sheet ${sheetNum} of ${totalSheets} &nbsp;|&nbsp; ${psLayout} per page
+    <div style="font-size:7.5pt;color:#333;text-align:right;font-weight:600;">
+      Date: ${today}
     </div>
-  </div>`;
-
-  const footerHTML = `
-  <div style="margin-top:4pt;border-top:0.5pt solid #ccc;padding-top:3pt;">
-    <div style="font-size:6pt;color:#999;">Photos submitted by surveyor as part of survey documentation.</div>
   </div>`;
 
   let sheetsHTML = '';
   for (let s = 0; s < totalSheets; s++) {
-    const pageBreak = s > 0 ? 'page-break-before:always;' : '';
-    let rows = '';
-    let cells = '';
+    let gridHTML = `<div style="display:grid;grid-template-columns:repeat(${L.cols}, 1fr);grid-template-rows:repeat(${L.rows}, 1fr);gap:2mm;flex-grow:1;height:${gHeight};">`;
     for (let i = 0; i < psLayout; i++) {
-      const globalIdx = s * psLayout + i;
-      const photo = psPhotos[globalIdx];
-      const imgHtml = photo
-        ? `<img src="${photo.dataUrl}" style="width:100%;height:100%;object-fit:contain;display:block;background:#e8e8e8;border-radius:1mm;"/>`
-        : `<div style="width:100%;height:100%;background:#fff;"></div>`;
-      // No label, no border — padding only creates the gap between photos
-      cells += `<td style="width:${L.cw}mm;height:${L.ch}mm;padding:1.5mm;vertical-align:top;">${imgHtml}</td>`;
-      if ((i + 1) % L.cols === 0 && i < psLayout - 1) { rows += `<tr>${cells}</tr>`; cells = ''; }
+      const idx = s * psLayout + i;
+      const ph = psPhotos[idx];
+      gridHTML += `<div style="border:0.4pt solid #e5e0d8;display:flex;flex-direction:column;position:relative;overflow:hidden;padding:1mm;background:#fff;height:100% !important;">`;
+      if (ph) {
+        gridHTML += `<div style="flex-grow:1;display:flex;align-items:center;justify-content:center;overflow:hidden;"><img src="${ph.dataUrl}" style="max-width:100%;max-height:100%;object-fit:contain;"/></div><div style="position:absolute;bottom:2px;right:2px;font-size:7pt;font-weight:700;background:rgba(255,255,255,0.7);padding:0 3px;border-radius:2px;">PHOTO ${idx+1}</div>`;
+      }
+      gridHTML += `</div>`;
     }
-    if (cells) rows += `<tr>${cells}</tr>`;
+    gridHTML += `</div>`;
+
     sheetsHTML += `
-    <div style="${pageBreak}">
+    <div class="page" style="width:${pWidth};height:${pHeight};padding:8mm;box-sizing:border-box;page-break-after:always;display:flex;flex-direction:column;overflow:hidden;">
       ${headerHTML(s + 1)}
-      <table style="width:100%;border-collapse:collapse;table-layout:fixed;">${rows}</table>
-      ${footerHTML}
+      ${gridHTML}
     </div>`;
   }
 
-  const pageSize = psLandscape ? 'A4 landscape' : 'A4 portrait';
-  return `<!DOCTYPE html><html><head><title>Photo Sheet — ${veh}</title>
-<style>
-@page{size:${pageSize};margin:8mm 8mm 8mm 8mm}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;font-size:8pt;color:#000;background:#fff}
-@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style></head><body>${sheetsHTML}</body></html>`;
+  return `<!DOCTYPE html><html><head><title>Photo Sheet - ${veh}</title><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&display=swap" rel="stylesheet"><style>body{margin:0;padding:0;font-family:'Barlow',sans-serif;background:#525659}@media print{body{background:none}.page{box-shadow:none!important}} .page{background:#fff;margin:10mm auto;box-shadow:0 0 10px rgba(0,0,0,0.2)}</style></head><body>${sheetsHTML}</body></html>`;
 }
 
 function genPhotoSheet() {
@@ -2195,14 +2286,15 @@ function buildFinalSurveyHTML() {
   return`${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:3px;text-decoration:underline;letter-spacing:0.05em;">PRIVATE AND CONFIDENTIAL — MOTOR (FINAL) SURVEY REPORT</div>
 <p style="font-size:6.5pt;font-style:italic;margin-bottom:4px;text-align:justify;color:#444;">This report is issued by us as Licenced Surveyors without prejudice, in respect of cause, nature &amp; extent of loss/damage, subject to the terms &amp; conditions of the Insurance policy.</p>
-<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Report No.</td><td style="${td}font-weight:700;width:32%;">${gv('f-report-no')}</td><td style="${td}color:#444;width:18%;font-size:6.8pt;">Date</td><td style="${td}font-weight:700;">${gv('f-report-date')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy No.</td><td style="${td}font-family:monospace;">${gv('f-policy-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Claim No.</td><td style="${td}font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Period</td><td style="${td}">${gv('f-policy-from')} to ${gv('f-policy-to')}</td><td style="${td}color:#444;font-size:6.8pt;">I.D.V.</td><td style="${td}font-weight:600;">₹ ${fmt2(gv('f-idv'))}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Type</td><td style="${td}" colspan="3">${gv('f-policy-type')} — <b>${depType==='nil'?'Nil Depreciation':depType==='zero'?'Zero Dep Policy':'Standard IRDAI '+ageLabel}</b></td></tr></table>
-<table style="${ts}"><tr><td style="${td}font-weight:700;width:18%;background:#f5f2ee;font-size:6.8pt;">1. INSURER</td><td style="${td}" colspan="3">${gv('f-insurer')} | Appointing: ${gv('f-appt-office')}</td></tr><tr><td style="${td}font-weight:700;background:#f5f2ee;font-size:6.8pt;">2. INSURED</td><td style="${td}font-weight:600;width:32%;">${gv('f-insured-name')}</td><td style="${td}color:#444;font-size:6.8pt;">Mobile</td><td style="${td}">${gv('f-insured-mobile')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Address</td><td style="${td}" colspan="3">${gv('f-insured-addr')}</td></tr><tr><td style="${td}font-weight:700;background:#f5f2ee;font-size:6.8pt;">3. H.P.A.</td><td style="${td}" colspan="3">${gv('f-hpa')||'NIL'}</td></tr></table>
-<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">4. VEHICLE PARTICULARS</div>
-<table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Reg. No.</td><td style="${td}font-weight:700;width:32%;">${gv('f-reg-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Reg.</td><td style="${td}">${gv('f-reg-date')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Make / Model / Year</td><td style="${td}" colspan="3"><b>${gv('f-make')}</b> / ${gv('f-model')} / ${gv('f-year')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Chassis No.</td><td style="${td}font-family:monospace;">${gv('f-chassis')}</td><td style="${td}color:#444;font-size:6.8pt;">Engine No.</td><td style="${td}font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Body / Colour / Fuel</td><td style="${td}" colspan="3">${gv('f-body-type')} / ${gv('f-colour')} / ${gv('f-fuel')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">CC / Odometer</td><td style="${td}">${gv('f-cc')} / ${gv('f-odo')} KM</td><td style="${td}color:#444;font-size:6.8pt;">Pre-Accident Cond.</td><td style="${td}">${gv('f-condition')}</td></tr></table>
-<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">5. DRIVER'S PARTICULARS</div>
-<table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Driver Name</td><td style="${td}font-weight:600;" colspan="3">${gv('f-driver-name')||'—'}${gv('f-dl-parent')?' '+(gv('f-dl-relation')||'S/o')+' '+gv('f-dl-parent'):''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">M.D.L. No.</td><td style="${td}font-family:monospace;width:32%;">${gv('f-mdl')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Birth</td><td style="${td}">${gv('f-dob')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Licence Classes</td><td style="${td}" colspan="3">${gv('f-dl-type')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Non-Transport Valid</td><td style="${td}${gv('f-dl-valid')&&new Date(gv('f-dl-valid'))<new Date()?'color:#c00;font-weight:700;':''}">${gv('f-dl-valid')||'—'}${gv('f-dl-valid')&&new Date(gv('f-dl-valid'))<new Date()?' ⚠ EXPIRED':''}</td><td style="${td}color:#444;font-size:6.8pt;">Transport Valid</td><td style="${td}${gv('f-dl-valid-transport')&&new Date(gv('f-dl-valid-transport'))<new Date()?'color:#c00;font-weight:700;':''}">${gv('f-dl-valid-transport')||'—'}${gv('f-dl-valid-transport')&&new Date(gv('f-dl-valid-transport'))<new Date()?' ⚠ EXPIRED':''}</td></tr></table>
-<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">6. ACCIDENT &amp; SURVEY DETAILS</div>
-<table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Date &amp; Time</td><td style="${td}width:32%;">${gv('f-doa')}</td><td style="${td}color:#444;font-size:6.8pt;">Place</td><td style="${td}">${gv('f-poa')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Survey</td><td style="${td}">${gv('f-survey-date')}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Survey</td><td style="${td}">${gv('f-survey-place')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Third Party</td><td style="${td}" colspan="3">${gv('f-tp')||'NIL'}</td></tr></table>
+<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Report No.</td><td style="${td}font-weight:700;width:32%;">${gv('f-report-no')}</td><td style="${td}color:#444;width:18%;font-size:6.8pt;">Date</td><td style="${td}font-weight:700;">${formatDateDMY(gv('f-report-date'))}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy No.</td><td style="${td}font-family:monospace;">${gv('f-policy-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Claim No.</td><td style="${td}font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Period</td><td style="${td}">${formatDateDMY(gv('f-policy-from'))} to ${formatDateDMY(gv('f-policy-to'))}</td><td style="${td}color:#444;font-size:6.8pt;">I.D.V.</td><td style="${td}font-weight:600;">₹ ${fmt2(gv('f-idv'))}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Type</td><td style="${td}" colspan="3">${gv('f-policy-type')} — <b>${depType==='nil'?'Nil Depreciation':depType==='zero'?'Zero Dep Policy':'Standard IRDAI '+ageLabel}</b></td></tr></table>
+<div style="font-weight:700;font-size:7pt;background:#f5f2ee;width:100%;padding:2px 4px;border:0.4pt solid #bbb;border-bottom:none;">1. INSURER &amp; INSURED DETAILS</div>
+<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Insurer</td><td style="${td}" colspan="3">${gv('f-insurer')} | Appointing: ${gv('f-appt-office')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Insured Name</td><td style="${td}font-weight:600;width:32%;">${gv('f-insured-name')}</td><td style="${td}color:#444;font-size:6.8pt;">Mobile</td><td style="${td}">${gv('f-insured-mobile')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Address</td><td style="${td}" colspan="3">${gv('f-insured-addr')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">H.P.A.</td><td style="${td}" colspan="3">${gv('f-hpa')||'NIL'}</td></tr></table>
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">2. VEHICLE PARTICULARS</div>
+<table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Reg. No.</td><td style="${td}font-weight:700;width:32%;">${gv('f-reg-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Reg.</td><td style="${td}">${formatDateDMY(gv('f-reg-date'))}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Make / Model / Year</td><td style="${td}" colspan="3"><b>${gv('f-make')}</b> / ${gv('f-model')} / ${gv('f-year')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Chassis No.</td><td style="${td}font-family:monospace;">${gv('f-chassis')}</td><td style="${td}color:#444;font-size:6.8pt;">Engine No.</td><td style="${td}font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Body / Colour / Fuel</td><td style="${td}" colspan="3">${gv('f-body-type')} / ${gv('f-colour')} / ${gv('f-fuel')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">CC / Odometer</td><td style="${td}">${gv('f-cc')} / ${gv('f-odo')} KM</td><td style="${td}color:#444;font-size:6.8pt;">Pre-Accident Cond.</td><td style="${td}">${gv('f-condition')}</td></tr></table>
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">3. DRIVER'S PARTICULARS</div>
+<table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Driver Name</td><td style="${td}font-weight:600;" colspan="3">${gv('f-driver-name')||'—'}${gv('f-dl-parent')?' '+(gv('f-dl-relation')||'S/o')+' '+gv('f-dl-parent'):''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">M.D.L. No.</td><td style="${td}font-family:monospace;width:32%;">${gv('f-mdl')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Birth</td><td style="${td}">${formatDateDMY(gv('f-dob'))||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Licence Classes</td><td style="${td}" colspan="3">${gv('f-dl-type')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Non-Transport Valid</td><td style="${td}${gv('f-dl-valid')&&new Date(gv('f-dl-valid'))<new Date()?'color:#c00;font-weight:700;':''}">${formatDateDMY(gv('f-dl-valid'))||'—'}${gv('f-dl-valid')&&new Date(gv('f-dl-valid'))<new Date()?' ⚠ EXPIRED':''}</td><td style="${td}color:#444;font-size:6.8pt;">Transport Valid</td><td style="${td}${gv('f-dl-valid-transport')&&new Date(gv('f-dl-valid-transport'))<new Date()?'color:#c00;font-weight:700;':''}">${formatDateDMY(gv('f-dl-valid-transport'))||'—'}${gv('f-dl-valid-transport')&&new Date(gv('f-dl-valid-transport'))<new Date()?' ⚠ EXPIRED':''}</td></tr></table>
+<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">4. ACCIDENT &amp; SURVEY DETAILS</div>
+<table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Date &amp; Time</td><td style="${td}width:32%;">${formatDateDMY(gv('f-doa'))}</td><td style="${td}color:#444;font-size:6.8pt;">Place</td><td style="${td}">${gv('f-poa')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Survey</td><td style="${td}">${formatDateDMY(gv('f-survey-date'))}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Survey</td><td style="${td}">${gv('f-survey-place')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Third Party</td><td style="${td}" colspan="3">${gv('f-tp')||'NIL'}</td></tr></table>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">7. CAUSE &amp; NATURE OF ACCIDENT</div>
 <div style="font-size:7.2pt;margin-bottom:4px;padding:2px 4px;border:0.4pt solid #bbb;background:#fafaf7;line-height:1.5;">${gv('f-cause')||'—'}</div>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">8. ASSESSMENT SUMMARY</div>
@@ -2239,7 +2331,7 @@ function buildBillCheckHTML() {
   const labHtml=assessRows.filter(r=>r.section==='labour'||r.section==='paint').map((r,i)=>`<tr><td style="padding:5px 8px;">${i+1}</td><td style="padding:5px 8px;">${r.particulars}</td><td style="padding:5px 8px;text-align:center;">${r.gst}%</td><td colspan="2" style="padding:5px 8px;text-align:right;">${fa(r.assessed)}</td></tr>`).join('');
   return`${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:1.05rem;margin-bottom:12px;">BILL CHECK REPORT</div>
-<table style="${ts}margin-bottom:12px;"><tr><td style="padding:4px 0;color:#666;width:33%;">Report No.</td><td style="font-weight:600;">${gv('f-report-no')}</td><td style="color:#666;">Date</td><td>${gv('f-report-date')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insurer</td><td colspan="3">${gv('f-insurer')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insured</td><td colspan="3">${gv('f-insured-name')}</td></tr><tr><td style="padding:4px 0;color:#666;">Policy No.</td><td>${gv('f-policy-no')}</td><td style="color:#666;">Vehicle No.</td><td style="font-weight:600;">${gv('f-reg-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Chassis</td><td>${gv('f-chassis')}</td><td style="color:#666;">Engine</td><td>${gv('f-engine')}</td></tr></table>
+<table style="${ts}margin-bottom:12px;"><tr><td style="padding:4px 0;color:#666;width:33%;">Report No.</td><td style="font-weight:600;">${gv('f-report-no')}</td><td style="color:#666;">Date</td><td>${formatDateDMY(gv('f-report-date'))}</td></tr><tr><td style="padding:4px 0;color:#666;">Insurer</td><td colspan="3">${gv('f-insurer')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insured</td><td colspan="3">${gv('f-insured-name')}</td></tr><tr><td style="padding:4px 0;color:#666;">Policy No.</td><td>${gv('f-policy-no')}</td><td style="color:#666;">Vehicle No.</td><td style="font-weight:600;">${gv('f-reg-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Chassis</td><td>${gv('f-chassis')}</td><td style="color:#666;">Engine</td><td>${gv('f-engine')}</td></tr></table>
 <table style="${ts}margin-bottom:12px;"><thead><tr><th style="${th}">Sr.</th><th style="${th}">Particulars</th><th style="${th}text-align:center;">GST%</th><th style="${th}text-align:right;">Metal ₹</th><th style="${th}text-align:right;">Plastic/Rubber ₹</th></tr></thead><tbody><tr><td colspan="5" style="padding:5px 8px;font-weight:600;background:#ede8df;font-size:0.7rem;">SPARE PARTS</td></tr>${partsHtml}<tr style="background:#e8f5f3;"><td colspan="3" style="padding:5px 8px;font-weight:600;">TOTAL</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(metal)}</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${fa(plastic)}</td></tr><tr><td colspan="5" style="padding:5px 8px;font-weight:600;background:#ede8df;font-size:0.7rem;">LABOUR</td></tr>${labHtml}<tr style="background:#e8f5f3;"><td colspan="3" style="padding:5px 8px;font-weight:600;">TOTAL LABOUR</td><td colspan="2" style="padding:5px 8px;text-align:right;font-weight:600;">${fa(labBase)}</td></tr></tbody></table>
 <table style="${ts}margin-bottom:14px;"><tr><td style="padding:7px;border-bottom:1px solid #ddd;">I) Total Spare Parts (incl. GST)</td><td style="padding:7px;text-align:right;border-bottom:1px solid #ddd;font-weight:600;">₹ ${fa(mGST+pGST)}</td></tr><tr><td style="padding:7px;border-bottom:1px solid #ddd;">II) Total Labour (incl. GST)</td><td style="padding:7px;text-align:right;border-bottom:1px solid #ddd;font-weight:600;">₹ ${fa(lGST)}</td></tr><tr><td style="padding:7px;border-bottom:1px solid #ddd;">Total (I+II)</td><td style="padding:7px;text-align:right;border-bottom:1px solid #ddd;">₹ ${fa(total)}</td></tr><tr><td style="padding:7px;border-bottom:1px solid #ddd;">Less Excess</td><td style="padding:7px;text-align:right;border-bottom:1px solid #ddd;">₹ ${fa(excess)}</td></tr><tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;">NET LIABILITY</td><td style="padding:9px;text-align:right;font-weight:700;">₹ ${fa(net)}</td></tr></table>
 <div style="font-style:italic;font-size:0.78rem;margin-bottom:14px;">INWORDS : RUPEES ${numberToWords(net)} ONLY</div>
@@ -2259,22 +2351,22 @@ function buildSpotSurveyHTML() {
   return`${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:1px;text-decoration:underline;">PRIVATE AND CONFIDENTIAL</div>
 <div style="text-align:center;font-weight:700;font-size:8.5pt;margin-bottom:3px;text-decoration:underline;">SPOT SURVEY REPORT</div>
-<table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Spot Report No.</td><td style="${td}font-weight:700;width:32%;">${gv('spot-report-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Report</td><td style="${td}font-weight:700;">${gv('spot-report-date')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Allotment</td><td style="${td}">${gv('spot-allot-date')}</td><td style="${td}color:#444;font-size:6.8pt;">Date & Time of Survey</td><td style="${td}">${gv('spot-survey-datetime')}</td></tr></table>
+<table style="${ts}"><tr><td style="${td}color:#444;font-size:6.8pt;width:18%;">Spot Report No.</td><td style="${td}font-weight:700;width:32%;">${gv('spot-report-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Date of Report</td><td style="${td}font-weight:700;">${formatDateDMY(gv('spot-report-date'))}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Allotment</td><td style="${td}">${formatDateDMY(gv('spot-allot-date'))}</td><td style="${td}color:#444;font-size:6.8pt;">Date & Time of Survey</td><td style="${td}">${formatDateTimeDMY(gv('spot-survey-datetime'))}</td></tr></table>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">A. VEHICLE PARTICULARS</div>
-<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Policy No.</td><td style="${td}font-family:monospace;width:32%;">${gv('f-policy-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Claim No.</td><td style="${td}font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Type</td><td style="${td}">${gv('f-policy-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">IDV (₹)</td><td style="${td}">${gv('f-idv')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Period</td><td style="${td}">${gv('f-policy-from')||'—'} to ${gv('f-policy-to')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Policy Issuing Office</td><td style="${td}">${gv('f-policy-office')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Appointing Office</td><td style="${td}">${gv('f-appt-office')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;"></td><td style="${td}"></td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Reg. No.</td><td style="${td}font-weight:700;">${gv('f-reg-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Make / Model / Year</td><td style="${td}"><b>${gv('f-make')}</b> / ${gv('f-model')} / ${gv('f-year')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Chassis No.</td><td style="${td}font-family:monospace;">${gv('f-chassis')}</td><td style="${td}color:#444;font-size:6.8pt;">Engine No.</td><td style="${td}font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Reg.</td><td style="${td}">${gv('f-reg-date')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Class of Vehicle</td><td style="${td}">${gv('f-veh-class')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Body Type</td><td style="${td}">${gv('f-body-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Colour</td><td style="${td}">${gv('f-colour')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Fuel</td><td style="${td}">${gv('f-fuel')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">CC</td><td style="${td}">${gv('f-cc')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">RLW / GVW / Seating</td><td style="${td}">${gv('f-rlw')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Odometer (KM)</td><td style="${td}">${gv('f-odo')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Pre-Accident Condition</td><td style="${td}">${gv('f-condition')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">${isComm?'Fitness Cert. No.':''}</td><td style="${td}font-family:monospace;">${isComm?gv('f-fitness')||'—':''}</td></tr>${isComm?`<tr><td style="${td}color:#444;font-size:6.8pt;">Route / Area</td><td style="${td}" colspan="3">${gv('f-route')||'—'}</td></tr>`:''}<tr><td style="${td}color:#444;font-size:6.8pt;">Insured</td><td style="${td}font-weight:600;">${gv('f-insured-name')}</td><td style="${td}color:#444;font-size:6.8pt;">Insurer</td><td style="${td}">${gv('f-insurer')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Insured Mobile</td><td style="${td}">${gv('f-insured-mobile')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">HPA / Finance With</td><td style="${td}">${gv('f-hpa')||'NIL'}</td></tr>${gv('f-insured-addr')?`<tr><td style="${td}color:#444;font-size:6.8pt;">Insured Address</td><td style="${td}" colspan="3">${gv('f-insured-addr')}</td></tr>`:''}</table>
+<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Policy No.</td><td style="${td}font-family:monospace;width:32%;">${gv('f-policy-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Claim No.</td><td style="${td}font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Type</td><td style="${td}">${gv('f-policy-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">IDV (₹)</td><td style="${td}">${gv('f-idv')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Policy Period</td><td style="${td}">${formatDateDMY(gv('f-policy-from'))||'—'} to ${formatDateDMY(gv('f-policy-to'))||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Policy Issuing Office</td><td style="${td}">${gv('f-policy-office')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Appointing Office</td><td style="${td}">${gv('f-appt-office')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;"></td><td style="${td}"></td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Reg. No.</td><td style="${td}font-weight:700;">${gv('f-reg-no')}</td><td style="${td}color:#444;font-size:6.8pt;">Make / Model / Year</td><td style="${td}"><b>${gv('f-make')}</b> / ${gv('f-model')} / ${gv('f-year')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Chassis No.</td><td style="${td}font-family:monospace;">${gv('f-chassis')}</td><td style="${td}color:#444;font-size:6.8pt;">Engine No.</td><td style="${td}font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Reg.</td><td style="${td}">${formatDateDMY(gv('f-reg-date'))||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Class of Vehicle</td><td style="${td}">${gv('f-veh-class')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Body Type</td><td style="${td}">${gv('f-body-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Colour</td><td style="${td}">${gv('f-colour')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Fuel</td><td style="${td}">${gv('f-fuel')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">CC</td><td style="${td}">${gv('f-cc')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">RLW / GVW / Seating</td><td style="${td}">${gv('f-rlw')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Odometer (KM)</td><td style="${td}">${gv('f-odo')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Pre-Accident Condition</td><td style="${td}">${gv('f-condition')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">${isComm?'Fitness Cert. No.':''}</td><td style="${td}font-family:monospace;">${isComm?gv('f-fitness')||'—':''}</td></tr>${isComm?`<tr><td style="${td}color:#444;font-size:6.8pt;">Route / Area</td><td style="${td}" colspan="3">${gv('f-route')||'—'}</td></tr>`:''}<tr><td style="${td}color:#444;font-size:6.8pt;">Insured</td><td style="${td}font-weight:600;">${gv('f-insured-name')}</td><td style="${td}color:#444;font-size:6.8pt;">Insurer</td><td style="${td}">${gv('f-insurer')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Insured Mobile</td><td style="${td}">${gv('f-insured-mobile')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">HPA / Finance With</td><td style="${td}">${gv('f-hpa')||'NIL'}</td></tr>${gv('f-insured-addr')?`<tr><td style="${td}color:#444;font-size:6.8pt;">Insured Address</td><td style="${td}" colspan="3">${gv('f-insured-addr')}</td></tr>`:''}</table>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">B. DRIVER'S PARTICULARS &amp; DL VERIFICATION</div>
-<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Driver Name</td><td style="${td}font-weight:600;width:32%;">${gv('spot-driver-name')||'—'}${gv('spot-dl-parent')?' '+(gv('spot-dl-relation')||'S/o')+' '+gv('spot-dl-parent'):''}</td><td style="${td}color:#444;font-size:6.8pt;">MDL No.</td><td style="${td}font-family:monospace;">${gv('spot-mdl-no')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Birth</td><td style="${td}">${gv('f-dob')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Issuing Authority</td><td style="${td}">${gv('spot-dl-authority')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Licence Classes</td><td style="${td}">${gv('spot-dl-type')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Issue Date</td><td style="${td}">${gv('spot-dl-issue')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Non-Transport Valid</td><td style="${td}${ntExpired?'color:#c00;font-weight:700;':''}">${dlValid||'—'}${ntExpired?' ⚠ EXPIRED':''}</td><td style="${td}color:#444;font-size:6.8pt;">Transport Valid</td><td style="${td}${tExpired?'color:#c00;font-weight:700;':''}">${dlTValid||'—'}${tExpired?' ⚠ EXPIRED':''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">MDL Status</td><td style="${td}" colspan="3"><b>${gv('spot-mdl-verified')==='verified'?'ORIGINAL MDL VERIFIED':gv('spot-mdl-verified')==='photocopy'?'PHOTOCOPY VERIFIED':'NOT AVAILABLE'}</b>${gv('spot-dl-invalid-remarks')?' — '+gv('spot-dl-invalid-remarks'):''}</td></tr></table>
+<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Driver Name</td><td style="${td}font-weight:600;width:32%;">${gv('spot-driver-name')||'—'}${gv('spot-dl-parent')?' '+(gv('spot-dl-relation')||'S/o')+' '+gv('spot-dl-parent'):''}</td><td style="${td}color:#444;font-size:6.8pt;">MDL No.</td><td style="${td}font-family:monospace;">${gv('spot-mdl-no')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Birth</td><td style="${td}">${formatDateDMY(gv('f-dob'))||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Issuing Authority</td><td style="${td}">${gv('spot-dl-authority')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Licence Classes / Issue Date</td><td style="${td}" colspan="3">${gv('spot-dl-type')||'—'} &nbsp;|&nbsp; Issued: ${formatDateDMY(gv('spot-dl-issue'))||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Non-Transport Valid</td><td style="${td}${ntExpired?'color:#c00;font-weight:700;':''}">${formatDateDMY(dlValid)||'—'}${ntExpired?' ⚠ EXPIRED':''}</td><td style="${td}color:#444;font-size:6.8pt;">Transport Valid</td><td style="${td}${tExpired?'color:#c00;font-weight:700;':''}">${formatDateDMY(dlTValid)||'—'}${tExpired?' ⚠ EXPIRED':''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">MDL Status</td><td style="${td}" colspan="3"><b>${gv('spot-mdl-verified')==='verified'?'ORIGINAL MDL VERIFIED':gv('spot-mdl-verified')==='photocopy'?'PHOTOCOPY VERIFIED':'NOT AVAILABLE'}</b>${gv('spot-dl-invalid-remarks')?' — '+gv('spot-dl-invalid-remarks'):''}</td></tr></table>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">C. ACCIDENT DETAILS</div>
-<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Date &amp; Time</td><td style="${td}width:32%;">${gv('spot-accident-datetime')}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Accident</td><td style="${td}">${gv('spot-accident-place')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Survey</td><td style="${td}">${gv('f-survey-date')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Survey</td><td style="${td}">${gv('spot-survey-place')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Third Party</td><td style="${td}">${gv('spot-tp-involved')==='no'?'NIL':gv('spot-tp-involved').toUpperCase()}</td><td style="${td}color:#444;font-size:6.8pt;">TP Details</td><td style="${td}">${gv('spot-tp-details')||'NIL'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Police Reported</td><td style="${td}">${gv('spot-police-reported')==='yes'?'Yes — '+gv('spot-police-station')+' | Diary: '+gv('spot-diary-no'):'No'}</td><td style="${td}color:#444;font-size:6.8pt;">Panchanama</td><td style="${td}">${gv('spot-panchanama')==='yes'?'Yes':'No'}</td></tr></table>
+<table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Date &amp; Time</td><td style="${td}width:32%;">${formatDateTimeDMY(gv('f-doa'))}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Accident</td><td style="${td}">${gv('f-poa')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Date of Survey</td><td style="${td}">${formatDateDMY(gv('f-survey-date'))||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Place of Survey</td><td style="${td}">${gv('spot-survey-place')}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Third Party</td><td style="${td}">${gv('spot-tp-involved')==='no'?'NIL':gv('spot-tp-involved').toUpperCase()}</td><td style="${td}color:#444;font-size:6.8pt;">TP Details</td><td style="${td}">${gv('spot-tp-details')||'NIL'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Police Reported</td><td style="${td}">${gv('spot-police-reported')==='yes'?'Yes — '+gv('spot-police-station')+' | Diary: '+gv('spot-diary-no'):'No'}</td><td style="${td}color:#444;font-size:6.8pt;">Panchanama</td><td style="${td}">${gv('spot-panchanama')==='yes'?'Yes':'No'}</td></tr></table>
 ${isComm?`<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">D. COMMERCIAL VEHICLE DOCUMENTS</div><table style="${ts}"><tr><td style="${td}color:#444;width:18%;font-size:6.8pt;">Permit No.</td><td style="${td}font-family:monospace;width:32%;">${gv('spot-permit-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Permit Type</td><td style="${td}">${gv('spot-permit-type')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Permit Valid From</td><td style="${td}">${gv('spot-permit-from')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Permit Valid To</td><td style="${td}">${gv('spot-permit-to')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Fitness No.</td><td style="${td}font-family:monospace;">${gv('spot-fitness-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Fitness Valid To</td><td style="${td}${gv('spot-fitness-valid')&&new Date(gv('spot-fitness-valid'))<today?'color:#c00;font-weight:700;':''}">${gv('spot-fitness-valid')||'—'}${gv('spot-fitness-valid')&&new Date(gv('spot-fitness-valid'))<today?' ⚠ EXPIRED':''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Auth. No.</td><td style="${td}font-family:monospace;">${gv('spot-auth-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Auth Valid To</td><td style="${td}">${gv('spot-auth-valid')||'—'}</td></tr></table>`:''}
 ${isGoods?`<div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">E. LOAD DETAILS</div><table style="${ts}"><tr><td style="${td}color:#444;width:25%;font-size:6.8pt;">GVW (kg)</td><td style="${td}width:25%;">${gvwVal||'—'}</td><td style="${td}color:#444;width:25%;font-size:6.8pt;">ULW / Tare (kg)</td><td style="${td}">${ulwVal||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Legal Load Capacity</td><td style="${td}font-weight:600;">${capVal?capVal+' kg':'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Actual Load Carried</td><td style="${td}${overload&&document.getElementById('overload-in-report')?.checked?'color:#c00;font-weight:700;':''}">${actualLoad?actualLoad+' kg':'—'}${overload&&document.getElementById('overload-in-report')?.checked?` ⚠ Overloaded by ${Math.round(actualLoad-capVal)} kg`:''}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">CN / Challan No.</td><td style="${td}font-family:monospace;">${gv('spot-cn-no')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Challan Date</td><td style="${td}">${gv('spot-cn-date')||'—'}</td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Goods</td><td style="${td}">${gv('spot-load-desc')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;"></td><td style="${td}"></td></tr><tr><td style="${td}color:#444;font-size:6.8pt;">Origin</td><td style="${td}">${gv('spot-load-origin')||'—'}</td><td style="${td}color:#444;font-size:6.8pt;">Destination</td><td style="${td}">${gv('spot-load-dest')||'—'}</td></tr></table>`:''}
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">F. CAUSE OF ACCIDENT</div>
-<div style="font-size:7.2pt;margin-bottom:4px;padding:2px 4px;border:0.4pt solid #bbb;line-height:1.5;">${gv('spot-accident-cause')||'—'}</div>
+<div style="font-size:7.2pt;margin-bottom:4px;padding:2px 4px;border:0.4pt solid #bbb;line-height:1.5;">${gv('f-cause')||'—'}</div>
 <div style="font-weight:700;font-size:7pt;background:#0d1b2a;color:#fff;padding:2px 4px;margin-bottom:2px;">G. DAMAGE PARTICULARS AT SPOT</div>
 <div style="font-size:6.8pt;margin-bottom:3px;padding:2px 4px;">Severity: <b>${gv('spot-damage-severity').toUpperCase()}</b> &nbsp;|&nbsp; Airbags Deployed: <b>${gv('spot-airbags').toUpperCase()}</b> &nbsp;|&nbsp; Drivable: <b>${gv('spot-drivable')}</b></div>
 ${dmgRows.length?`<table style="${ts}"><thead><tr><th style="${th};width:20pt;text-align:center;">Sr.</th><th style="${th}">Component</th><th style="${th}">Damage Description</th></tr></thead><tbody>${dmgRows}</tbody></table>`:'<p style="font-size:7pt;padding:2px 4px;border:0.4pt solid #bbb;">Damage observations: '+gv('spot-comments')+'</p>'}
 ${gv('spot-comments')?`<div style="font-size:7pt;margin-top:4px;padding:2px 4px;border:0.4pt solid #bbb;">Comments: ${gv('spot-comments')}</div>`:''}
-${gv('spot-repair-workshop')?`<div style="font-size:7.2pt;margin-top:6px;padding:3px 4px;border:0.4pt solid #bbb;background:#f9f9f6;"><b>Repairs:</b> ${gv('spot-repair-workshop')}</div>`:'<div style="font-size:7.2pt;margin-top:6px;padding:3px 4px;border:0.4pt solid #bbb;background:#f9f9f6;"><b>Repairs:</b> &nbsp;</div>'}
+${gv('spot-repairs')?`<div style="font-size:7.2pt;margin-top:6px;padding:3px 4px;border:0.4pt solid #bbb;background:#f9f9f6;"><b>Repairs:</b> ${gv('spot-repairs')}</div>`:'<div style="font-size:7.2pt;margin-top:6px;padding:3px 4px;border:0.4pt solid #bbb;background:#f9f9f6;"><b>Repairs:</b> &nbsp;</div>'}
 <p style="font-size:6.5pt;line-height:1.5;margin:8px 0;text-align:justify;color:#333;">We hereby certify that we have carried out spot survey of the above vehicle and report as above without prejudice and subject to terms and conditions of the policy.</p>
 ${getSigBlock()}
 <div style="font-size:6.8pt;margin-top:6px;padding-top:4px;border-top:0.4pt solid #ccc;"><b>ENCL:</b> ${gv('spot-encl')||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div>`;
@@ -2290,9 +2382,9 @@ function buildRIHTML() {
 <table style="${ts}margin-bottom:12px;border:1px solid #ddd;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="${th}width:30px;">Sr.</th><th style="${th}">Particulars</th><th style="${th}text-align:center;width:100px;">Status</th><th style="${th}width:160px;">Remarks</th></tr></thead><tbody>${riParts.map((p,i)=>{const st=p.status==='replaced'?'✓ Replaced':p.status==='repaired'?'⚡ Repaired':'✗ Not Replaced';const col=p.status==='replaced'?'#1e7e52':p.status==='repaired'?'#b45309':'#c0392b';return`<tr style="border-bottom:1px solid #e5e0d8;"><td style="padding:5px 9px;color:#666;">${i+1}</td><td style="padding:5px 9px;">${p.particulars}</td><td style="padding:5px 9px;text-align:center;color:${col};font-weight:600;font-size:0.75rem;">${st}</td><td style="padding:5px 9px;font-size:0.75rem;font-style:italic;">${p.remarks||'—'}</td></tr>`;}).join('')}</tbody></table>`:''
   return`${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:1.15rem;margin-bottom:12px;">REINSPECTION REPORT</div>
-<div style="display:flex;justify-content:space-between;margin-bottom:12px;"><div><strong>Ref No.: ${gv('ri-ref')||'RIN/—/'+new Date().getFullYear()}</strong></div><div><strong>Date: ${gv('ri-date')}</strong></div></div>
+<div style="display:flex;justify-content:space-between;margin-bottom:12px;"><div><strong>Ref No.: ${gv('ri-ref')||'RIN/—/'+new Date().getFullYear()}</strong></div><div><strong>Date: ${formatDateDMY(gv('ri-date'))}</strong></div></div>
 <table style="${ts}margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Insurer</td><td>${gv('f-insurer')}</td></tr><tr><td style="${td}color:#666;">Insured</td><td style="font-weight:600;">${gv('f-insured-name')}</td></tr><tr><td style="${td}color:#666;">Policy No.</td><td style="font-family:monospace;">${gv('f-policy-no')}</td></tr><tr><td style="${td}color:#666;">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr></table>
-<table style="${ts}margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Registration No.</td><td style="font-weight:600;">${gv('f-reg-no')}</td></tr><tr><td style="${td}color:#666;">Make &amp; Model</td><td>${gv('f-make')} ${gv('f-model')}</td></tr><tr><td style="${td}color:#666;">Chassis No.</td><td style="font-family:monospace;">${gv('f-chassis')}</td></tr><tr><td style="${td}color:#666;">Engine No.</td><td style="font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#666;">Original Survey Ref</td><td><strong>${gv('ri-survey-ref')||gv('f-report-no')}</strong> dated ${gv('ri-survey-date')||gv('f-report-date')}</td></tr></table>
+<table style="${ts}margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Registration No.</td><td style="font-weight:600;">${gv('f-reg-no')}</td></tr><tr><td style="${td}color:#666;">Make &amp; Model</td><td>${gv('f-make')} ${gv('f-model')}</td></tr><tr><td style="${td}color:#666;">Chassis No.</td><td style="font-family:monospace;">${gv('f-chassis')}</td></tr><tr><td style="${td}color:#666;">Engine No.</td><td style="font-family:monospace;">${gv('f-engine')}</td></tr><tr><td style="${td}color:#666;">Original Survey Ref</td><td><strong>${gv('ri-survey-ref')||gv('f-report-no')}</strong> dated ${formatDateDMY(gv('ri-survey-date')||gv('f-report-date'))}</td></tr></table>
 ${partsTable}
 <table style="${ts}margin-bottom:12px;"><tr><td style="${td}color:#666;width:35%;">Repair Quality</td><td style="font-weight:600;">${qT}</td></tr><tr><td style="${td}color:#666;">Vehicle Condition</td><td style="font-weight:600;">${vT}</td></tr><tr><td style="${td}color:#666;">Salvage Status</td><td>${sT}</td></tr></table>
 ${gv('ri-observations')?`<div style="font-weight:700;margin-bottom:7px;">ADDITIONAL OBSERVATIONS</div><p style="font-size:0.8rem;line-height:1.6;margin-bottom:14px;background:#f7f3ed;padding:12px;border-radius:6px;">${gv('ri-observations')}</p>`:''}
@@ -2313,7 +2405,7 @@ function buildFeeBillHTML() {
   const gstRow = includeGST ? `<tr><td style="padding:6px 9px;">GST @ 18% (SAC 998549)</td><td style="padding:6px 9px;text-align:right;">${fa(gstAmt)}</td></tr>` : '';
   return`${getSurveyorHeader()}
 <div style="text-align:center;font-weight:700;font-size:1.1rem;margin-bottom:12px;">SURVEYOR FEE BILL / INVOICE</div>
-<table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:12px;"><tr><td style="padding:4px 0;color:#666;width:35%;">To</td><td style="font-weight:600;">${gv('f-insurer')}</td><td style="color:#666;width:20%;text-align:right;">Bill Date</td><td style="font-weight:600;text-align:right;">${gv('fee-bill-date')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Report No.</td><td colspan="3">${gv('f-report-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Policy No.</td><td style="font-family:monospace;">${gv('f-policy-no')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insured</td><td>${gv('f-insured-name')}</td></tr><tr><td style="padding:4px 0;color:#666;">Vehicle</td><td><b>${gv('f-reg-no')}</b> — ${gv('f-make')} ${gv('f-model')}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Accident</td><td>${gv('f-doa')||gv('spot-accident-datetime')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Survey</td><td>${gv('f-survey-date')||gv('spot-survey-datetime')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Place of Survey</td><td>${gv('f-survey-place')||gv('spot-survey-place')||'—'}</td></tr></table>
+<table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:12px;"><tr><td style="padding:4px 0;color:#666;width:35%;">To</td><td style="font-weight:600;">${gv('f-insurer')}</td><td style="color:#666;width:20%;text-align:right;">Bill Date</td><td style="font-weight:600;text-align:right;">${formatDateDMY(gv('fee-bill-date'))||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Report No.</td><td colspan="3">${gv('f-report-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Policy No.</td><td style="font-family:monospace;">${gv('f-policy-no')||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Claim No.</td><td style="font-family:monospace;">${gv('f-claim-no')}</td></tr><tr><td style="padding:4px 0;color:#666;">Insured</td><td>${gv('f-insured-name')}</td></tr><tr><td style="padding:4px 0;color:#666;">Vehicle</td><td><b>${gv('f-reg-no')}</b> — ${gv('f-make')} ${gv('f-model')}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Accident</td><td>${formatDateDMY(gv('f-doa'))||formatDateDMY(gv('spot-accident-datetime'))||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Date of Survey</td><td>${formatDateDMY(gv('f-survey-date'))||formatDateDMY(gv('spot-survey-datetime'))||'—'}</td></tr><tr><td style="padding:4px 0;color:#666;">Place of Survey</td><td>${gv('f-survey-place')||gv('spot-survey-place')||'—'}</td></tr></table>
 <table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:14px;"><thead><tr style="background:#0d1b2a;color:#fff;"><th style="padding:7px 9px;text-align:left;">Particulars</th><th style="padding:7px 9px;text-align:right;">Amount</th></tr></thead><tbody>${rows.map((r,i)=>`<tr style="background:${i%2===0?'#fff':'#f8f5f0'}"><td style="padding:6px 9px;">${r[0]}</td><td style="padding:6px 9px;text-align:right;">${r[1]}</td></tr>`).join('')}<tr style="background:#f0fdf8;"><td style="padding:6px 9px;font-weight:600;">Sub-Total</td><td style="padding:6px 9px;text-align:right;font-weight:600;">${fa(total)}</td></tr>${gstRow}<tr style="background:#0d1b2a;color:#fff;"><td style="padding:9px;font-weight:700;">TOTAL PAYABLE</td><td style="padding:9px;text-align:right;font-weight:700;">${fa(grand)}</td></tr></tbody></table>
 <div style="font-style:italic;font-size:0.78rem;margin-bottom:14px;">RUPEES ${numberToWords(grand)} ONLY</div>
 ${gv('fee-advance-receipt')?`<div style="font-size:0.78rem;margin-top:10px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;"><strong>Advance Receipt:</strong> ${gv('fee-advance-receipt')}</div>`:''}
